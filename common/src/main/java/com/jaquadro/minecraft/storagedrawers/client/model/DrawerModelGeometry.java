@@ -5,17 +5,22 @@ import com.jaquadro.minecraft.storagedrawers.block.BlockCompDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlocks;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.block.model.BlockElement;
 import net.minecraft.client.renderer.block.model.BlockModel;
+import net.minecraft.client.renderer.block.model.SimpleUnbakedGeometry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.phys.AABB;
 import org.apache.commons.io.IOUtils;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DrawerModelGeometry
 {
@@ -85,33 +90,41 @@ public class DrawerModelGeometry
                                              ResourceLocation locationInd,
                                              ResourceLocation locationIndBase,
                                              BlockDrawers... blocks) {
-        BlockModel slotInfo = getBlockModel(locationIcon);
-        BlockModel countInfo = getBlockModel(locationCount);
-        BlockModel indInfo = getBlockModel(locationInd);
-        BlockModel indBaseInfo = getBlockModel(locationIndBase);
+        List<BlockElement> slotGeo = getElements(getBlockModel(locationIcon));
+        List<BlockElement> countGeo = getElements(getBlockModel(locationCount));
+        List<BlockElement> indicatorGeo = getElements(getBlockModel(locationInd));
+        List<BlockElement> indicatorBaseGeo = getElements(getBlockModel(locationIndBase));
+
         for (BlockDrawers block : blocks) {
             if (block == null)
                 continue;
 
-            for (int i = 0; i < block.getDrawerCount(); i++) {
-                Vector3f from = slotInfo.getElements().get(i).from;
-                Vector3f to = slotInfo.getElements().get(i).to;
-                block.labelGeometry[i] = new AABB(from.x(), from.y(), from.z(), to.x(), to.y(), to.z());
-            }
-            for (int i = 0; i < block.getDrawerCount(); i++) {
-                Vector3f from = countInfo.getElements().get(i).from;
-                Vector3f to = countInfo.getElements().get(i).to;
-                block.countGeometry[i] = new AABB(from.x(), from.y(), from.z(), to.x(), to.y(), to.z());
-            }
-            for (int i = 0; i < block.getDrawerCount(); i++) {
-                Vector3f from = indInfo.getElements().get(i).from;
-                Vector3f to = indInfo.getElements().get(i).to;
-                block.indGeometry[i] = new AABB(from.x(), from.y(), from.z(), to.x(), to.y(), to.z());
-            }
-            for (int i = 0; i < block.getDrawerCount(); i++) {
-                Vector3f from = indBaseInfo.getElements().get(i).from;
-                Vector3f to = indBaseInfo.getElements().get(i).to;
-                block.indBaseGeometry[i] = new AABB(from.x(), from.y(), from.z(), to.x(), to.y(), to.z());
+            populateGeometryData(block, slotGeo, BlockDrawers.GeometryType.Label);
+            populateGeometryData(block, countGeo, BlockDrawers.GeometryType.Count);
+            populateGeometryData(block, indicatorGeo, BlockDrawers.GeometryType.Indicator);
+            populateGeometryData(block, indicatorBaseGeo, BlockDrawers.GeometryType.IndicatorBase);
+        }
+    }
+
+    private static void populateGeometryData (BlockDrawers block, List<BlockElement> info, BlockDrawers.GeometryType type) {
+        if (block == null || info == null)
+            return;
+
+        int drawerCount = block.getDrawerCount();
+        if (drawerCount > info.size())
+            return;
+
+        for (int i = 0; i < drawerCount; i++) {
+            Vector3fc from = info.get(i).from();
+            Vector3fc to = info.get(i).to();
+            AABB bound = new AABB(from.x(), from.y(), from.z(), to.x(), to.y(), to.z());
+
+            switch (type) {
+                case Slot: block.slotGeometry[i] = bound; break;
+                case Count: block.countGeometry[i] = bound; break;
+                case Label: block.labelGeometry[i] = bound; break;
+                case Indicator: block.indGeometry[i] = bound; break;
+                case IndicatorBase: block.indBaseGeometry[i] = bound; break;
             }
         }
     }
@@ -128,5 +141,15 @@ public class DrawerModelGeometry
         } finally {
             IOUtils.closeQuietly(reader);
         }
+    }
+
+    private static List<BlockElement> getElements (BlockModel model) {
+        if (model == null)
+            return new ArrayList<>();
+
+        if (model.geometry() instanceof SimpleUnbakedGeometry geo)
+            return geo.elements();
+        else
+            return new ArrayList<>();
     }
 }

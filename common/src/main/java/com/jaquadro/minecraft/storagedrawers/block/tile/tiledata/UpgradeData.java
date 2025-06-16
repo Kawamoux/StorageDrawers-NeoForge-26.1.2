@@ -7,13 +7,13 @@ import com.jaquadro.minecraft.storagedrawers.item.*;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 public class UpgradeData extends BlockEntityDataShim
 {
@@ -317,12 +317,12 @@ public class UpgradeData extends BlockEntityDataShim
         if (!tag.contains("Upgrades"))
             return;
 
-        ListTag tagList = tag.getList("Upgrades", Tag.TAG_COMPOUND);
+        ListTag tagList = tag.getListOrEmpty("Upgrades");
         for (int i = 0; i < tagList.size(); i++) {
-            CompoundTag upgradeTag = tagList.getCompound(i);
+            CompoundTag upgradeTag = tagList.getCompoundOrEmpty(i);
 
-            int slot = upgradeTag.getByte("Slot");
-            upgrades[slot] = ItemStack.parseOptional(provider, upgradeTag);
+            Optional<Byte> slot = upgradeTag.getByte("Slot");
+            slot.ifPresent(aByte -> upgrades[aByte] = ItemStack.parse(provider, upgradeTag).orElse(ItemStack.EMPTY));
         }
 
         syncUpgrades();

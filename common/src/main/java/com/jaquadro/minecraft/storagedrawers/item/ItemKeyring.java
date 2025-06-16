@@ -21,12 +21,14 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemUtils;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class ItemKeyring extends Item
@@ -129,15 +131,17 @@ public class ItemKeyring extends Item
 
     @Override
     public Optional<TooltipComponent> getTooltipImage (ItemStack stack) {
-        if (stack.has(DataComponents.HIDE_TOOLTIP) || stack.has(DataComponents.HIDE_ADDITIONAL_TOOLTIP))
+        TooltipDisplay tooltipdisplay = stack.getOrDefault(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT);
+        if (!tooltipdisplay.shows(ModDataComponents.KEYRING_CONTENTS.get()))
             return Optional.empty();
 
         return Optional.ofNullable(stack.get(ModDataComponents.KEYRING_CONTENTS.get())).map(KeyringTooltip::new);
     }
 
     @Override
-    public void appendHoverText (@NotNull ItemStack itemStack, TooltipContext context, List<Component> list, TooltipFlag advanced) {
-        ComponentUtil.appendSplitDescription(list, getDescription());
+    public void appendHoverText (ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, tooltip, flag);
+        ComponentUtil.appendSplitDescription(tooltip, getDescription());
     }
 
     @Override

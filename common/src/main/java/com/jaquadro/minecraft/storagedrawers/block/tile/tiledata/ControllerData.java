@@ -14,9 +14,9 @@ public class ControllerData extends BlockEntityDataShim
     @Override
     public void read (HolderLookup.Provider provider, CompoundTag tag) {
         controllerCoord = null;
-        if (tag.contains("Controller", Tag.TAG_COMPOUND)) {
-            CompoundTag ctag = tag.getCompound("Controller");
-            controllerCoord = new BlockPos(ctag.getInt("x"), ctag.getInt("y"), ctag.getInt("z"));
+        if (tag.contains("Controller")) {
+            CompoundTag ctag = tag.getCompoundOrEmpty("Controller");
+            controllerCoord = new BlockPos(ctag.getIntOr("x", 0), ctag.getIntOr("y", 0), ctag.getIntOr("z", 0));
         }
     }
 

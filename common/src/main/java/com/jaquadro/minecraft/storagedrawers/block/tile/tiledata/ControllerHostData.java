@@ -2,12 +2,10 @@ package com.jaquadro.minecraft.storagedrawers.block.tile.tiledata;
 
 import com.jaquadro.minecraft.storagedrawers.api.storage.IControlGroup;
 import com.jaquadro.minecraft.storagedrawers.api.storage.INetworked;
-import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityController;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
@@ -22,11 +20,11 @@ public class ControllerHostData extends BlockEntityDataShim
     public void read (HolderLookup.Provider provider, CompoundTag tag) {
         nodeMap.clear();
 
-        if (tag.contains("RemoteNodes", Tag.TAG_LIST)) {
-            ListTag list = tag.getList("RemoteNodes", Tag.TAG_COMPOUND);
+        if (tag.contains("RemoteNodes")) {
+            ListTag list = tag.getListOrEmpty("RemoteNodes");
             for (int i = 0; i < list.size(); i++) {
-                CompoundTag ctag = list.getCompound(i);
-                nodeMap.put(new BlockPos(ctag.getInt("x"), ctag.getInt("y"), ctag.getInt("z")), null);
+                CompoundTag ctag = list.getCompoundOrEmpty(i);
+                nodeMap.put(new BlockPos(ctag.getIntOr("x", 0), ctag.getIntOr("y", 0), ctag.getIntOr("z", 0)), null);
             }
         }
     }

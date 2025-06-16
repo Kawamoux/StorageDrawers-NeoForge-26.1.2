@@ -9,10 +9,9 @@ import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.BlockStandardDrawers;
 import com.jaquadro.minecraft.storagedrawers.client.model.DrawerModelStore;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.DrawerModelContext;
-import com.jaquadro.minecraft.storagedrawers.client.model.context.FramedModelContext;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -31,7 +30,7 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
         this.overlays = overlays;
     }
 
-    @Override
+    /*@Override
     public List<RenderType> getRenderTypes (BlockState state) {
         return List.of(RenderType.cutoutMipped());
     }
@@ -39,10 +38,10 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
     @Override
     public List<RenderType> getRenderTypes (ItemStack stack) {
         return List.of(Sheets.cutoutBlockSheet());
-    }
+    }*/
 
     @Override
-    public void emitQuads (Supplier<DrawerModelContext> contextSupplier, BiConsumer<BakedModel, RenderType> emitModel) {
+    public void emitQuads (Supplier<DrawerModelContext> contextSupplier, Consumer<BlockStateModel> emitModel) {
         DrawerModelContext context = contextSupplier.get();
         if (context == null)
             return;
@@ -50,7 +49,7 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
         emitDecoratedQuads(context, emitModel);
     }
 
-    public void emitDecoratedQuads(DrawerModelContext context, BiConsumer<BakedModel, RenderType> emitModel) {
+    public void emitDecoratedQuads(DrawerModelContext context, Consumer<BlockStateModel> emitModel) {
         Direction dir = context.state().getValue(BlockDrawers.FACING);
         boolean half = false;
         Block block = context.state().getBlock();
@@ -67,11 +66,11 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
         boolean isClaimed = protectable != null && protectable.getOwner() != null;
 
         if (isLocked && isClaimed)
-            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.LOCK_CLAIM, dir, half), RenderType.cutoutMipped());
+            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.LOCK_CLAIM, dir, half));
         else if (isLocked)
-            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.LOCK, dir, half), RenderType.cutoutMipped());
+            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.LOCK, dir, half));
         else if (isClaimed)
-            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.CLAIM, dir, half), RenderType.cutoutMipped());
+            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.CLAIM, dir, half));
 
         DrawerModelStore.DynamicPart priorityPart = switch (attr.getPriority()) {
             case 1 -> DrawerModelStore.DynamicPart.PRIORITY_P1;
@@ -81,19 +80,19 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
             default -> null;
         };
         if (priorityPart != null)
-            emitModel.accept(DrawerModelStore.getModel(priorityPart, dir, half), RenderType.cutoutMipped());
+            emitModel.accept(DrawerModelStore.getModel(priorityPart, dir, half));
 
         if (attr.isVoid())
-            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.VOID, dir, half), RenderType.cutoutMipped());
+            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.VOID, dir, half));
         if (attr.isConcealed())
-            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.SHROUD, dir, half), RenderType.cutoutMipped());
+            emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.SHROUD, dir, half));
         if (attr.hasFillLevel()) {
             if (block instanceof BlockCompDrawers compBlock) {
                 int count = compBlock.getDrawerCount();
-                emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.INDICATOR_COMP, dir, half, count), RenderType.cutoutMipped());
+                emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.INDICATOR_COMP, dir, half, count));
             } else if (block instanceof BlockStandardDrawers stdBlock) {
                 int count = stdBlock.getDrawerCount();
-                emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.INDICATOR, dir, half, count), RenderType.cutoutMipped());
+                emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.INDICATOR, dir, half, count));
             }
         }
         if (block instanceof BlockStandardDrawers) {
@@ -103,7 +102,7 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
                 DrawerModelStore.DynamicPart[] groupMissingSlots = DrawerModelStore.missingSlots[count - 1];
                 for (int i = 0; i < groupMissingSlots.length; i++) {
                     if (group.getDrawer(i).isMissing())
-                        emitModel.accept(DrawerModelStore.getModel(groupMissingSlots[i], dir, half, count), RenderType.cutoutMipped());
+                        emitModel.accept(DrawerModelStore.getModel(groupMissingSlots[i], dir, half, count));
                 }
             }
         }

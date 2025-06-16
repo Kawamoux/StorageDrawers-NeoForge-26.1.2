@@ -3,10 +3,13 @@ package com.jaquadro.minecraft.storagedrawers.client.model;
 import com.jaquadro.minecraft.storagedrawers.ModConstants;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.EnumCompDrawer;
+import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacing;
+import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacingSized;
+import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacingSizedOpen;
+import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacingSizedSlotted;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlocks;
 import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -143,8 +146,8 @@ public class DrawerModelStore
     public static final FrameMatSet FramedTrimMaterials = new FrameMatSet()
         .sidePart(DynamicPart.FRAMED_TRIM_SIDE).trimPart(DynamicPart.FRAMED_TRIM_TRIM);
 
-    private static final Map<String, BakedModel> modelStore = new HashMap<>();
-    private static final Map<String, ModelResourceLocation> locationStore = new HashMap<>();
+    private static final Map<BlockState, BlockStateModel> modelStore = new HashMap<>();
+    private static final Set<BlockState> locationStore = new HashSet<>();
 
     public static final DecorationSet INSTANCE = new DecorationSet();
 
@@ -162,101 +165,100 @@ public class DrawerModelStore
     };
 
     public static class DecorationSet {
-        public final Set<String> targetBlocks = new HashSet<>();
-        public final Map<String, ModelResourceLocation> overlays = new HashMap<>();
+        public final Set<BlockState> targetBlocks = new HashSet<>();
+        public final Map<String, BlockState> overlays = new HashMap<>();
 
         public DecorationSet () {
             ModBlocks.getDrawersOfType(BlockDrawers.class).forEach(blockDrawers -> {
-                for (BlockState state : blockDrawers.getStateDefinition().getPossibleStates())
-                    targetBlocks.add(BlockModelShaper.stateToModelLocation(state).toString());
+                targetBlocks.addAll(blockDrawers.getStateDefinition().getPossibleStates());
             });
             ModBlocks.getFramedBlocks().forEach(blockTrim -> {
                 if (blockTrim instanceof Block mcBlock) {
-                    for (BlockState state : mcBlock.getStateDefinition().getPossibleStates())
-                        targetBlocks.add(BlockModelShaper.stateToModelLocation(state).toString());
+                    targetBlocks.addAll(mcBlock.getStateDefinition().getPossibleStates());
 
-                    ModelResourceLocation invLoc = new ModelResourceLocation(BuiltInRegistries.BLOCK.getKey(mcBlock), "inventory");
-                    targetBlocks.add(invLoc.toString());
+                    // TODO: How handle inventory?
+                    //ModelResourceLocation invLoc = new ModelResourceLocation(BuiltInRegistries.BLOCK.getKey(mcBlock), "inventory");
+                    //targetBlocks.add(invLoc.toString());
                 }
             });
         }
 
         public void add (Direction dir, boolean half) {
-            addOverlay(getVariant(DynamicPart.LOCK, dir, half), new ModelResourceLocation(ModConstants.loc("meta_locked"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.CLAIM, dir, half), new ModelResourceLocation(ModConstants.loc("meta_claimed"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.LOCK_CLAIM, dir, half), new ModelResourceLocation(ModConstants.loc("meta_locked_claimed"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.VOID, dir, half), new ModelResourceLocation(ModConstants.loc("meta_void"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.SHROUD, dir, half), new ModelResourceLocation(ModConstants.loc("meta_shroud"), getVariant(dir, half)));
+            addOverlay(getVariant(DynamicPart.LOCK, dir, half), ModBlocks.META_LOCKED.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.CLAIM, dir, half), ModBlocks.META_CLAIMED.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.LOCK_CLAIM, dir, half), ModBlocks.META_LOCKED_CLAIMED.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.VOID, dir, half), ModBlocks.META_VOID.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.SHROUD, dir, half), ModBlocks.META_SHROUD.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
 
-            addOverlay(getVariant(DynamicPart.INDICATOR, dir, half, 1), new ModelResourceLocation(ModConstants.loc("meta_indicator"), getVariant(dir, half, 1)));
-            addOverlay(getVariant(DynamicPart.INDICATOR, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_indicator"), getVariant(dir, half, 2)));
-            addOverlay(getVariant(DynamicPart.INDICATOR, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_indicator"), getVariant(dir, half, 4)));
-            addOverlay(getVariant(DynamicPart.INDICATOR_COMP, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_comp_indicator"), getVariant(dir, half, 2)));
-            addOverlay(getVariant(DynamicPart.INDICATOR_COMP, dir, half, 3), new ModelResourceLocation(ModConstants.loc("meta_comp_indicator"), getVariant(dir, half, 3)));
+            addOverlay(getVariant(DynamicPart.INDICATOR, dir, half, 1), ModBlocks.META_INDICATOR.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 1));
+            addOverlay(getVariant(DynamicPart.INDICATOR, dir, half, 2), ModBlocks.META_INDICATOR.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 2));
+            addOverlay(getVariant(DynamicPart.INDICATOR, dir, half, 4), ModBlocks.META_INDICATOR.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 4));
+            addOverlay(getVariant(DynamicPart.INDICATOR_COMP, dir, half, 2), ModBlocks.META_COMP_INDICATOR.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 2));
+            addOverlay(getVariant(DynamicPart.INDICATOR_COMP, dir, half, 3), ModBlocks.META_COMP_INDICATOR.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 3));
 
-            addOverlay(getVariant(DynamicPart.PRIORITY_P1, dir, half), new ModelResourceLocation(ModConstants.loc("meta_priority_p1"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.PRIORITY_P2, dir, half), new ModelResourceLocation(ModConstants.loc("meta_priority_p2"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.PRIORITY_N1, dir, half), new ModelResourceLocation(ModConstants.loc("meta_priority_n1"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.PRIORITY_N2, dir, half), new ModelResourceLocation(ModConstants.loc("meta_priority_n2"), getVariant(dir, half)));
+            addOverlay(getVariant(DynamicPart.PRIORITY_P1, dir, half), ModBlocks.META_PRIORITY_P1.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.PRIORITY_P2, dir, half), ModBlocks.META_PRIORITY_P2.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.PRIORITY_N1, dir, half), ModBlocks.META_PRIORITY_N1.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.PRIORITY_N2, dir, half), ModBlocks.META_PRIORITY_N2.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
 
-            addOverlay(getVariant(DynamicPart.MISSING_1, dir, half, 1), new ModelResourceLocation(ModConstants.loc("meta_missing_slot_1_1"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.MISSING_1, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_missing_slot_2_1"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.MISSING_1, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_missing_slot_4_1"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.MISSING_2, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_missing_slot_2_2"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.MISSING_2, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_missing_slot_4_2"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.MISSING_3, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_missing_slot_4_3"), getVariant(dir, half)));
-            addOverlay(getVariant(DynamicPart.MISSING_4, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_missing_slot_4_4"), getVariant(dir, half)));
+            addOverlay(getVariant(DynamicPart.MISSING_1, dir, half, 1), ModBlocks.META_MISSING_1_1.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.MISSING_1, dir, half, 2), ModBlocks.META_MISSING_2_1.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.MISSING_1, dir, half, 4), ModBlocks.META_MISSING_4_1.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.MISSING_2, dir, half, 2), ModBlocks.META_MISSING_2_2.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.MISSING_2, dir, half, 4), ModBlocks.META_MISSING_4_2.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.MISSING_3, dir, half, 4), ModBlocks.META_MISSING_4_3.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
+            addOverlay(getVariant(DynamicPart.MISSING_4, dir, half, 4), ModBlocks.META_MISSING_4_4.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half));
 
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SIDE, dir, half, 1), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_side"), getVariant(dir, half, 1)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SIDE, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_side"), getVariant(dir, half, 2)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SIDE, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_side"), getVariant(dir, half, 4)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_TRIM, dir, half, 1), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_trim"), getVariant(dir, half, 1)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_TRIM, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_trim"), getVariant(dir, half, 2)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_TRIM, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_trim"), getVariant(dir, half, 4)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_FRONT, dir, half, 1), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_front"), getVariant(dir, half, 1)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_FRONT, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_front"), getVariant(dir, half, 2)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_FRONT, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_front"), getVariant(dir, half, 4)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 1), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_shading"), getVariant(dir, half, 1)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 2), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_shading"), getVariant(dir, half, 2)));
-            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 4), new ModelResourceLocation(ModConstants.loc("meta_framed_drawers_shading"), getVariant(dir, half, 4)));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SIDE, dir, half, 1), ModBlocks.META_FRAMED_DRAWERS_SIDE.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 1));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SIDE, dir, half, 2), ModBlocks.META_FRAMED_DRAWERS_SIDE.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 2));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SIDE, dir, half, 4), ModBlocks.META_FRAMED_DRAWERS_SIDE.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 4));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_TRIM, dir, half, 1), ModBlocks.META_FRAMED_DRAWERS_TRIM.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 1));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_TRIM, dir, half, 2), ModBlocks.META_FRAMED_DRAWERS_TRIM.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 2));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_TRIM, dir, half, 4), ModBlocks.META_FRAMED_DRAWERS_TRIM.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 4));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_FRONT, dir, half, 1), ModBlocks.META_FRAMED_DRAWERS_FRONT.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 1));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_FRONT, dir, half, 2), ModBlocks.META_FRAMED_DRAWERS_FRONT.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 2));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_FRONT, dir, half, 4), ModBlocks.META_FRAMED_DRAWERS_FRONT.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 4));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 1), ModBlocks.META_FRAMED_DRAWERS_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 1));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 2), ModBlocks.META_FRAMED_DRAWERS_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 2));
+            addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 4), ModBlocks.META_FRAMED_DRAWERS_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 4));
 
-            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_SIDE), new ModelResourceLocation(ModConstants.loc("meta_framed_trim_side"), getVariant()));
-            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_TRIM), new ModelResourceLocation(ModConstants.loc("meta_framed_trim_trim"), getVariant()));
+            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_SIDE), ModBlocks.META_FRAMED_TRIM_SIDE.get().defaultBlockState());
+            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_TRIM), ModBlocks.META_FRAMED_TRIM_TRIM.get().defaultBlockState());
 
-            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_SIDE, dir), new ModelResourceLocation(ModConstants.loc("meta_framed_controller_side"), getVariant(dir)));
-            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_TRIM, dir), new ModelResourceLocation(ModConstants.loc("meta_framed_controller_trim"), getVariant(dir)));
-            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_FRONT, dir), new ModelResourceLocation(ModConstants.loc("meta_framed_controller_front"), getVariant(dir)));
-            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_SHADING, dir), new ModelResourceLocation(ModConstants.loc("meta_framed_controller_shading"), getVariant(dir)));
+            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_SIDE, dir), ModBlocks.META_FRAMED_CONTROLLER_SIDE.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir));
+            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_TRIM, dir), ModBlocks.META_FRAMED_CONTROLLER_TRIM.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir));
+            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_FRONT, dir), ModBlocks.META_FRAMED_CONTROLLER_FRONT.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir));
+            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_SHADING, dir), ModBlocks.META_FRAMED_CONTROLLER_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir));
 
-            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_IO_SIDE), new ModelResourceLocation(ModConstants.loc("meta_framed_controller_io_side"), getVariant()));
-            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_IO_TRIM), new ModelResourceLocation(ModConstants.loc("meta_framed_controller_io_trim"), getVariant()));
-            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_IO_SHADING), new ModelResourceLocation(ModConstants.loc("meta_framed_controller_io_shading"), getVariant()));
+            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_IO_SIDE), ModBlocks.META_FRAMED_CONTROLLER_IO_SIDE.get().defaultBlockState());
+            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_IO_TRIM), ModBlocks.META_FRAMED_CONTROLLER_IO_TRIM.get().defaultBlockState());
+            addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_IO_SHADING), ModBlocks.META_FRAMED_CONTROLLER_IO_SHADING.get().defaultBlockState());
 
             for (int i = 1; i <= 2; i++) {
                 EnumCompDrawer open = EnumCompDrawer.byOpenSlots(i);
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_SIDE, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_2_side"), getVariant(dir, half, open)));
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_TRIM, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_2_trim"), getVariant(dir, half, open)));
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_FRONT, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_2_front"), getVariant(dir, half, open)));
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_SHADING, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_2_shading"), getVariant(dir, half, open)));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_SIDE, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_2_SIDE.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_TRIM, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_2_TRIM.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_FRONT, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_2_FRONT.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP2_SHADING, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_2_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
             }
 
             for (int i = 1; i <= 3; i++) {
                 EnumCompDrawer open = EnumCompDrawer.byOpenSlots(i);
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_SIDE, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_3_side"), getVariant(dir, half, open)));
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_TRIM, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_3_trim"), getVariant(dir, half, open)));
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_FRONT, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_3_front"), getVariant(dir, half, open)));
-                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_SHADING, dir, half, open), new ModelResourceLocation(ModConstants.loc("meta_framed_compdrawers_3_shading"), getVariant(dir, half, open)));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_SIDE, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_3_SIDE.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_TRIM, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_3_TRIM.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_FRONT, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_3_FRONT.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
+                addOverlay(getVariant(DynamicPart.FRAMED_COMP3_SHADING, dir, half, open), ModBlocks.META_FRAMED_COMPDRAWERS_3_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedOpen.SLOTS, open));
             }
         }
 
-        void addOverlay(String variant, ModelResourceLocation loc) {
+        void addOverlay(String variant, BlockState loc) {
             overlays.put(variant, addLocation(loc));
         }
 
-        public boolean isTargetedModel (ModelResourceLocation loc) {
+        public boolean isTargetedModel (BlockState loc) {
             if (loc == null)
                 return false;
-            return targetBlocks.contains(loc.toString());
+            return targetBlocks.contains(loc);
         }
     }
 
@@ -269,9 +271,9 @@ public class DrawerModelStore
         }
     }
 
-    static ModelResourceLocation addLocation(ModelResourceLocation loc) {
-        locationStore.put(loc.toString(), loc);
-        modelStore.put(loc.toString(), null);
+    static BlockState addLocation(BlockState loc) {
+        locationStore.add(loc);
+        modelStore.put(loc, null);
 
         return loc;
     }
@@ -316,47 +318,46 @@ public class DrawerModelStore
         return "part=" + part.getName() + ",facing=" + dir.getName() + ",half=" + half + ",slots=" + slots;
     }
 
-    public static Stream<ModelResourceLocation> getModelLocations() {
-        return locationStore.values().stream();
+    public static Stream<BlockState> getModelLocations() {
+        return locationStore.stream();
     }
 
-    public static void tryAddModel(ModelResourceLocation loc, BakedModel model) {
+    public static void tryAddModel(BlockState loc, BlockStateModel model) {
         if (loc == null)
             return;
 
-        String key = loc.toString();
-        if (modelStore.containsKey(key))
-            modelStore.put(key, model);
+        if (modelStore.containsKey(loc))
+            modelStore.put(loc, model);
     }
 
-    public static BakedModel getModel(ModelResourceLocation loc) {
-        if (loc == null)
+    public static BlockStateModel getModel(BlockState state) {
+        if (state == null)
             return null;
 
-        return modelStore.getOrDefault(loc.toString(), null);
+        return modelStore.getOrDefault(state, null);
     }
 
-    public static BakedModel getModel(String variant) {
+    public static BlockStateModel getModel(String variant) {
         return getModel(INSTANCE.overlays.getOrDefault(variant, null));
     }
 
-    public static BakedModel getModel(DynamicPart part) {
+    public static BlockStateModel getModel(DynamicPart part) {
         return getModel(getVariant(part));
     }
 
-    public static BakedModel getModel(DynamicPart part, Direction dir) {
+    public static BlockStateModel getModel(DynamicPart part, Direction dir) {
         return getModel(getVariant(part, dir));
     }
 
-    public static BakedModel getModel(DynamicPart part, Direction dir, boolean half) {
+    public static BlockStateModel getModel(DynamicPart part, Direction dir, boolean half) {
         return getModel(getVariant(part, dir, half));
     }
 
-    public static BakedModel getModel(DynamicPart part, Direction dir, boolean half, int slots) {
+    public static BlockStateModel getModel(DynamicPart part, Direction dir, boolean half, int slots) {
         return getModel(getVariant(part, dir, half, slots));
     }
 
-    public static BakedModel getModel(DynamicPart part, Direction dir, boolean half, EnumCompDrawer slots) {
+    public static BlockStateModel getModel(DynamicPart part, Direction dir, boolean half, EnumCompDrawer slots) {
         return getModel(getVariant(part, dir, half, slots));
     }
 }

@@ -13,6 +13,7 @@ import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
 import com.texelsaurus.minecraft.chameleon.inventory.content.PositionContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -76,11 +77,11 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
 
         inputStack = ItemStack.EMPTY;
         if (tag.contains("Input"))
-            inputStack = ItemStack.parseOptional(provider, tag.getCompound("Input"));
+            inputStack = ItemStack.parse(provider, tag.getCompoundOrEmpty("Input")).orElse(ItemStack.EMPTY);
 
         resultStack = ItemStack.EMPTY;
         if (tag.contains("Result"))
-            resultStack = ItemStack.parseOptional(provider, tag.getCompound("Result"));
+            resultStack = ItemStack.parse(provider, tag.getCompoundOrEmpty("Result")).orElse(ItemStack.EMPTY);
     }
 
     @Override
@@ -88,10 +89,10 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
         tag = super.writeFixed(provider, tag);
 
         if (!inputStack.isEmpty())
-            tag.put("Input", inputStack.saveOptional(provider));
+            tag.put("Input", inputStack.save(provider));
 
         if (!resultStack.isEmpty())
-            tag.put("Result", resultStack.saveOptional(provider));
+            tag.put("Result", resultStack.save(provider));
 
         return tag;
     }
@@ -144,7 +145,7 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
     }
 
     @Override
-    protected void applyImplicitComponents(DataComponentInput input) {
+    protected void applyImplicitComponents(DataComponentGetter input) {
         super.applyImplicitComponents(input);
         this.name = input.get(DataComponents.CUSTOM_NAME);
     }
@@ -163,8 +164,8 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
     @Override
     public void readPortable (HolderLookup.Provider provider, CompoundTag tag) {
         super.readPortable(provider, tag);
-        if (tag.contains("CustomName", 8))
-            name = parseCustomNameSafe(tag.getString("CustomName"), provider);
+        if (tag.contains("CustomName"))
+            name = parseCustomNameSafe(tag.get("CustomName"), provider);
     }
 
     @Override

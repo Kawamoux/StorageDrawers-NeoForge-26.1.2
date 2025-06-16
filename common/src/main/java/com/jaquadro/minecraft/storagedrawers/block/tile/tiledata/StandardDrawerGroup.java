@@ -53,10 +53,10 @@ public abstract class StandardDrawerGroup extends BlockEntityDataShim implements
         if (!tag.contains("Drawers"))
             return;
 
-        ListTag itemList = tag.getList("Drawers", Tag.TAG_COMPOUND);
+        ListTag itemList = tag.getListOrEmpty("Drawers");
         for (int i = 0; i < itemList.size(); i++) {
             if (i < slots.length)
-                slots[i].deserializeNBT(provider, itemList.getCompound(i));
+                slots[i].deserializeNBT(provider, itemList.getCompoundOrEmpty(i));
         }
     }
 
@@ -409,11 +409,11 @@ public abstract class StandardDrawerGroup extends BlockEntityDataShim implements
             boolean tagMissing = false;
 
             if (nbt.contains("Item"))
-                tagItem = ItemStack.parseOptional(provider, nbt.getCompound("Item"));
+                tagItem = ItemStack.parse(provider, nbt.getCompoundOrEmpty("Item")).orElse(ItemStack.EMPTY);
             if (nbt.contains("Count"))
-                tagCount = nbt.getInt("Count");
+                tagCount = nbt.getIntOr("Count", 0);
             if (nbt.contains("Missing"))
-                tagMissing = nbt.getBoolean("Missing");
+                tagMissing = nbt.getBooleanOr("Missing", false);
 
             setStoredItemRaw(tagItem);
             setStoredItemCountRaw(tagCount);

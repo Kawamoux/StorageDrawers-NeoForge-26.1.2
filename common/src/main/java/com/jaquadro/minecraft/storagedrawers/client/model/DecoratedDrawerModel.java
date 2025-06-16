@@ -8,60 +8,37 @@ import com.jaquadro.minecraft.storagedrawers.block.BlockCompDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.BlockStandardDrawers;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.DrawerModelContext;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.function.Consumer;
 
-public abstract class DecoratedDrawerModel implements BakedModel
+public abstract class DecoratedDrawerModel implements BlockStateModel
 {
-    protected final BakedModel mainModel;
+    protected final BlockStateModel mainModel;
     protected final DrawerModelStore.DecorationSet overlays;
 
-    protected DecoratedDrawerModel (BakedModel mainModel, DrawerModelStore.DecorationSet overlays) {
+    protected DecoratedDrawerModel (BlockStateModel mainModel, DrawerModelStore.DecorationSet overlays) {
         this.mainModel = mainModel;
         this.overlays = overlays;
     }
 
     @Override
-    public List<BakedQuad> getQuads (@Nullable BlockState blockState, @Nullable Direction direction, RandomSource randomSource) {
-        return mainModel.getQuads(blockState, direction, randomSource);
+    public void collectParts (RandomSource randomSource, List<BlockModelPart> list) {
+        mainModel.collectParts(randomSource, list);
     }
 
     @Override
-    public boolean useAmbientOcclusion () {
-        return mainModel.useAmbientOcclusion();
+    public TextureAtlasSprite particleIcon () {
+        return mainModel.particleIcon();
     }
 
-    @Override
-    public boolean isGui3d () {
-        return mainModel.isGui3d();
-    }
-
-    @Override
-    public boolean usesBlockLight () {
-        return mainModel.usesBlockLight();
-    }
-
-    @Override
-    public TextureAtlasSprite getParticleIcon () {
-        return mainModel.getParticleIcon();
-    }
-
-    @Override
-    public ItemTransforms getTransforms () {
-        return mainModel.getTransforms();
-    }
-
-    public void emitDecoratedQuads(DrawerModelContext context, Consumer<BakedModel> emitModel) {
+    public void emitDecoratedQuads(DrawerModelContext context, Consumer<BlockStateModel> emitModel) {
         Direction dir = context.state().getValue(BlockDrawers.FACING);
 
         boolean half = false;

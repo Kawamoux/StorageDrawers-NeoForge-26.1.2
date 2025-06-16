@@ -4,8 +4,6 @@ import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributes;
 import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerGroup;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.IProtectable;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -19,8 +17,8 @@ public class DrawerModelContext extends FramedModelContext
         super(state);
     }
 
-    public DrawerModelContext (BlockState state, Direction direction, RandomSource randomSource, RenderType renderType) {
-        super(state, direction, randomSource, renderType);
+    public DrawerModelContext (BlockState state, RandomSource randomSource) {
+        super(state, randomSource);
     }
 
     public IDrawerAttributes attr () {

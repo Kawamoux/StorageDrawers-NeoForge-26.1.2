@@ -7,8 +7,6 @@ import com.jaquadro.minecraft.storagedrawers.client.model.ModelContextSupplier;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.FramedModelContext;
 import com.jaquadro.minecraft.storagedrawers.components.item.FrameData;
 import com.jaquadro.minecraft.storagedrawers.core.ModDataComponents;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -36,8 +34,8 @@ public class FramedModelProperties implements ModelContextSupplier<FramedModelCo
     }
 
     @Override
-    public FramedModelContext makeContext (@Nullable BlockState state, @Nullable Direction side, RandomSource rand, Object renderData, @Nullable RenderType type) {
-        FramedModelContext context = new FramedModelContext(state, side, rand, type);
+    public FramedModelContext makeContext (@Nullable BlockState state, RandomSource rand, Object renderData) {
+        FramedModelContext context = new FramedModelContext(state, rand);
         if (renderData instanceof FramedModelProperties props) {
             context.materialData(new MaterialData(props.material));
         }

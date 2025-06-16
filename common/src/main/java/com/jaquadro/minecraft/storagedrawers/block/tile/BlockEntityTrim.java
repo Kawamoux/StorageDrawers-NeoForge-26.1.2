@@ -1,13 +1,16 @@
 package com.jaquadro.minecraft.storagedrawers.block.tile;
 
 import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedBlockEntity;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.FramedModelProperties;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataProvider;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlockEntities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.Nullable;
 
-public class BlockEntityTrim extends BaseBlockEntity implements IFramedBlockEntity
+public class BlockEntityTrim extends BaseBlockEntity implements IFramedBlockEntity, RenderDataProvider
 {
     private MaterialData materialData = new MaterialData();
 
@@ -29,5 +32,10 @@ public class BlockEntityTrim extends BaseBlockEntity implements IFramedBlockEnti
     @Override
     public boolean dataPacketRequiresRenderUpdate () {
         return true;
+    }
+
+    @Override
+    public @Nullable Object getRenderData () {
+        return FramedModelProperties.getModelData(this);
     }
 }

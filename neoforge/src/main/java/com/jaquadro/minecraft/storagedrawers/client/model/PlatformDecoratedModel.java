@@ -1,107 +1,129 @@
 package com.jaquadro.minecraft.storagedrawers.client.model;
 
+import com.google.common.base.Suppliers;
+import com.jaquadro.minecraft.storagedrawers.StorageDrawers;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataProvider;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
 import com.jaquadro.minecraft.storagedrawers.client.model.decorator.ModelDecorator;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.client.color.item.ItemTintSources;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.block.model.TextureSlots;
 import net.minecraft.client.renderer.item.*;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.resources.model.ModelBaker;
+import net.minecraft.client.resources.model.ResolvedModel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.ChunkRenderTypeSet;
-import net.neoforged.neoforge.client.model.IDynamicBakedModel;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.neoforged.neoforge.client.model.DynamicBlockStateModel;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3f;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel implements IDynamicBakedModel
+public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel implements DynamicBlockStateModel
 {
     private final ModelDecorator<C> decorator;
     private final ModelContextSupplier<C> contextSupplier;
 
-    public PlatformDecoratedModel (BakedModel parent, ModelDecorator<C> decorator, ModelContextSupplier<C> contextSupplier) {
+    public PlatformDecoratedModel (BlockStateModel parent, ModelDecorator<C> decorator, ModelContextSupplier<C> contextSupplier) {
         super(parent);
         this.decorator = decorator;
         this.contextSupplier = contextSupplier;
     }
 
     @Override
-    public List<BakedQuad> getQuads (@Nullable BlockState state, @Nullable Direction side, RandomSource rand, ModelData extraData, @Nullable RenderType type) {
-        if (state == null) {
-            // NB: getting here for item renders (state == null) implies that the caller has not
-            // respected #getRenderPasses, since if they had this method wouldn't be called.
-            // If that's the case, then we might as well return the main quads that they're looking
-            // for anyway.
-            return parent.getQuads(state, side, rand, extraData, type);
+    public void collectParts (BlockAndTintGetter level, BlockPos blockPos, BlockState state, RandomSource randomSource, List<BlockModelPart> list) {
+        BlockEntity entity = level.getBlockEntity(blockPos);
+        if (entity instanceof RenderDataProvider renderProvider) {
+            Object renderData = renderProvider.getRenderData();
+            Supplier<C> supplier = () -> contextSupplier.makeContext(state, randomSource, renderData);
+
+            if (decorator.shouldRenderBase(supplier))
+                parent.collectParts(level, blockPos, state, randomSource, list);
+
+            Consumer<BlockStateModel> emitModel = (model) -> {
+                if (model != null) {
+                    model.collectParts(level, blockPos, state, randomSource, list);
+                }
+            };
+
+            try {
+                decorator.emitQuads(supplier, emitModel);
+            } catch (Exception e) { }
+        } else {
+            parent.collectParts(level, blockPos, state, randomSource, list);
         }
-
-        List<BakedQuad> quads = new ArrayList<>();
-
-        Supplier<C> supplier = () -> contextSupplier.makeContext(state, side, rand, extraData, type);
-        if (decorator.shouldRenderBase(supplier))
-            quads.addAll(parent.getQuads(state, side, rand, extraData, type));
-
-        BiConsumer<BakedModel, RenderType> emitModel = (model, renderType) -> {
-            if (model != null && renderType == type)
-                quads.addAll(model.getQuads(state, side, rand, extraData, type));
-        };
-
-        try {
-            decorator.emitQuads(supplier, emitModel);
-        } catch (Exception e) {
-            return quads;
-        }
-
-        return quads;
-    }
-
-    @Override
-    public TextureAtlasSprite getParticleIcon (ModelData data) {
-        return parent.getParticleIcon(data);
-    }
-
-    @Override
-    public ChunkRenderTypeSet getRenderTypes (BlockState state, RandomSource rand, ModelData data) {
-        return ChunkRenderTypeSet.of(decorator.getRenderTypes(state));
-    }
-
-    @Override
-    public RenderType getRenderType (ItemStack itemStack) {
-        return decorator.getRenderTypes(itemStack).get(0);
     }
 
     public static class PlatformDecoratedItemModel implements ItemModel
     {
-        ModelResourceLocation location;
+        ResourceLocation location;
+        String variant;
         PlatformDecoratedModel<?> parent;
-        BakedModel model;
+        BlockStateModel model;
         ItemStack stack;
+        BlockState state;
+        ModelRenderProperties properties;
 
-        public PlatformDecoratedItemModel (ModelResourceLocation location) {
+        private final Supplier<Vector3f[]> extents;
+
+        public PlatformDecoratedItemModel (ResourceLocation location, String variant, ModelRenderProperties properties) {
             this.location = location;
+            this.variant = variant;
+            this.properties = properties;
+
+            this.extents = Suppliers.memoize(() -> {
+                Vector3f[] ext = new Vector3f[2];
+                ext[0] = new Vector3f(0.0f, 0.0f, 0.0f);
+                ext[1] = new Vector3f(1.0f, 1.0f, 1.0f);
+                return ext;
+            });
         }
 
         @Override
         public void update (ItemStackRenderState itemStackRenderState, ItemStack itemStack, ItemModelResolver itemModelResolver, ItemDisplayContext itemDisplayContext, @Nullable ClientLevel clientLevel, @Nullable LivingEntity livingEntity, int i) {
+            if (state == null) {
+                var blockOption = BuiltInRegistries.BLOCK.get(location);
+                if (blockOption.isEmpty())
+                    return;
+
+                Block block = blockOption.get().value();
+                state = block.defaultBlockState();
+
+                String[] props = variant.split(",");
+                for (String prop : props) {
+                    String[] keyVal = prop.split("=");
+                    if (keyVal.length != 2) continue;
+
+                    String key = keyVal[0].trim();
+                    String value = keyVal[1].trim();
+
+                    Property<?> property = state.getBlock().getStateDefinition().getProperty(key);
+                    if (property != null)
+                        state = setProperty(state, property, value);
+                }
+            }
+
             if (parent == null) {
-                BakedModel stored = ItemModelStore.models.get(location);
+                BlockStateModel stored = ItemModelStore.models.get(state);
                 if (stored instanceof PlatformDecoratedModel<?> p)
                     parent = p;
             }
@@ -112,9 +134,41 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             }
 
             if (model != null) {
-                ItemStackRenderState.LayerRenderState renderState = itemStackRenderState.newLayer();
-                renderState.setupBlockModel(model, model.getRenderType(stack));
+                List<BlockModelPart> parts = new ArrayList<>();
+                model.collectParts(null, parts);
+                Map<RenderType, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
+                for (BlockModelPart part : parts) {
+                    RenderType type = part.getRenderType(state);
+                    if (!layers.containsKey(type)) {
+                        ItemStackRenderState.LayerRenderState renderState = itemStackRenderState.newLayer();
+                        layers.put(type, renderState);
+
+                        RenderType itemRenderType = null;
+                        if (type == RenderType.SOLID)
+                            itemRenderType = Sheets.solidBlockSheet();
+                        if (type == RenderType.CUTOUT_MIPPED || type == RenderType.CUTOUT)
+                            itemRenderType = Sheets.cutoutBlockSheet();
+                        else if (type == RenderType.translucent())
+                            itemRenderType = Sheets.translucentItemSheet();
+
+                        renderState.setRenderType(itemRenderType);
+                        renderState.setExtents(extents);
+                    }
+
+                    ItemStackRenderState.LayerRenderState layer = layers.get(type);
+                    properties.applyToLayer(layer, itemDisplayContext);
+
+                    layer.prepareQuadList().addAll(part.getQuads(null));
+                    for (Direction direction : Direction.values())
+                        layer.prepareQuadList().addAll(part.getQuads(direction));
+                }
+                int x = 5;
             }
+        }
+
+        private static <T extends Comparable<T>> BlockState setProperty(BlockState state, Property<T> property, String valueName) {
+            Optional<T> parsed = property.getValue(valueName);
+            return parsed.map(v -> state.setValue(property, v)).orElse(state);
         }
 
         public record Unbaked (ResourceLocation model, String variant) implements ItemModel.Unbaked {
@@ -132,13 +186,18 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
 
             @Override
             public ItemModel bake (BakingContext bakingContext) {
-                ModelResourceLocation loc = new ModelResourceLocation(model, variant);
-                return new PlatformDecoratedItemModel(loc);
+                ModelBaker modelbaker = bakingContext.blockModelBaker();
+                ResolvedModel resolvedmodel = modelbaker.getModel(ResourceLocation.fromNamespaceAndPath(StorageDrawers.MOD_ID, "block/oak_full_drawers_2"));
+                TextureSlots textureslots = resolvedmodel.getTopTextureSlots();
+
+                ModelRenderProperties modelrenderproperties = ModelRenderProperties.fromResolvedModel(modelbaker, resolvedmodel, textureslots);
+                return new PlatformDecoratedItemModel(model, variant, modelrenderproperties);
             }
 
             @Override
             public void resolveDependencies (Resolver resolver) {
-                resolver.resolve(model);
+                resolver.markDependency(model);
+                resolver.markDependency(ResourceLocation.fromNamespaceAndPath(StorageDrawers.MOD_ID, "block/oak_full_drawers_2"));
             }
         }
     }
@@ -155,41 +214,20 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         }
 
         @Override
-        public List<BakedQuad> getQuads (@Nullable BlockState state, @Nullable Direction side, RandomSource rand) {
-            List<BakedQuad> quads = new ArrayList<>();
-
+        public void collectParts (RandomSource randomSource, List<BlockModelPart> list) {
             Supplier<C> supplier = () -> parent.contextSupplier.makeContext(stack);
             ModelDecorator<C> decorator = parent.decorator;
             if (decorator.shouldRenderBase(supplier, stack))
-                quads.addAll(parent.getQuads(state, side, rand));
+                parent.collectParts(randomSource, list);
 
-            BiConsumer<BakedModel, RenderType> emitModel = (model, renderType) -> {
+            Consumer<BlockStateModel> emitModel = (model) -> {
                 if (model != null)
-                    quads.addAll(model.getQuads(state, side, rand));
+                    model.collectParts(randomSource, list);
             };
 
             try {
                 decorator.emitItemQuads(supplier, emitModel, stack);
-            } catch (Exception e) {
-                return quads;
-            }
-
-            return quads;
-        }
-
-        @Override
-        public TextureAtlasSprite getParticleIcon (ModelData data) {
-            return parent.getParticleIcon(data);
-        }
-
-        @Override
-        public ChunkRenderTypeSet getRenderTypes (BlockState state, RandomSource rand, ModelData data) {
-            return parent.getRenderTypes(state, rand, data);
-        }
-
-        @Override
-        public RenderType getRenderType (ItemStack itemStack) {
-            return parent.getRenderType(itemStack);
+            } catch (Exception e) { }
         }
     }
 }

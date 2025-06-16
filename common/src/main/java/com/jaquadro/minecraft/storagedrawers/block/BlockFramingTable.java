@@ -162,7 +162,7 @@ public class BlockFramingTable extends HorizontalDirectionalBlock implements Ent
             Direction dirLeft = state.getValue(FACING).getCounterClockWise();
             BlockPos pos2 = pos.relative(dirLeft);
             level.setBlock(pos2, state.setValue(PART, EnumFramingTablePart.LEFT), 3);
-            level.blockUpdated(pos, Blocks.AIR);
+            level.updateNeighborsAt(pos, Blocks.AIR);
             state.updateNeighbourShapes(level, pos, 3);
         }
     }

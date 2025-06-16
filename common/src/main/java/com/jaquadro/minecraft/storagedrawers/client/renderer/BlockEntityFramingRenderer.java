@@ -5,13 +5,10 @@ import com.jaquadro.minecraft.storagedrawers.block.*;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityFramingTable;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -20,6 +17,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
@@ -33,7 +31,7 @@ public class BlockEntityFramingRenderer implements BlockEntityRenderer<BlockEnti
     }
 
     @Override
-    public void render (@NotNull BlockEntityFramingTable blockEntityTable, float partialTickTime, @NotNull PoseStack matrix, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay) {
+    public void render (@NotNull BlockEntityFramingTable blockEntityTable, float partialTickTime, @NotNull PoseStack matrix, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay, Vec3 camPosition) {
         Level level = blockEntityTable.getLevel();
         if (level == null)
             return;
@@ -105,7 +103,7 @@ public class BlockEntityFramingRenderer implements BlockEntityRenderer<BlockEnti
 
         try {
             context.getItemModelResolver().updateForTopItem(
-                itemRenderState, item, ItemDisplayContext.GROUND, false, context.getBlockEntityRenderDispatcher().level, null, 0
+                itemRenderState, item, ItemDisplayContext.GROUND, context.getBlockEntityRenderDispatcher().level, null, 0
             );
 
             itemRenderState.render(matrix, buffer, combinedLight, combinedOverlay);

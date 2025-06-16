@@ -4,6 +4,7 @@
         "indicator": "storagedrawers:block/indicator/indicator_1_off",
         "indicatorOn": "storagedrawers:block/indicator/indicator_1_on"
     },
+    "render_type": "cutout_mipped",
     "elements": [ {
         "from": [ 1, 1, 8.99 ],
         "to": [ 15, 15, 16],

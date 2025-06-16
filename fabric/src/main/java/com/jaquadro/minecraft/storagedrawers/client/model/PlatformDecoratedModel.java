@@ -15,8 +15,10 @@ import net.fabricmc.fabric.api.renderer.v1.mesh.Mesh;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MutableMesh;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.item.ItemModel;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
@@ -41,7 +43,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
-public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel implements FabricBakedModel
+public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel implements FabricBlockStateModel
 {
     private final ModelDecorator<C> decorator;
     private final ModelContextSupplier<C> contextSupplier;
@@ -70,7 +72,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         return false;
     }
 
-    @Override
+    /*@Override
     public void emitItemQuads (QuadEmitter emitter, Supplier<RandomSource> randomSupplier) {
         Supplier<C> supplier = () -> contextSupplier.makeContext(stack);
 
@@ -94,12 +96,12 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         try {
             decorator.emitItemQuads(supplier, emitModel, stack);
         } catch (Exception e) { }
-    }
+    }*/
 
     @Override
-    public void emitBlockQuads (QuadEmitter emitter, BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, Predicate<@Nullable Direction> cullTest) {
+    public void emitQuads (QuadEmitter emitter, BlockAndTintGetter blockView, BlockPos pos, BlockState state, RandomSource random, Predicate<@Nullable Direction> cullTest) {
         if (state == null) {
-            parent.emitBlockQuads(emitter, blockView, state, pos, randomSupplier, cullTest);
+            parent.emitQuads(emitter, blockView, pos, null, random, cullTest);
             return;
         }
 
@@ -107,21 +109,19 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         if (fabricView == null)
             return;
 
-        RandomSource randomSource = randomSupplier.get();
-
         Object renderData = fabricView.getBlockEntityRenderData(pos);
-        Supplier<C> supplier = () -> contextSupplier.makeContext(state, null, randomSource, renderData, null);
+        Supplier<C> supplier = () -> contextSupplier.makeContext(state, random, renderData);
 
         if (decorator.shouldRenderBase(supplier))
-            parent.emitBlockQuads(emitter, blockView, state, pos, randomSupplier, cullTest);
+            parent.emitQuads(emitter, blockView, pos, state, random, cullTest);
 
-        BiConsumer<BakedModel, RenderType> emitModel = (model, renderType) -> {
+        BiConsumer<BlockStateModel, RenderType> emitModel = (model, renderType) -> {
             if (model != null) {
                 if (renderType == RenderType.translucent()) {
-                    Mesh mesh = getMesh(model, state, randomSource, renderType);
+                    Mesh mesh = getMesh(model, state, random, renderType);
                     mesh.outputTo(emitter);
                 } else
-                    model.emitBlockQuads(emitter, blockView, state, pos, randomSupplier, cullTest);
+                    model.emitBlockQuads(emitter, blockView, state, pos, random, cullTest);
             }
         };
 

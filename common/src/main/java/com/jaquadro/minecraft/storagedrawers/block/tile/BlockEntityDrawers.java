@@ -6,6 +6,8 @@ import com.jaquadro.minecraft.storagedrawers.api.storage.*;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.IProtectable;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.DrawerModelProperties;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataProvider;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.ControllerData;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.DetachedDrawerData;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
@@ -27,6 +29,7 @@ import com.texelsaurus.minecraft.chameleon.inventory.content.PositionContent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -48,7 +51,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.EnumSet;
 import java.util.UUID;
 
-public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDrawerGroup, IProtectable, INetworked, IFramedBlockEntity, Nameable
+public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDrawerGroup, IProtectable, INetworked, IFramedBlockEntity, Nameable, RenderDataProvider
 {
     private MaterialData materialData = new MaterialData();
     private final UpgradeData upgradeData = new DrawerUpgradeData();
@@ -512,7 +515,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
             return 0;
 
         int count = 0;
-        ItemStack playerStack = player.getInventory().getSelected();
+        ItemStack playerStack = player.getInventory().getSelectedItem();
         if (!playerStack.isEmpty())
             count = putItemsIntoSlot(slot, playerStack, playerStack.getCount());
 
@@ -599,7 +602,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
         super.readPortable(provider, tag);
 
         if (tag.contains("Lock")) {
-            EnumSet<LockAttribute> attrs = LockAttribute.getEnumSet(tag.getByte("Lock"));
+            EnumSet<LockAttribute> attrs = LockAttribute.getEnumSet(tag.getByteOr("Lock", (byte)0));
             if (attrs != null) {
                 drawerAttributes.setItemLocked(LockAttribute.LOCK_EMPTY, attrs.contains(LockAttribute.LOCK_EMPTY));
                 drawerAttributes.setItemLocked(LockAttribute.LOCK_POPULATED, attrs.contains(LockAttribute.LOCK_POPULATED));
@@ -610,31 +613,31 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
         }
 
         if (tag.contains("Shr"))
-            drawerAttributes.setIsConcealed(tag.getBoolean("Shr"));
+            drawerAttributes.setIsConcealed(tag.getBooleanOr("Shr", false));
         else
             drawerAttributes.setIsConcealed(false);
 
 
         if (tag.contains("Qua"))
-            drawerAttributes.setIsShowingQuantity(tag.getBoolean("Qua"));
+            drawerAttributes.setIsShowingQuantity(tag.getBooleanOr("Qua", false));
         else
             drawerAttributes.setIsShowingQuantity(false);
 
         owner = null;
         if (tag.contains("Own"))
-            owner = UUID.fromString(tag.getString("Own"));
+            owner = UUID.fromString(tag.getStringOr("Own", ""));
 
         securityKey = null;
         if (tag.contains("Sec"))
-            securityKey = tag.getString("Sec");
+            securityKey = tag.getStringOr("Sec", "");
 
         if (tag.contains("Pri"))
-            drawerAttributes.setPriority(tag.getInt("Pri"));
+            drawerAttributes.setPriority(tag.getIntOr("Pri", 0));
         else
             drawerAttributes.setPriority(0);
 
-        if (tag.contains("CustomName", 8))
-            name = parseCustomNameSafe(tag.getString("CustomName"), provider);
+        if (tag.contains("CustomName"))
+            name = parseCustomNameSafe(tag.get("CustomName"), provider);
 
         loading = false;
     }
@@ -746,7 +749,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
     }
 
     @Override
-    protected void applyImplicitComponents(DataComponentInput input) {
+    protected void applyImplicitComponents(DataComponentGetter input) {
         super.applyImplicitComponents(input);
         this.name = input.get(DataComponents.CUSTOM_NAME);
     }
@@ -767,6 +770,11 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
         if (capability == null || level == null)
             return null;
         return capability.getCapability(level, getBlockPos());
+    }
+
+    @Override
+    public @Nullable Object getRenderData () {
+        return DrawerModelProperties.getModelData(this);
     }
 
     /*public <T> T getCapability(@NotNull BlockCapability<T, Void> capability) {

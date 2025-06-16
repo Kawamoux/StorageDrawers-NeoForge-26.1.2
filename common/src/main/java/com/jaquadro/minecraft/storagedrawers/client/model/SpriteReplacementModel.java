@@ -5,17 +5,18 @@ import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,75 +24,96 @@ import java.util.Map;
 public class SpriteReplacementModel extends ParentModel
 {
     private TextureAtlasSprite sprite;
-    private Map<String, List<BakedQuad>> cache = new HashMap<>();
+    private Map<BlockModelPart, ReplacementBlockPart> cache = new HashMap<>();
 
-    public SpriteReplacementModel (@NotNull BakedModel parent, TextureAtlasSprite sprite) {
+    public SpriteReplacementModel (@NotNull BlockStateModel parent, TextureAtlasSprite sprite) {
         super(parent);
         this.sprite = sprite;
     }
 
-    public SpriteReplacementModel (@NotNull BakedModel parent, ItemStack stack) {
+    public SpriteReplacementModel (@NotNull BlockStateModel parent, ItemStack stack) {
         super(parent);
 
         if (stack != null && stack.getItem() instanceof BlockItem blockItem) {
             Block block = blockItem.getBlock();
             BlockRenderDispatcher disp = Minecraft.getInstance().getBlockRenderer();
-            BakedModel model = disp.getBlockModel(block.defaultBlockState());
-            sprite = model.getParticleIcon();
+            BlockStateModel model = disp.getBlockModel(block.defaultBlockState());
+            sprite = model.particleIcon();
         }
     }
 
     @Override
-    public List<BakedQuad> getQuads (@Nullable BlockState state, @Nullable Direction dir, RandomSource rand) {
-        if (sprite == null)
-            return super.getQuads(state, dir, rand);
-
-        String key = cacheKey(state, dir);
-        List<BakedQuad> list = cache.getOrDefault(key, null);
-        if (list == null) {
-            list = super.getQuads(state, dir, rand).stream().map(
-                bakedQuad -> (BakedQuad)new ReplacementBakedQuad(bakedQuad, sprite)).toList();
-            cache.put(key, list);
+    public void collectParts (RandomSource randomSource, List<BlockModelPart> list) {
+        if (sprite == null) {
+            super.collectParts(randomSource, list);
+            return;
         }
 
-        return list;
+        parent.collectParts(randomSource).forEach(part -> {
+            if (cache.containsKey(part))
+                list.add(cache.get(part));
+            else {
+                ReplacementBlockPart replacement = new ReplacementBlockPart(part, sprite);
+                if (cache.size() < 10)
+                    cache.put(part, replacement);
+                list.add(replacement);
+            }
+        });
     }
 
     @Override
-    public TextureAtlasSprite getParticleIcon () {
+    public TextureAtlasSprite particleIcon () {
         if (sprite == null)
-            return super.getParticleIcon();
+            return super.particleIcon();
 
         return sprite;
     }
 
-    private String cacheKey (@Nullable BlockState state, @Nullable Direction dir) {
-        return ((state != null) ? state.toString() : "") + "#" + ((dir != null) ? dir.toString() : "");
-    }
-
-    private static class ReplacementBakedQuad extends BakedQuad
+    private static class ReplacementBlockPart implements BlockModelPart
     {
-        TextureAtlasSprite sprite;
+        private BlockModelPart parent;
+        private TextureAtlasSprite sprite;
+        private List<BakedQuad> quads = new ArrayList<>();
 
-        public ReplacementBakedQuad (BakedQuad quad, @NotNull TextureAtlasSprite sprite) {
-            super(quad.getVertices().clone(), quad.getTintIndex(), quad.getDirection(), quad.getSprite(), quad.isShade(), quad.getLightEmission());
+        public ReplacementBlockPart(BlockModelPart part, TextureAtlasSprite sprite) {
+            parent = part;
             this.sprite = sprite;
-            remapQuad();
+
+            part.getQuads(null).forEach(quad -> quads.add(remapQuad(quad, sprite)));
+            for (Direction dir : Direction.values()) {
+                part.getQuads(dir).forEach(quad -> quads.add(remapQuad(quad, sprite)));
+            }
         }
 
         @Override
-        public @NotNull TextureAtlasSprite getSprite () {
+        public List<BakedQuad> getQuads (@Nullable Direction direction) {
+            return quads;
+        }
+
+        @Override
+        public boolean useAmbientOcclusion () {
+            return parent.useAmbientOcclusion();
+        }
+
+        @Override
+        public TextureAtlasSprite particleIcon () {
+            if (sprite == null)
+                return parent.particleIcon();
+
             return sprite;
         }
 
-        private void remapQuad() {
+        BakedQuad remapQuad (BakedQuad quad, TextureAtlasSprite sprite) {
+            int[] vertices = quad.vertices().clone();
+
             for(int i = 0; i < 4; ++i) {
                 int blk = DefaultVertexFormat.BLOCK.getVertexSize() / 4 * i;
                 int offset = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV) / 4;
-                this.vertices[blk + offset] = Float.floatToRawIntBits(this.sprite.getU(getUnInterpolatedU(super.sprite, Float.intBitsToFloat(this.vertices[blk + offset]))));
-                this.vertices[blk + offset + 1] = Float.floatToRawIntBits(this.sprite.getV(getUnInterpolatedV(super.sprite, Float.intBitsToFloat(this.vertices[blk + offset + 1]))));
+                vertices[blk + offset] = Float.floatToRawIntBits(sprite.getU(getUnInterpolatedU(quad.sprite(), Float.intBitsToFloat(vertices[blk + offset]))));
+                vertices[blk + offset + 1] = Float.floatToRawIntBits(sprite.getV(getUnInterpolatedV(quad.sprite(), Float.intBitsToFloat(vertices[blk + offset + 1]))));
             }
 
+            return new BakedQuad(vertices, quad.tintIndex(), quad.direction(), sprite, quad.shade(), quad.lightEmission());
         }
 
         private float getUnInterpolatedU(TextureAtlasSprite sprite, float u) {

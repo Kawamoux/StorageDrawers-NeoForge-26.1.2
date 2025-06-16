@@ -7,6 +7,7 @@ import net.minecraft.world.item.Item;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ComponentUtil
 {
@@ -18,21 +19,21 @@ public class ComponentUtil
         return Arrays.stream(description.getString().split("\n")).map(Component::literal).toList();
     }
 
-    public static void appendSplitDescription (List<Component> list, Item item) {
+    public static void appendSplitDescription (Consumer<Component> list, Item item) {
         appendSplitDescription(list, item, ChatFormatting.GRAY);
     }
 
-    public static void appendSplitDescription (List<Component> list, Component description) {
+    public static void appendSplitDescription (Consumer<Component> list, Component description) {
         appendSplitDescription(list, description, ChatFormatting.GRAY);
     }
 
-    public static void appendSplitDescription (List<Component> list, Item item, ChatFormatting formatting) {
+    public static void appendSplitDescription (Consumer<Component> list, Item item, ChatFormatting formatting) {
         for (MutableComponent component : getSplitDescription(item))
-            list.add(component.withStyle(formatting));
+            list.accept(component.withStyle(formatting));
     }
 
-    public static void appendSplitDescription (List<Component> list, Component description, ChatFormatting formatting) {
+    public static void appendSplitDescription (Consumer<Component> list, Component description, ChatFormatting formatting) {
         for (MutableComponent component : getSplitDescription(description))
-            list.add(component.withStyle(formatting));
+            list.accept(component.withStyle(formatting));
     }
 }

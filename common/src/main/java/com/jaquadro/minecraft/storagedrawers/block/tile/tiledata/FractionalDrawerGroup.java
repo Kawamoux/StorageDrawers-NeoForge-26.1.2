@@ -67,7 +67,7 @@ public class FractionalDrawerGroup extends BlockEntityDataShim implements IDrawe
     @Override
     public void read (HolderLookup.Provider provider, CompoundTag tag) {
         if (tag.contains("Drawers"))
-            storage.deserializeNBT(provider, tag.getCompound("Drawers"));
+            storage.deserializeNBT(provider, tag.getCompoundOrEmpty("Drawers"));
     }
 
     @Override
@@ -557,15 +557,15 @@ public class FractionalDrawerGroup extends BlockEntityDataShim implements IDrawe
                 convRate[i] = 0;
             }
 
-            pooledCount = tag.getInt("Count");
+            pooledCount = tag.getIntOr("Count", 0);
 
-            ListTag itemList = tag.getList("Items", Tag.TAG_COMPOUND);
+            ListTag itemList = tag.getListOrEmpty("Items");
             for (int i = 0; i < itemList.size(); i++) {
-                CompoundTag slotTag = itemList.getCompound(i);
-                int slot = slotTag.getByte("Slot");
+                CompoundTag slotTag = itemList.getCompoundOrEmpty(i);
+                int slot = slotTag.getByteOr("Slot", (byte)0);
 
-                protoStack[slot] = ItemStack.parseOptional(provider, slotTag.getCompound("Item"));
-                convRate[slot] = slotTag.getByte("Conv");
+                protoStack[slot] = ItemStack.parse(provider, slotTag.getCompoundOrEmpty("Item")).orElse(ItemStack.EMPTY);
+                convRate[slot] = slotTag.getByteOr("Conv", (byte)0);
 
                 IDrawerAttributes attrs = getAttributes();
                 matchers[slot] = attrs.isDictConvertible()

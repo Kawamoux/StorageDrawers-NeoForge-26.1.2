@@ -136,7 +136,7 @@ public class BaseBlockEntity extends BlockEntity
     }
 
     private void restoreLoadFailure (CompoundTag tag) {
-        for (String key : failureSnapshot.getAllKeys()) {
+        for (String key : failureSnapshot.keySet()) {
             if (!tag.contains(key))
                 tag.put(key, failureSnapshot.get(key).copy());
         }

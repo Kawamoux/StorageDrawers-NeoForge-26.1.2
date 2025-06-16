@@ -11,7 +11,7 @@ import com.jaquadro.minecraft.storagedrawers.client.model.SpriteReplacementModel
 import com.jaquadro.minecraft.storagedrawers.client.model.context.FramedModelContext;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -31,7 +31,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
     protected final DrawerModelStore.FrameMatSet matSet;
     protected final boolean shaded;
 
-    private static Map<BakedModel, Map<ResourceLocation, BakedModel>> replacementCache = new HashMap<>();
+    private static Map<BlockStateModel, Map<ResourceLocation, BlockStateModel>> replacementCache = new HashMap<>();
 
     public MaterialModelDecorator (DrawerModelStore.FrameMatSet matSet, boolean shaded) {
         this.matSet = matSet;
@@ -62,23 +62,24 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
     }
 
     @Override
-    public void emitQuads (Supplier<C> contextSupplier, BiConsumer<BakedModel, RenderType> emitModel) {
+    public void emitQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel) {
         FramedModelContext context = contextSupplier.get();
         if (context == null)
             return;
 
         MaterialData matData = context.materialData();
         if (matData != null && !matData.getEffectiveSide().isEmpty()) {
-            RenderType renderType = context.renderType();
-            if (renderType == null || renderType == RenderType.cutoutMipped())
+            // TODO: Quads vs parts for render type
+            //RenderType renderType = context.renderType();
+            //if (renderType == null || renderType == RenderType.cutoutMipped())
                 emitFramedQuads(context, emitModel);
-            if (shaded && (renderType == null || renderType == RenderType.translucent()))
+            //if (shaded && (renderType == null || renderType == RenderType.translucent()))
                 emitFramedOverlayQuads(context, emitModel);
         }
     }
 
     @Override
-    public void emitItemQuads (Supplier<C> contextSupplier, BiConsumer<BakedModel, RenderType> emitModel, ItemStack stack) {
+    public void emitItemQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack) {
         FramedModelContext context = contextSupplier.get();
         if (context == null)
             return;
@@ -91,22 +92,8 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
     }
 
-    @Override
-    public List<RenderType> getRenderTypes (BlockState state) {
-        if (shaded)
-            return List.of(RenderType.cutoutMipped(), RenderType.translucent());
-        return List.of(RenderType.cutoutMipped());
-    }
-
-    @Override
-    public List<RenderType> getRenderTypes (ItemStack stack) {
-        if (shaded)
-            return List.of(Sheets.cutoutBlockSheet(), Sheets.translucentItemSheet());
-        return List.of(Sheets.cutoutBlockSheet());
-    }
-
-    private BakedModel getReplacementModel (BakedModel baseModel, ItemStack material) {
-        Map<ResourceLocation, BakedModel> matCache;
+    private BlockStateModel getReplacementModel (BlockStateModel baseModel, ItemStack material) {
+        Map<ResourceLocation, BlockStateModel> matCache;
         if (replacementCache.containsKey(baseModel))
             matCache = replacementCache.get(baseModel);
         else {
@@ -115,7 +102,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
 
         ResourceLocation matName = BuiltInRegistries.ITEM.getKey(material.getItem());
-        BakedModel replacedModel = null;
+        BlockStateModel replacedModel = null;
         if (matCache.containsKey(matName))
             replacedModel = matCache.get(matName);
         else {
@@ -126,7 +113,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         return replacedModel;
     }
 
-    public void emitFramedQuads(FramedModelContext context, BiConsumer<BakedModel, RenderType> emitModel) {
+    public void emitFramedQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel) {
         Block block = context.state().getBlock();
 
         if (block instanceof IFramedBlock fb) {
@@ -134,33 +121,33 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
             if (matData != null && !matData.isEmpty()) {
                 if (matSet.sidePart() != null && fb.supportsFrameMaterial(FrameMaterial.SIDE)) {
                     emitModel.accept(getReplacementModel(getStoreModel(context, matSet.sidePart()),
-                        matData.getEffectiveSide()), RenderType.cutoutMipped());
+                        matData.getEffectiveSide()));
                 }
 
                 if (matSet.trimPart() != null && fb.supportsFrameMaterial(FrameMaterial.TRIM)) {
                     emitModel.accept(getReplacementModel(getStoreModel(context, matSet.trimPart()),
-                        matData.getEffectiveTrim()), RenderType.cutoutMipped());
+                        matData.getEffectiveTrim()));
                 }
 
                 if (matSet.frontPart() != null && fb.supportsFrameMaterial(FrameMaterial.FRONT)) {
                     emitModel.accept(getReplacementModel(getStoreModel(context, matSet.frontPart()),
-                        matData.getEffectiveFront()), RenderType.cutoutMipped());
+                        matData.getEffectiveFront()));
                 }
             }
         }
     }
 
-    public void emitFramedOverlayQuads(FramedModelContext context, BiConsumer<BakedModel, RenderType> emitModel) {
+    public void emitFramedOverlayQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel) {
         MaterialData matData = context.materialData();
         if (matData != null && !matData.isEmpty()) {
             if (matSet.shadeFrontPart() != null)
-                emitModel.accept(getStoreModel(context, matSet.shadeFrontPart()), RenderType.translucent());
+                emitModel.accept(getStoreModel(context, matSet.shadeFrontPart()));
             if (matSet.shadeSidePart() != null)
-                emitModel.accept(getStoreModel(context, matSet.shadeSidePart()), RenderType.translucent());
+                emitModel.accept(getStoreModel(context, matSet.shadeSidePart()));
         }
     }
 
-    protected abstract BakedModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part);
+    protected abstract BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part);
 
     public static class Single<C extends FramedModelContext> extends MaterialModelDecorator<C>
     {
@@ -169,7 +156,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
 
         @Override
-        protected BakedModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
+        protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
             return DrawerModelStore.getModel(part);
         }
     }
@@ -181,7 +168,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
 
         @Override
-        protected BakedModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
+        protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
             Direction dir = context.state().getValue(BlockDrawers.FACING);
             return DrawerModelStore.getModel(part, dir);
         }
@@ -194,7 +181,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
 
         @Override
-        protected BakedModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
+        protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
             Direction dir = context.state().getValue(BlockDrawers.FACING);
             boolean half = false;
             Block block = context.state().getBlock();
@@ -212,7 +199,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
 
         @Override
-        protected BakedModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
+        protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
             Direction dir = context.state().getValue(BlockDrawers.FACING);
             boolean half = false;
             int count = 1;
@@ -234,7 +221,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
 
         @Override
-        protected BakedModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
+        protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
             Direction dir = context.state().getValue(BlockDrawers.FACING);
             boolean half = false;
             EnumCompDrawer open = EnumCompDrawer.OPEN1;

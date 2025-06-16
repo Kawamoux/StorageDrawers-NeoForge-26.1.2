@@ -69,7 +69,7 @@ public class BlockController extends HorizontalDirectionalBlock implements INetw
         if (blockEntity == null)
             return InteractionResult.FAIL;
 
-        ItemStack item = player.getInventory().getSelected();
+        ItemStack item = player.getInventory().getSelectedItem();
         if (!item.isEmpty() && toggle(level, pos, player, item.getItem()))
             return InteractionResult.SUCCESS;
 
@@ -82,7 +82,7 @@ public class BlockController extends HorizontalDirectionalBlock implements INetw
 
             if (item.getItem() instanceof ItemUpgradeRemote remote) {
                 item = remote.setBoundController(item, blockEntity);
-                player.getInventory().setItem(player.getInventory().selected, item);
+                player.getInventory().setItem(player.getInventory().getSelectedSlot(), item);
 
                 player.displayClientMessage(Component.translatable("message.storagedrawers.updated_remote_binding", pos.getX(), pos.getY(), pos.getZ()), true);
             }

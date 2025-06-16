@@ -12,11 +12,12 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class ItemUpgradeRemote extends ItemUpgrade
 {
@@ -43,15 +44,15 @@ public class ItemUpgradeRemote extends ItemUpgrade
     }
 
     @Override
-    public void appendHoverText (ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
+    public void appendHoverText (ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, tooltip, flag);
 
         BlockPos pos = getBoundPosition(stack);
         if (pos != null)
-            tooltip.add(Component.translatable(getDescriptionId() + ".bound", pos.getX(), pos.getY(), pos.getZ())
+            tooltip.accept(Component.translatable(getDescriptionId() + ".bound", pos.getX(), pos.getY(), pos.getZ())
                 .withStyle(ChatFormatting.YELLOW));
         else
-            tooltip.add(Component.translatable(getDescriptionId() + ".bound")
+            tooltip.accept(Component.translatable(getDescriptionId() + ".bound")
                 .withStyle(ChatFormatting.RED));
     }
 

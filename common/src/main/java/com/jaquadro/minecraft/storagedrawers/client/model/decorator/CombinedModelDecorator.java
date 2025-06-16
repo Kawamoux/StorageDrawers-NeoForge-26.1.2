@@ -2,12 +2,11 @@ package com.jaquadro.minecraft.storagedrawers.client.model.decorator;
 
 import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -54,49 +53,13 @@ public class CombinedModelDecorator<C extends ModelContext> extends ModelDecorat
     }
 
     @Override
-    public List<RenderType> getRenderTypes (BlockState state) {
-        if (decorators.isEmpty())
-            return super.getRenderTypes(state);
-        else if (decorators.size() == 1)
-            return decorators.get(0).getRenderTypes(state);
-
-        List<RenderType> types = new ArrayList<>(decorators.get(0).getRenderTypes(state));
-        for (int i = 1; i < decorators.size(); i++) {
-            for (var type : decorators.get(i).getRenderTypes(state)) {
-                if (!types.contains(type))
-                    types.add(type);
-            }
-        }
-
-        return types;
-    }
-
-    @Override
-    public List<RenderType> getRenderTypes (ItemStack stack) {
-        if (decorators.isEmpty())
-            return super.getRenderTypes(stack);
-        else if (decorators.size() == 1)
-            return decorators.get(0).getRenderTypes(stack);
-
-        List<RenderType> types = new ArrayList<>(decorators.get(0).getRenderTypes(stack));
-        for (int i = 1; i < decorators.size(); i++) {
-            for (var type : decorators.get(i).getRenderTypes(stack)) {
-                if (!types.contains(type))
-                    types.add(type);
-            }
-        }
-
-        return types;
-    }
-
-    @Override
-    public void emitQuads (Supplier<C> contextSupplier, BiConsumer<BakedModel, RenderType> emitModel) {
+    public void emitQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel) {
         for (var decorator : decorators)
             decorator.emitQuads(contextSupplier, emitModel);
     }
 
     @Override
-    public void emitItemQuads (Supplier<C> contextSupplier, BiConsumer<BakedModel, RenderType> emitModel, ItemStack stack) {
+    public void emitItemQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack) {
         for (var decorator : decorators)
             decorator.emitItemQuads(contextSupplier, emitModel, stack);
     }

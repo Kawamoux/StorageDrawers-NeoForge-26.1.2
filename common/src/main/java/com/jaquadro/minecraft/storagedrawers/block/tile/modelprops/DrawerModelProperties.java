@@ -47,8 +47,8 @@ public class DrawerModelProperties implements ModelContextSupplier<DrawerModelCo
     }
 
     @Override
-    public DrawerModelContext makeContext (@Nullable BlockState state, @Nullable Direction side, RandomSource rand, Object renderData, @Nullable RenderType type) {
-        DrawerModelContext context = new DrawerModelContext(state, side, rand, type);
+    public DrawerModelContext makeContext (@Nullable BlockState state, RandomSource rand, Object renderData) {
+        DrawerModelContext context = new DrawerModelContext(state, rand);
         if (renderData instanceof DrawerModelProperties props) {
             context.attr(props.attributes)
                 .group(props.group)

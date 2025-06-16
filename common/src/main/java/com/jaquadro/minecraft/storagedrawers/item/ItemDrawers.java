@@ -15,12 +15,13 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 public class ItemDrawers extends BlockItem implements IPortable
 {
@@ -29,8 +30,8 @@ public class ItemDrawers extends BlockItem implements IPortable
     }
 
     @Override
-    public void appendHoverText (ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        super.appendHoverText(stack, context, tooltip, flag);
+    public void appendHoverText (ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        super.appendHoverText(stack, context, display, tooltip, flag);
 
         //if (stack.hasTag() && stack.getTag().contains("material")) {
         //    String key = stack.getTag().getString("material");
@@ -38,16 +39,16 @@ public class ItemDrawers extends BlockItem implements IPortable
         //}
 
         Component textCapacity = Component.translatable("tooltip.storagedrawers.drawers.capacity", getCapacityForBlock(stack));
-        tooltip.add(Component.literal("").append(textCapacity).withStyle(ChatFormatting.GRAY));
+        tooltip.accept(Component.literal("").append(textCapacity).withStyle(ChatFormatting.GRAY));
 
         CustomData data = stack.get(DataComponents.BLOCK_ENTITY_DATA);
         if (data != null) {
             Component textSealed = Component.translatable("tooltip.storagedrawers.drawers.sealed");
-            tooltip.add(Component.literal("").append(textSealed).withStyle(ChatFormatting.YELLOW));
+            tooltip.accept(Component.literal("").append(textSealed).withStyle(ChatFormatting.YELLOW));
         }
 
         if (ModCommonConfig.INSTANCE.GENERAL.heavyDrawers.get() && isHeavy(context.registries(), stack)) {
-            tooltip.add(Component.translatable("tooltip.storagedrawers.drawers.too_heavy").withStyle(ChatFormatting.RED));
+            tooltip.accept(Component.translatable("tooltip.storagedrawers.drawers.too_heavy").withStyle(ChatFormatting.RED));
         }
 
         //tooltip.add(getDescription().applyTextStyle(TextFormatting.GRAY));

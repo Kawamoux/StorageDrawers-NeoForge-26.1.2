@@ -8,6 +8,8 @@ import com.jaquadro.minecraft.storagedrawers.api.storage.*;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.IProtectable;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute;
 import com.jaquadro.minecraft.storagedrawers.block.BlockControllerIO;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.FramedModelProperties;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataProvider;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.ControllerHostData;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities;
@@ -31,12 +33,13 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class BlockEntityController extends BaseBlockEntity implements IDrawerGroup, IControlGroup, IFramedBlockEntity
+public class BlockEntityController extends BaseBlockEntity implements IDrawerGroup, IControlGroup, IFramedBlockEntity, RenderDataProvider
 {
     private static final int PRI_LOCKED = 0;
     private static final int PRI_NORMAL = 1;
@@ -52,6 +55,11 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
     @Override
     public MaterialData material () {
         return materialData;
+    }
+
+    @Override
+    public @Nullable Object getRenderData () {
+        return FramedModelProperties.getModelData(this);
     }
 
     private static class StorageRecord
@@ -252,11 +260,11 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
         int count = 0;
 
         if (!dumpInventory) {
-            ItemStack currentStack = player.getInventory().getSelected();
+            ItemStack currentStack = player.getInventory().getSelectedItem();
             if (!currentStack.isEmpty()) {
                 count = insertItems(currentStack, player);
                 if (currentStack.getCount() == 0)
-                    player.getInventory().setItem(player.getInventory().selected, ItemStack.EMPTY);
+                    player.getInventory().setItem(player.getInventory().getSelectedSlot(), ItemStack.EMPTY);
             }
         }
         else {

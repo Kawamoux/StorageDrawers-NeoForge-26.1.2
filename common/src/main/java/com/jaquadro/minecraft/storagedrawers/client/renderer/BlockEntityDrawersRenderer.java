@@ -16,26 +16,27 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
-import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
-import net.minecraft.client.renderer.special.SpecialModelRenderer;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -48,6 +49,7 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
 
     private ItemRenderer itemRenderer;
     private ItemStackRenderState itemRenderState = new ItemStackRenderState();
+    private RandomSource randomSource = RandomSource.create();
 
     private final BlockEntityRendererProvider.Context context;
 
@@ -56,7 +58,7 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
     }
 
     @Override
-    public void render (@NotNull BlockEntityDrawers blockEntityDrawers, float partialTickTime, @NotNull PoseStack matrix, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay) {
+    public void render (@NotNull BlockEntityDrawers blockEntityDrawers, float partialTickTime, @NotNull PoseStack matrix, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay, Vec3 camPosition) {
 
         Player player = Minecraft.getInstance().player;
         if (player == null)
@@ -205,7 +207,7 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
 
         try {
             context.getItemModelResolver().updateForTopItem(
-                this.itemRenderState, itemStack, ItemDisplayContext.GUI, false, context.getBlockEntityRenderDispatcher().level, null, 0
+                this.itemRenderState, itemStack, ItemDisplayContext.GUI, context.getBlockEntityRenderDispatcher().level, null, 0
             );
 
             //BakedModel itemModel = itemRenderer.getModel(itemStack, null, null, 0);
@@ -267,13 +269,19 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         matrixStack.pushPose();
 
         alignRendering(matrixStack, side);
-        BakedModel model = DrawerModelStore.getModel(DrawerModelStore.DynamicPart.FRAMED_CONTROLLER_SHADING, Direction.SOUTH);
+        BlockStateModel model = DrawerModelStore.getModel(DrawerModelStore.DynamicPart.FRAMED_CONTROLLER_SHADING, Direction.SOUTH);
         if (model != null) {
-            List<BakedQuad> quads = model.getQuads(block.defaultBlockState(), null, null);
+            List<BlockModelPart> parts = model.collectParts(randomSource);
 
             VertexConsumer builder = buffer.getBuffer(RenderType.translucent());
-            for (BakedQuad quad : quads)
-                builder.putBulkData(matrixStack.last(), quad, 1, 1, 1, 1, combinedLight, combinedOverlay);
+            for (BlockModelPart part : parts) {
+                for (Direction dir : Direction.values()) {
+                    for (BakedQuad quad : part.getQuads(dir))
+                        builder.putBulkData(matrixStack.last(), quad, 1, 1, 1, 1, combinedLight, combinedOverlay);
+                }
+                for (BakedQuad quad : part.getQuads(null))
+                    builder.putBulkData(matrixStack.last(), quad, 1, 1, 1, 1, combinedLight, combinedOverlay);
+            }
         }
 
         matrixStack.popPose();

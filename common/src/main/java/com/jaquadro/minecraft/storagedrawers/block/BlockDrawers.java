@@ -20,6 +20,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -55,6 +56,14 @@ import java.util.*;
 
 public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, EntityBlock
 {
+    public enum GeometryType {
+        Slot,
+        Count,
+        Label,
+        Indicator,
+        IndicatorBase
+    }
+
     private static final VoxelShape AABB_NORTH_FULL = Shapes.join(Shapes.block(), Block.box(1, 1, 0, 15, 15, 1), BooleanOp.ONLY_FIRST);
     private static final VoxelShape AABB_SOUTH_FULL = Shapes.join(Shapes.block(), Block.box(1, 1, 15, 15, 15, 16), BooleanOp.ONLY_FIRST);
     private static final VoxelShape AABB_WEST_FULL = Shapes.join(Shapes.block(), Block.box(0, 1, 1, 1, 15, 15), BooleanOp.ONLY_FIRST);
@@ -267,7 +276,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             if (!context.player.isCreative()) {
                 item.shrink(1);
                 if (item.getCount() <= 0)
-                    context.player.getInventory().setItem(context.player.getInventory().selected, ItemStack.EMPTY);
+                    context.player.getInventory().setItem(context.player.getInventory().getSelectedSlot(), ItemStack.EMPTY);
                 context.level.playSound(null, context.pos, SoundEvents.WOOD_PLACE, SoundSource.PLAYERS, .2f,
                     ((context.level.random.nextFloat() - context.level.random.nextFloat()) * .7f + 1) * 2);
             }
@@ -283,7 +292,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             if (!context.player.isCreative()) {
                 item.shrink(1);
                 if (item.getCount() <= 0)
-                    context.player.getInventory().setItem(context.player.getInventory().selected, ItemStack.EMPTY);
+                    context.player.getInventory().setItem(context.player.getInventory().getSelectedSlot(), ItemStack.EMPTY);
                 context.level.playSound(null, context.pos, SoundEvents.WOOD_PLACE, SoundSource.PLAYERS, .2f,
                     ((context.level.random.nextFloat() - context.level.random.nextFloat()) * .7f + 1) * 2);
             }
@@ -358,7 +367,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             if (!context.player.isCreative()) {
                 item.shrink(1);
                 if (item.getCount() <= 0)
-                    context.player.getInventory().setItem(context.player.getInventory().selected, ItemStack.EMPTY);
+                    context.player.getInventory().setItem(context.player.getInventory().getSelectedSlot(), ItemStack.EMPTY);
             }
 
             return Optional.of(InteractionResult.SUCCESS);
@@ -567,13 +576,10 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         return (side == Direction.UP) ? getSignal(state, worldIn, pos, side) : 0;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public void onRemove(BlockState p_51538_, Level p_51539_, BlockPos p_51540_, BlockState p_51541_, boolean p_51542_) {
-        if (!p_51538_.is(p_51541_.getBlock())) {
-            p_51539_.updateNeighbourForOutputSignal(p_51540_, this);
-            super.onRemove(p_51538_, p_51539_, p_51540_, p_51541_, p_51542_);
-        }
+    protected void affectNeighborsAfterRemoval (BlockState state, ServerLevel level, BlockPos pos, boolean $$3) {
+        if (!level.getBlockState(pos).is(state.getBlock()))
+            level.updateNeighbourForOutputSignal(pos, this);
     }
 
     @Override

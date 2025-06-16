@@ -1,53 +1,29 @@
 package com.jaquadro.minecraft.storagedrawers.client.model;
 
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemTransforms;
+import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-public class ParentModel implements BakedModel
+public class ParentModel implements BlockStateModel
 {
     @NotNull
-    protected final BakedModel parent;
+    protected final BlockStateModel parent;
 
-    public ParentModel (@NotNull BakedModel parent) {
+    public ParentModel (@NotNull BlockStateModel parent) {
         this.parent = parent;
     }
 
     @Override
-    public List<BakedQuad> getQuads (@Nullable BlockState state, @Nullable Direction dir, RandomSource rand) {
-        return parent.getQuads(state, dir, rand);
+    public void collectParts (RandomSource randomSource, List<BlockModelPart> list) {
+        parent.collectParts(randomSource, list);
     }
 
     @Override
-    public boolean useAmbientOcclusion () {
-        return parent.useAmbientOcclusion();
-    }
-
-    @Override
-    public boolean isGui3d () {
-        return parent.isGui3d();
-    }
-
-    @Override
-    public boolean usesBlockLight () {
-        return parent.usesBlockLight();
-    }
-
-    @Override
-    public TextureAtlasSprite getParticleIcon () {
-        return parent.getParticleIcon();
-    }
-
-    @Override
-    public ItemTransforms getTransforms () {
-        return parent.getTransforms();
+    public TextureAtlasSprite particleIcon () {
+        return parent.particleIcon();
     }
 }

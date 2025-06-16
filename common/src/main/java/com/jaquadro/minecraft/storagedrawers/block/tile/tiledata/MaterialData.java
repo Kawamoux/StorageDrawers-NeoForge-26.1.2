@@ -144,40 +144,40 @@ public class MaterialData extends BlockEntityDataShim implements IFramedMaterial
     public void read (HolderLookup.Provider provider, CompoundTag tag) {
         frameBase = ItemStack.EMPTY;
         if (tag.contains("MatB"))
-            frameBase = ItemStack.parseOptional(provider, tag.getCompound("MatB"));
+            frameBase = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatB")).orElse(ItemStack.EMPTY);
 
         materialSide = ItemStack.EMPTY;
         if (tag.contains("MatS"))
-            materialSide = ItemStack.parseOptional(provider, tag.getCompound("MatS"));
+            materialSide = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatS")).orElse(ItemStack.EMPTY);
 
         materialFront = ItemStack.EMPTY;
         if (tag.contains("MatF"))
-            materialFront = ItemStack.parseOptional(provider, tag.getCompound("MatF"));
+            materialFront = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatF")).orElse(ItemStack.EMPTY);
 
         materialTrim = ItemStack.EMPTY;
         if (tag.contains("MatT"))
-            materialTrim = ItemStack.parseOptional(provider, tag.getCompound("MatT"));
+            materialTrim = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatT")).orElse(ItemStack.EMPTY);
     }
 
     @Override
     public CompoundTag write (HolderLookup.Provider provider, CompoundTag tag) {
         if (!frameBase.isEmpty())
-            tag.put("MatB", frameBase.saveOptional(provider));
+            tag.put("MatB", frameBase.save(provider));
         else if (tag.contains("MatB"))
             tag.remove("MatB");
 
         if (!materialSide.isEmpty())
-            tag.put("MatS", materialSide.saveOptional(provider));
+            tag.put("MatS", materialSide.save(provider));
         else if (tag.contains("MatS"))
             tag.remove("MatS");
 
         if (!materialFront.isEmpty())
-            tag.put("MatF", materialFront.saveOptional(provider));
+            tag.put("MatF", materialFront.save(provider));
         else if (tag.contains("MatF"))
             tag.remove("MatF");
 
         if (!materialTrim.isEmpty())
-            tag.put("MatT", materialTrim.saveOptional(provider));
+            tag.put("MatT", materialTrim.save(provider));
         else if (tag.contains("MatT"))
             tag.remove("MatT");
 

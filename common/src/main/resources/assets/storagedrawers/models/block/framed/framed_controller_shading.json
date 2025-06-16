@@ -4,6 +4,7 @@
         "side": "storagedrawers:block/overlay/controller_side",
         "particle": "storagedrawers:block/overlay/controller_front"
     },
+    "render_type": "translucent",
     "elements": [
         {
             "from": [1, 1, 0.99],

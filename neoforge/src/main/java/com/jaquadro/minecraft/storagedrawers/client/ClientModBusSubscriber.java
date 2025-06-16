@@ -15,10 +15,8 @@ import com.jaquadro.minecraft.storagedrawers.inventory.FramingTableScreen;
 import com.jaquadro.minecraft.storagedrawers.inventory.tooltip.DetachedDrawerTooltip;
 import com.jaquadro.minecraft.storagedrawers.inventory.tooltip.KeyringTooltip;
 import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.resources.model.MissingBlockModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
@@ -104,27 +102,25 @@ public class ClientModBusSubscriber
         ModBlocks.getDrawers().forEach(blockDrawers -> replaceBlock(event, blockDrawers, BakedModelProvider::makeStandardDrawerModel));
     }
 
-    public static void replaceBlock(ModelEvent.ModifyBakingResult event, Block block, Function<BakedModel, BakedModel> replacer) {
+    public static void replaceBlock(ModelEvent.ModifyBakingResult event, Block block, Function<BlockStateModel, BlockStateModel> replacer) {
         for (BlockState state : block.getStateDefinition().getPossibleStates()) {
-            ModelResourceLocation modelResource = BlockModelShaper.stateToModelLocation(state);
-            replaceBlock(event, modelResource, replacer);
+            replaceBlock(event, state, replacer);
         }
     }
 
-    private static void replaceBlock (ModelEvent.ModifyBakingResult event, ModelResourceLocation modelResource, Function<BakedModel, BakedModel> replacer) {
-        BakedModel missing = event.getBakingResult().blockStateModels().get(MissingBlockModel.VARIANT);
-        BakedModel parentModel = event.getBakingResult().blockStateModels().get(modelResource);
+    private static void replaceBlock (ModelEvent.ModifyBakingResult event, BlockState modelResource, Function<BlockStateModel, BlockStateModel> replacer) {
+        BlockStateModel parentModel = event.getBakingResult().blockStateModels().get(modelResource);
         if (parentModel == null) {
             StorageDrawers.log.warn("Got back null model from ModelBakeEvent.ModelManager for resource " + modelResource.toString());
             return;
-        } else if (parentModel == missing)
-            return;
+        }// else if (parentModel == missing)
+        //    return;
 
         if (parentModel instanceof ParentModel)
             return;
 
         if (DrawerModelStore.INSTANCE.isTargetedModel(modelResource)) {
-            BakedModel model = replacer.apply(parentModel);
+            BlockStateModel model = replacer.apply(parentModel);
             ItemModelStore.models.put(modelResource, model);
             event.getBakingResult().blockStateModels().put(modelResource, model);
         }

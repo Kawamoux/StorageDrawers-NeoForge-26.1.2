@@ -152,17 +152,17 @@ public class DetachedDrawerData implements IDrawer
             return;
 
         if (nbt.contains("Item"))
-            tagItem = ItemStack.parseOptional(provider, nbt.getCompound("Item"));
+            tagItem = ItemStack.parse(provider, nbt.getCompoundOrEmpty("Item")).orElse(ItemStack.EMPTY);
         if (nbt.contains("Count"))
-            tagCount = nbt.getInt("Count");
+            tagCount = nbt.getIntOr("Count", 0);
 
         if (nbt.contains("StorageMult"))
-            storageMult = nbt.getInt("StorageMult");
+            storageMult = nbt.getIntOr("StorageMult", 0);
         else
             storageMult = ModCommonConfig.INSTANCE.GENERAL.baseStackStorage.get() * 8;
 
         if (nbt.contains("Heavy"))
-            setIsHeavy(nbt.getBoolean("Heavy"));
+            setIsHeavy(nbt.getBooleanOr("Heavy", false));
 
         setStoredItemRaw(tagItem);
         setStoredItemCountRaw(tagCount);
