@@ -25,6 +25,7 @@ public class DrawerModelProperties implements ModelContextSupplier<DrawerModelCo
 {
     public static final DrawerModelProperties INSTANCE = new DrawerModelProperties();
 
+    public static final ModelProperty<BlockState> BLOCKSTATE = new ModelProperty<>();
     public static final ModelProperty<IDrawerAttributes> ATTRIBUTES = new ModelProperty<>();
     public static final ModelProperty<IDrawerGroup> DRAWER_GROUP = new ModelProperty<>();
     public static final ModelProperty<IProtectable> PROTECTABLE = new ModelProperty<>();
@@ -38,9 +39,18 @@ public class DrawerModelProperties implements ModelContextSupplier<DrawerModelCo
             .with(MATERIAL, blockEntity.material()).build();
     }
 
+    public static ModelData getModelData (BlockState blockState, ModelData data) {
+        return ModelData.builder()
+            .with(BLOCKSTATE, blockState)
+            .with(ATTRIBUTES, data.get(ATTRIBUTES))
+            .with(DRAWER_GROUP, data.get(DRAWER_GROUP))
+            .with(PROTECTABLE, data.get(PROTECTABLE))
+            .with(MATERIAL, data.get(MATERIAL)).build();
+    }
+
     @Override
-    public DrawerModelContext makeContext (@Nullable BlockState state, @Nullable Direction side, RandomSource rand, ModelData extraData, @Nullable RenderType type) {
-        return new DrawerModelContext(state, side, rand, type)
+    public DrawerModelContext makeContext (@Nullable BlockState state, RandomSource rand, ModelData extraData) {
+        return new DrawerModelContext(state, rand)
             .attr(extraData.get(ATTRIBUTES))
             .group(extraData.get(DRAWER_GROUP))
             .protectable(extraData.get(PROTECTABLE))

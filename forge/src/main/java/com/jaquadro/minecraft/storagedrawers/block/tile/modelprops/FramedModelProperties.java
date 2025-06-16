@@ -23,6 +23,7 @@ public class FramedModelProperties implements ModelContextSupplier<FramedModelCo
 {
     public static final FramedModelProperties INSTANCE = new FramedModelProperties();
 
+    public static final ModelProperty<BlockState> BLOCKSTATE = new ModelProperty<>();
     public static final ModelProperty<IFramedMaterials> MATERIAL = new ModelProperty<>();
 
     public static ModelData getModelData (IFramedBlockEntity blockEntity) {
@@ -30,9 +31,15 @@ public class FramedModelProperties implements ModelContextSupplier<FramedModelCo
             .with(MATERIAL, blockEntity.material()).build();
     }
 
+    public static ModelData getModelData (BlockState state, ModelData data) {
+        return ModelData.builder()
+            .with(BLOCKSTATE, state)
+            .with(MATERIAL, data.get(MATERIAL)).build();
+    }
+
     @Override
-    public FramedModelContext makeContext (@Nullable BlockState state, @Nullable Direction side, RandomSource rand, ModelData extraData, @Nullable RenderType type) {
-        return new FramedModelContext(state, side, rand, type)
+    public FramedModelContext makeContext (@Nullable BlockState state, RandomSource rand, ModelData extraData) {
+        return new FramedModelContext(state, rand)
             .materialData(new MaterialData(extraData.get(MATERIAL)));
     }
 

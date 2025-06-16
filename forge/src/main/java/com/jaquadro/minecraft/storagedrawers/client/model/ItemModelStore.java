@@ -1,12 +1,12 @@
 package com.jaquadro.minecraft.storagedrawers.client.model;
 
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ItemModelStore
 {
-    public static Map<ModelResourceLocation, BakedModel> models = new HashMap<>();
+    public static Map<BlockState, BlockStateModel> models = new HashMap<>();
 }

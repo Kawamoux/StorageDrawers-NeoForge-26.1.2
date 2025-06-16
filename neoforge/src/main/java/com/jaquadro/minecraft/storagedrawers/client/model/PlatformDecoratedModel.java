@@ -3,6 +3,7 @@ package com.jaquadro.minecraft.storagedrawers.client.model;
 import com.google.common.base.Suppliers;
 import com.jaquadro.minecraft.storagedrawers.StorageDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataProvider;
+import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
 import com.jaquadro.minecraft.storagedrawers.client.model.decorator.ModelDecorator;
 import com.mojang.serialization.Codec;
@@ -75,15 +76,16 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
 
     public static class PlatformDecoratedItemModel implements ItemModel
     {
-        ResourceLocation location;
-        String variant;
+        private final ResourceLocation location;
+        private final String variant;
+        private final ModelRenderProperties properties;
+        private final Supplier<Vector3f[]> extents;
+        private final Map<MaterialData, BlockStateModel> modelCache = new HashMap<>();
+
         PlatformDecoratedModel<?> parent;
         BlockStateModel model;
         ItemStack stack;
         BlockState state;
-        ModelRenderProperties properties;
-
-        private final Supplier<Vector3f[]> extents;
 
         public PlatformDecoratedItemModel (ResourceLocation location, String variant, ModelRenderProperties properties) {
             this.location = location;
