@@ -73,6 +73,11 @@ public class BlockEntityControllerIO extends BaseBlockEntity implements IDrawerG
     }
 
     @Override
+    public void validateRemoteNode (INetworked node) {
+
+    }
+
+    @Override
     public void invalidateRemoteNode (INetworked node) {
 
     }

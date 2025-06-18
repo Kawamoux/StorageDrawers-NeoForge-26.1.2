@@ -26,7 +26,19 @@ public abstract class ModelDecorator<C extends ModelContext>
         return true;
     }
 
-    public void emitQuads(Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel) { }
+    public List<RenderType> getRenderTypes (BlockState state) {
+        return List.of(RenderType.solid());
+    }
 
-    public void emitItemQuads(Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack) { }
+    public void emitQuads(Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel) {
+        emitQuads(contextSupplier, emitModel, null);
+    }
+
+    public void emitQuads(Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, RenderType renderType) { }
+
+    public void emitItemQuads(Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack) {
+        emitItemQuads(contextSupplier, emitModel, stack, null);
+    }
+
+    public void emitItemQuads(Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack, RenderType renderType) { }
 }

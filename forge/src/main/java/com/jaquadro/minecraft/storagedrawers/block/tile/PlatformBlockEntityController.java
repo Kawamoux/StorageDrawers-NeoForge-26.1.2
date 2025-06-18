@@ -1,6 +1,6 @@
 package com.jaquadro.minecraft.storagedrawers.block.tile;
 
-import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.FramedModelProperties;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.ForgeFramedModelProperties;
 import com.jaquadro.minecraft.storagedrawers.capabilities.PlatformCapabilities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -20,7 +20,7 @@ public class PlatformBlockEntityController extends BlockEntityController
     @NotNull
     @Override
     public ModelData getModelData () {
-        return FramedModelProperties.getModelData(this);
+        return ForgeFramedModelProperties.getForgeModelData(this).modelData;
     }
 
     @Override

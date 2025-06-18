@@ -2,16 +2,9 @@ package com.jaquadro.minecraft.storagedrawers.client;
 
 import com.jaquadro.minecraft.storagedrawers.ModConstants;
 import com.jaquadro.minecraft.storagedrawers.StorageDrawers;
-import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.DrawerModelProperties;
-import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.FramedModelProperties;
 import com.jaquadro.minecraft.storagedrawers.client.gui.ClientDetachedDrawerTooltip;
 import com.jaquadro.minecraft.storagedrawers.client.gui.ClientKeyringTooltip;
 import com.jaquadro.minecraft.storagedrawers.client.model.*;
-import com.jaquadro.minecraft.storagedrawers.client.model.context.DrawerModelContext;
-import com.jaquadro.minecraft.storagedrawers.client.model.context.FramedModelContext;
-import com.jaquadro.minecraft.storagedrawers.client.model.decorator.CombinedModelDecorator;
-import com.jaquadro.minecraft.storagedrawers.client.model.decorator.DrawerModelDecorator;
-import com.jaquadro.minecraft.storagedrawers.client.model.decorator.MaterialModelDecorator;
 import com.jaquadro.minecraft.storagedrawers.client.renderer.BlockEntityDrawersRenderer;
 import com.jaquadro.minecraft.storagedrawers.client.renderer.BlockEntityFramingRenderer;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlockEntities;
@@ -22,17 +15,8 @@ import com.jaquadro.minecraft.storagedrawers.inventory.FramingTableScreen;
 import com.jaquadro.minecraft.storagedrawers.inventory.tooltip.DetachedDrawerTooltip;
 import com.jaquadro.minecraft.storagedrawers.inventory.tooltip.KeyringTooltip;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.ItemBlockRenderTypes;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.renderer.special.SpecialModelRenderers;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.item.ItemModels;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.MissingBlockModel;
-import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
@@ -44,7 +28,6 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
-import java.util.List;
 import java.util.function.Function;
 
 @Mod.EventBusSubscriber(modid = StorageDrawers.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
@@ -63,10 +46,6 @@ public class ClientModBusSubscriber {
             MenuScreens.register(ModContainers.DRAWER_CONTAINER_COMP_2.get(), DrawerScreen.Compacting2::new);
             MenuScreens.register(ModContainers.DRAWER_CONTAINER_COMP_3.get(), DrawerScreen.Compacting3::new);
             MenuScreens.register(ModContainers.FRAMING_TABLE.get(), FramingTableScreen::new);
-
-            ItemBlockRenderTypes.setRenderLayer(ModBlocks.KEYBUTTON_DRAWER.get(), RenderType.cutoutMipped());
-            ItemBlockRenderTypes.setRenderLayer(ModBlocks.KEYBUTTON_CONCEALMENT.get(), RenderType.cutoutMipped());
-            ItemBlockRenderTypes.setRenderLayer(ModBlocks.KEYBUTTON_QUANTIFY.get(), RenderType.cutoutMipped());
         });
     }
 
@@ -123,27 +102,25 @@ public class ClientModBusSubscriber {
         ModBlocks.getDrawers().forEach(blockDrawers -> replaceBlock(event, blockDrawers, BakedModelProvider::makeStandardDrawerModel));
     }
 
-    public static void replaceBlock(ModelEvent.ModifyBakingResult event, Block block, Function<BakedModel, BakedModel> replacer) {
+    public static void replaceBlock(ModelEvent.ModifyBakingResult event, Block block, Function<BlockStateModel, BlockStateModel> replacer) {
         for (BlockState state : block.getStateDefinition().getPossibleStates()) {
-            ModelResourceLocation modelResource = BlockModelShaper.stateToModelLocation(state);
-            replaceBlock(event, modelResource, replacer);
+            replaceBlock(event, state, replacer);
         }
     }
 
-    private static void replaceBlock (ModelEvent.ModifyBakingResult event, ModelResourceLocation modelResource, Function<BakedModel, BakedModel> replacer) {
-        BakedModel missing = event.getResults().blockStateModels().get(MissingBlockModel.VARIANT);
-        BakedModel parentModel = event.getResults().blockStateModels().get(modelResource);
+    private static void replaceBlock (ModelEvent.ModifyBakingResult event, BlockState modelResource, Function<BlockStateModel, BlockStateModel> replacer) {
+        BlockStateModel parentModel = event.getResults().blockStateModels().get(modelResource);
         if (parentModel == null) {
             StorageDrawers.log.warn("Got back null model from ModelBakeEvent.ModelManager for resource " + modelResource.toString());
             return;
-        } else if (parentModel == missing)
-            return;
+        }// else if (parentModel == missing)
+        //    return;
 
         if (parentModel instanceof ParentModel)
             return;
 
         if (DrawerModelStore.INSTANCE.isTargetedModel(modelResource)) {
-            BakedModel model = replacer.apply(parentModel);
+            BlockStateModel model = replacer.apply(parentModel);
             ItemModelStore.models.put(modelResource, model);
             event.getResults().blockStateModels().put(modelResource, model);
         }

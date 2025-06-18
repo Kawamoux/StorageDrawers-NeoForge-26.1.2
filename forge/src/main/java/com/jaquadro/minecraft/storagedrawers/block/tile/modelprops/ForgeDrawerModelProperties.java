@@ -7,10 +7,9 @@ import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.client.model.ModelContextSupplier;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.DrawerModelContext;
+import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
 import com.jaquadro.minecraft.storagedrawers.components.item.FrameData;
 import com.jaquadro.minecraft.storagedrawers.core.ModDataComponents;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -21,9 +20,9 @@ import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
 import org.jetbrains.annotations.Nullable;
 
-public class DrawerModelProperties implements ModelContextSupplier<DrawerModelContext>
+public class ForgeDrawerModelProperties extends DrawerModelProperties
 {
-    public static final DrawerModelProperties INSTANCE = new DrawerModelProperties();
+    public static final ForgeDrawerModelProperties INSTANCE = new ForgeDrawerModelProperties();
 
     public static final ModelProperty<BlockState> BLOCKSTATE = new ModelProperty<>();
     public static final ModelProperty<IDrawerAttributes> ATTRIBUTES = new ModelProperty<>();
@@ -31,30 +30,39 @@ public class DrawerModelProperties implements ModelContextSupplier<DrawerModelCo
     public static final ModelProperty<IProtectable> PROTECTABLE = new ModelProperty<>();
     public static final ModelProperty<MaterialData> MATERIAL = new ModelProperty<>();
 
-    public static ModelData getModelData (BlockEntityDrawers blockEntity) {
-        return ModelData.builder()
-            .with(ATTRIBUTES, blockEntity.getDrawerAttributes())
-            .with(DRAWER_GROUP, blockEntity.getGroup())
-            .with(PROTECTABLE, blockEntity)
-            .with(MATERIAL, blockEntity.material()).build();
+    public final ModelData modelData;
+
+    protected  ForgeDrawerModelProperties () {
+        super();
+
+        modelData = ModelData.builder().build();
     }
 
-    public static ModelData getModelData (BlockState blockState, ModelData data) {
-        return ModelData.builder()
-            .with(BLOCKSTATE, blockState)
-            .with(ATTRIBUTES, data.get(ATTRIBUTES))
-            .with(DRAWER_GROUP, data.get(DRAWER_GROUP))
-            .with(PROTECTABLE, data.get(PROTECTABLE))
-            .with(MATERIAL, data.get(MATERIAL)).build();
+    protected ForgeDrawerModelProperties (BlockEntityDrawers blockEntity) {
+        super(blockEntity);
+
+        modelData = ModelData.builder()
+            .with(ATTRIBUTES, attributes)
+            .with(DRAWER_GROUP, group)
+            .with(PROTECTABLE, protectable)
+            .with(MATERIAL, material).build();
+    }
+
+    public static ForgeDrawerModelProperties getForgeModelData (BlockEntityDrawers blockEntity) {
+        return new ForgeDrawerModelProperties(blockEntity);
     }
 
     @Override
-    public DrawerModelContext makeContext (@Nullable BlockState state, RandomSource rand, ModelData extraData) {
-        return new DrawerModelContext(state, rand)
-            .attr(extraData.get(ATTRIBUTES))
-            .group(extraData.get(DRAWER_GROUP))
-            .protectable(extraData.get(PROTECTABLE))
-            .materialData(extraData.get(MATERIAL));
+    public DrawerModelContext makeContext (@Nullable BlockState state, RandomSource rand, Object renderData) {
+        if (renderData instanceof ModelData m) {
+            return new DrawerModelContext(state, rand)
+                .attr(m.get(ATTRIBUTES))
+                .group(m.get(DRAWER_GROUP))
+                .protectable(m.get(PROTECTABLE))
+                .materialData(m.get(MATERIAL));
+        }
+
+        return super.makeContext(state, rand, renderData);
     }
 
     @Override

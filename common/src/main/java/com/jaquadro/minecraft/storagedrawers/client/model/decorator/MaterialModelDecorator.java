@@ -62,33 +62,39 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
     }
 
     @Override
-    public void emitQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel) {
+    public List<RenderType> getRenderTypes (BlockState state) {
+        if (shaded)
+            return List.of(RenderType.solid(), RenderType.translucent());
+        return List.of(RenderType.solid());
+    }
+
+    @Override
+    public void emitQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, RenderType renderType) {
         FramedModelContext context = contextSupplier.get();
         if (context == null)
             return;
 
         MaterialData matData = context.materialData();
         if (matData != null && !matData.getEffectiveSide().isEmpty()) {
-            // TODO: Quads vs parts for render type
-            //RenderType renderType = context.renderType();
-            //if (renderType == null || renderType == RenderType.cutoutMipped())
-                emitFramedQuads(context, emitModel);
-            //if (shaded && (renderType == null || renderType == RenderType.translucent()))
-                emitFramedOverlayQuads(context, emitModel);
+            if (renderType == null || renderType == RenderType.solid())
+                emitFramedQuads(context, emitModel, renderType);
+            if (shaded && (renderType == null || renderType == RenderType.translucent()))
+                emitFramedOverlayQuads(context, emitModel, renderType);
         }
     }
 
     @Override
-    public void emitItemQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack) {
+    public void emitItemQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack, RenderType renderType) {
         FramedModelContext context = contextSupplier.get();
         if (context == null)
             return;
 
         MaterialData matData = context.materialData();
         if (matData != null && !matData.getEffectiveSide().isEmpty()) {
-            emitFramedQuads(context, emitModel);
-            if (shaded)
-                emitFramedOverlayQuads(context, emitModel);
+            if (renderType == null || renderType == RenderType.solid())
+                emitFramedQuads(context, emitModel, renderType);
+            if (shaded && (renderType == null || renderType == RenderType.translucent()))
+                emitFramedOverlayQuads(context, emitModel, renderType);
         }
     }
 
@@ -113,7 +119,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         return replacedModel;
     }
 
-    public void emitFramedQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel) {
+    public void emitFramedQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel, RenderType renderType) {
         Block block = context.state().getBlock();
 
         if (block instanceof IFramedBlock fb) {
@@ -137,7 +143,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         }
     }
 
-    public void emitFramedOverlayQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel) {
+    public void emitFramedOverlayQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel, RenderType renderType) {
         MaterialData matData = context.materialData();
         if (matData != null && !matData.isEmpty()) {
             if (matSet.shadeFrontPart() != null)

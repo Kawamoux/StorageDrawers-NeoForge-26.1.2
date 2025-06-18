@@ -1,2 +1,1 @@
-- Fixed framed item rendering issue
-- NEOFORGE: Fixed crash from item rendering issue
+- Updated to Minecraft 1.21.5

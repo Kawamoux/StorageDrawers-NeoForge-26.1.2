@@ -21,11 +21,11 @@ public class FramedModelProperties implements ModelContextSupplier<FramedModelCo
 
     public final IFramedMaterials material;
 
-    private FramedModelProperties () {
+    protected FramedModelProperties () {
         material = null;
     }
 
-    private FramedModelProperties (IFramedBlockEntity blockEntity) {
+    protected FramedModelProperties (IFramedBlockEntity blockEntity) {
         material = blockEntity.material();
     }
 

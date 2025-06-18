@@ -86,8 +86,13 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         };
 
         try {
-            decorator.emitQuads(supplier, emitModel);
+            decorator.emitQuads(supplier, emitModel, renderType);
         } catch (Exception e) { }
+    }
+
+    @Override
+    public ChunkRenderTypeSet getRenderTypes (@NotNull BlockState state, @NotNull RandomSource rand, @NotNull ModelData data) {
+        return ChunkRenderTypeSet.of(decorator.getRenderTypes(state));
     }
 
     public static class PlatformDecoratedItemModel implements ItemModel
@@ -95,7 +100,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         ResourceLocation location;
         String variant;
         PlatformDecoratedModel<?> parent;
-        BlockStateModel model;
+        ItemRender<ModelContext> model;
         ItemStack stack;
         BlockState state;
         ModelRenderProperties properties;
@@ -147,39 +152,42 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
 
             if ((stack == null || !ItemStack.isSameItemSameComponents(stack, itemStack)) && parent != null) {
                 stack = itemStack;
-                model = new ItemRender<>(parent, itemStack);
+                model = new ItemRender<>((PlatformDecoratedModel<ModelContext>)parent, itemStack);
             }
 
             if (model != null) {
-                List<BlockModelPart> parts = new ArrayList<>();
-                model.collectParts(null, parts);
                 Map<RenderType, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
-                for (BlockModelPart part : parts) {
-                    RenderType type = part.getRenderType(state);
-                    if (!layers.containsKey(type)) {
+                for (var renderType : List.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.translucent())) {
+                    List<BlockModelPart> parts = new ArrayList<>();
+                    model.collectParts(null, parts, renderType);
+                    if (parts.isEmpty())
+                        continue;
+
+                    if (!layers.containsKey(renderType)) {
                         ItemStackRenderState.LayerRenderState renderState = itemStackRenderState.newLayer();
-                        layers.put(type, renderState);
+                        layers.put(renderType, renderState);
 
                         RenderType itemRenderType = null;
-                        if (type == RenderType.solid())
+                        if (renderType == RenderType.solid())
                             itemRenderType = Sheets.solidBlockSheet();
-                        if (type == RenderType.cutoutMipped() || type == RenderType.cutout())
+                        if (renderType == RenderType.cutoutMipped() || renderType == RenderType.cutout())
                             itemRenderType = Sheets.cutoutBlockSheet();
-                        else if (type == RenderType.translucent())
+                        else if (renderType == RenderType.translucent())
                             itemRenderType = Sheets.translucentItemSheet();
 
                         renderState.setRenderType(itemRenderType);
                         renderState.setExtents(extents);
                     }
 
-                    ItemStackRenderState.LayerRenderState layer = layers.get(type);
-                    properties.applyToLayer(layer, itemDisplayContext);
+                    for (BlockModelPart part : parts) {
+                        ItemStackRenderState.LayerRenderState layer = layers.get(renderType);
+                        properties.applyToLayer(layer, itemDisplayContext);
 
-                    layer.prepareQuadList().addAll(part.getQuads(null));
-                    for (Direction direction : Direction.values())
-                        layer.prepareQuadList().addAll(part.getQuads(direction));
+                        layer.prepareQuadList().addAll(part.getQuads(null));
+                        for (Direction direction : Direction.values())
+                            layer.prepareQuadList().addAll(part.getQuads(direction));
+                    }
                 }
-                int x = 5;
             }
         }
 
@@ -231,29 +239,27 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         }
 
         @Override
-        public List<BakedQuad> getQuads (@Nullable BlockState state, @Nullable Direction side, RandomSource rand) {
-            List<BakedQuad> quads = new ArrayList<>();
+        public void collectParts (RandomSource randomSource, List<BlockModelPart> list) {
+            collectParts(randomSource, list, null);
+        }
 
+        public void collectParts (RandomSource randomSource, List<BlockModelPart> list, RenderType renderType) {
             Supplier<C> supplier = () -> parent.contextSupplier.makeContext(stack);
             ModelDecorator<C> decorator = parent.decorator;
             if (decorator.shouldRenderBase(supplier, stack))
-                quads.addAll(parent.getQuads(state, side, rand));
+                parent.collectParts(randomSource, list);
 
-            BiConsumer<BakedModel, RenderType> emitModel = (model, renderType) -> {
+            Consumer<BlockStateModel> emitModel = (model) -> {
                 if (model != null)
-                    quads.addAll(model.getQuads(state, side, rand));
+                    model.collectParts(randomSource, list);
             };
 
             try {
-                decorator.emitItemQuads(supplier, emitModel, stack);
-            } catch (Exception e) {
-                return quads;
-            }
-
-            return quads;
+                decorator.emitItemQuads(supplier, emitModel, stack, renderType);
+            } catch (Exception e) { }
         }
 
-        @Override
+        /*@Override
         public TextureAtlasSprite getParticleIcon (ModelData data) {
             return parent.getParticleIcon(data);
         }
@@ -261,6 +267,6 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         @Override
         public ChunkRenderTypeSet getRenderTypes (BlockState state, RandomSource rand, ModelData data) {
             return parent.getRenderTypes(state, rand, data);
-        }
+        }*/
     }
 }

@@ -2,13 +2,13 @@ package com.jaquadro.minecraft.storagedrawers.block.tile.modelprops;
 
 import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedBlockEntity;
 import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedMaterials;
+import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.client.model.ModelContextSupplier;
+import com.jaquadro.minecraft.storagedrawers.client.model.context.DrawerModelContext;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.FramedModelContext;
 import com.jaquadro.minecraft.storagedrawers.components.item.FrameData;
 import com.jaquadro.minecraft.storagedrawers.core.ModDataComponents;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -19,28 +19,40 @@ import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
 import org.jetbrains.annotations.Nullable;
 
-public class FramedModelProperties implements ModelContextSupplier<FramedModelContext>
+public class ForgeFramedModelProperties extends FramedModelProperties
 {
-    public static final FramedModelProperties INSTANCE = new FramedModelProperties();
+    public static final ForgeFramedModelProperties INSTANCE = new ForgeFramedModelProperties();
 
     public static final ModelProperty<BlockState> BLOCKSTATE = new ModelProperty<>();
     public static final ModelProperty<IFramedMaterials> MATERIAL = new ModelProperty<>();
 
-    public static ModelData getModelData (IFramedBlockEntity blockEntity) {
-        return ModelData.builder()
+    public final ModelData modelData;
+
+    protected ForgeFramedModelProperties () {
+        super();
+
+        modelData = ModelData.builder().build();
+    }
+
+    protected ForgeFramedModelProperties (IFramedBlockEntity blockEntity) {
+        super(blockEntity);
+
+        modelData = ModelData.builder()
             .with(MATERIAL, blockEntity.material()).build();
     }
 
-    public static ModelData getModelData (BlockState state, ModelData data) {
-        return ModelData.builder()
-            .with(BLOCKSTATE, state)
-            .with(MATERIAL, data.get(MATERIAL)).build();
+    public static ForgeFramedModelProperties getForgeModelData (IFramedBlockEntity blockEntity) {
+        return new ForgeFramedModelProperties(blockEntity);
     }
 
     @Override
-    public FramedModelContext makeContext (@Nullable BlockState state, RandomSource rand, ModelData extraData) {
-        return new FramedModelContext(state, rand)
-            .materialData(new MaterialData(extraData.get(MATERIAL)));
+    public FramedModelContext makeContext (@Nullable BlockState state, RandomSource rand, Object renderData) {
+        if (renderData instanceof ModelData m) {
+            return new FramedModelContext(state, rand)
+                .materialData(new MaterialData(m.get(MATERIAL)));
+        }
+
+        return super.makeContext(state, rand, renderData);
     }
 
     @Override

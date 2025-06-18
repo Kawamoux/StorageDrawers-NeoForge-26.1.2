@@ -53,14 +53,32 @@ public class CombinedModelDecorator<C extends ModelContext> extends ModelDecorat
     }
 
     @Override
-    public void emitQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel) {
-        for (var decorator : decorators)
-            decorator.emitQuads(contextSupplier, emitModel);
+    public List<RenderType> getRenderTypes (BlockState state) {
+        if (decorators.isEmpty())
+            return super.getRenderTypes(state);
+        else if (decorators.size() == 1)
+            return decorators.get(0).getRenderTypes(state);
+
+        List<RenderType> types = new ArrayList<>(decorators.get(0).getRenderTypes(state));
+        for (int i = 1; i < decorators.size(); i++) {
+            for (var type : decorators.get(i).getRenderTypes(state)) {
+                if (!types.contains(type))
+                    types.add(type);
+            }
+        }
+
+        return types;
     }
 
     @Override
-    public void emitItemQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack) {
+    public void emitQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, RenderType renderType) {
         for (var decorator : decorators)
-            decorator.emitItemQuads(contextSupplier, emitModel, stack);
+            decorator.emitQuads(contextSupplier, emitModel, renderType);
+    }
+
+    @Override
+    public void emitItemQuads (Supplier<C> contextSupplier, Consumer<BlockStateModel> emitModel, ItemStack stack, RenderType renderType) {
+        for (var decorator : decorators)
+            decorator.emitItemQuads(contextSupplier, emitModel, stack, renderType);
     }
 }

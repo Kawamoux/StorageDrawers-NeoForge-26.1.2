@@ -28,14 +28,14 @@ public class DrawerModelProperties implements ModelContextSupplier<DrawerModelCo
     public final IProtectable protectable;
     public final MaterialData material;
 
-    private DrawerModelProperties () {
+    protected DrawerModelProperties () {
         attributes = null;
         group = null;
         protectable = null;
         material = null;
     }
 
-    private DrawerModelProperties (BlockEntityDrawers blockEntity) {
+    protected DrawerModelProperties (BlockEntityDrawers blockEntity) {
         attributes = blockEntity.getDrawerAttributes();
         group = blockEntity.getGroup();
         protectable = blockEntity;
@@ -48,15 +48,14 @@ public class DrawerModelProperties implements ModelContextSupplier<DrawerModelCo
 
     @Override
     public DrawerModelContext makeContext (@Nullable BlockState state, RandomSource rand, Object renderData) {
-        DrawerModelContext context = new DrawerModelContext(state, rand);
         if (renderData instanceof DrawerModelProperties props) {
-            context.attr(props.attributes)
+            return new DrawerModelContext(state, rand).attr(props.attributes)
                 .group(props.group)
                 .protectable(props.protectable)
                 .materialData(props.material);
         }
 
-        return context;
+        return new DrawerModelContext(state, rand);
     }
 
     @Override

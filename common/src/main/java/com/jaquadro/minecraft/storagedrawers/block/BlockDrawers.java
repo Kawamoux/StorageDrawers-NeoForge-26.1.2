@@ -24,6 +24,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
@@ -602,5 +603,20 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
     @Override
     public boolean useShapeForLightOcclusion(@NotNull BlockState state) {
         return true;
+    }
+
+    @Override
+    protected void tick (@NotNull BlockState state, @NotNull ServerLevel world, @NotNull BlockPos pos, @NotNull RandomSource rand) {
+        if (ModCommonConfig.INSTANCE.GENERAL.debugTrace.get())
+            ModServices.log.info("BlockDrawers [{}] tick", pos);
+
+        if (world.isClientSide)
+            return;
+
+        BlockEntityDrawers blockEntity = WorldUtils.getBlockEntity(world, pos, BlockEntityDrawers.class);
+        if (blockEntity == null)
+            return;
+
+        blockEntity.validateBoundController();
     }
 }

@@ -41,15 +41,21 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
     }*/
 
     @Override
-    public void emitQuads (Supplier<DrawerModelContext> contextSupplier, Consumer<BlockStateModel> emitModel) {
+    public List<RenderType> getRenderTypes (BlockState state) {
+        return List.of(RenderType.cutoutMipped());
+    }
+
+    @Override
+    public void emitQuads (Supplier<DrawerModelContext> contextSupplier, Consumer<BlockStateModel> emitModel, RenderType renderType) {
         DrawerModelContext context = contextSupplier.get();
         if (context == null)
             return;
 
-        emitDecoratedQuads(context, emitModel);
+        if (renderType == null || renderType == RenderType.cutoutMipped())
+            emitDecoratedQuads(context, emitModel, renderType);
     }
 
-    public void emitDecoratedQuads(DrawerModelContext context, Consumer<BlockStateModel> emitModel) {
+    public void emitDecoratedQuads(DrawerModelContext context, Consumer<BlockStateModel> emitModel, RenderType renderType) {
         Direction dir = context.state().getValue(BlockDrawers.FACING);
         boolean half = false;
         Block block = context.state().getBlock();

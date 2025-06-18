@@ -1,6 +1,6 @@
 package com.jaquadro.minecraft.storagedrawers.block.tile;
 
-import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.DrawerModelProperties;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.ForgeDrawerModelProperties;
 import com.jaquadro.minecraft.storagedrawers.capabilities.PlatformCapabilities;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +26,7 @@ public abstract class PlatformBlockEntityDrawersComp extends BlockEntityDrawersC
         @NotNull
         @Override
         public ModelData getModelData () {
-            return DrawerModelProperties.getModelData(this);
+            return ForgeDrawerModelProperties.getForgeModelData(this).modelData;
         }
 
         @Override
@@ -49,7 +49,7 @@ public abstract class PlatformBlockEntityDrawersComp extends BlockEntityDrawersC
         @NotNull
         @Override
         public ModelData getModelData () {
-            return DrawerModelProperties.getModelData(this);
+            return ForgeDrawerModelProperties.getForgeModelData(this).modelData;
         }
 
         @Override
