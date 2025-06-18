@@ -1,7 +1,7 @@
 package com.texelsaurus.minecraft.chameleon.config;
 
 import com.texelsaurus.minecraft.chameleon.service.ChameleonConfig;
-import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.NeoForgeConfigRegistry;
+import fuzs.forgeconfigapiport.fabric.api.v5.ConfigRegistry;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -32,9 +32,9 @@ public class ForgeApiConfig implements ChameleonConfig
         neoSpec = BUILDER.build();
 
         if (type == Type.COMMON)
-            NeoForgeConfigRegistry.INSTANCE.register(modId, ModConfig.Type.COMMON, neoSpec);
+            ConfigRegistry.INSTANCE.register(modId, ModConfig.Type.COMMON, neoSpec);
         else if (type == Type.CLIENT)
-            NeoForgeConfigRegistry.INSTANCE.register(modId, ModConfig.Type.CLIENT, neoSpec);
+            ConfigRegistry.INSTANCE.register(modId, ModConfig.Type.CLIENT, neoSpec);
 
         if (localSpec != null)
             localSpec.setLoaded();

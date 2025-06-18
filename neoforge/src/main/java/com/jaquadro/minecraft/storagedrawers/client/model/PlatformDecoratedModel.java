@@ -164,7 +164,6 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
                     for (Direction direction : Direction.values())
                         layer.prepareQuadList().addAll(part.getQuads(direction));
                 }
-                int x = 5;
             }
         }
 

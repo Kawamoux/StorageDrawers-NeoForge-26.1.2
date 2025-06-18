@@ -15,7 +15,7 @@ public class PlayerEventListener
     private static void applyDebuff(Player plr)
     {
         // slowness IV for 5 seconds
-        plr.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3, true, true));
+        plr.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, 3, true, true));
     }
 
     public static void onPlayerTick(Player player) {
@@ -28,10 +28,10 @@ public class PlayerEventListener
         if (!ModCommonConfig.INSTANCE.GENERAL.heavyDrawers.get())
             return;
 
-        for(var s : player.getAllSlots()) {
+        /*for(var s : player.getAllSlots()) {
             if (checkItemDebuf(s, player))
                 return;
-        }
+        }*/
 
         Inventory inv = player.getInventory();
         for (int i = 0; i < inv.getContainerSize(); i++) {

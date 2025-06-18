@@ -12,37 +12,38 @@ import com.jaquadro.minecraft.storagedrawers.core.ModBlocks;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
-import net.minecraft.client.renderer.block.model.UnbakedBlockStateModel;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.item.ItemModels;
-import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelBaker;
-import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
 @Environment(EnvType.CLIENT)
 public class ModelLoadPlugin implements ModelLoadingPlugin
 {
-    public class UnbakedProxyModel implements UnbakedBlockStateModel {
+    public class UnbakedProxyModel implements BlockStateModel.UnbakedRoot {
 
-        UnbakedBlockStateModel parent;
-        ModelResourceLocation modelLoc;
+        BlockStateModel.UnbakedRoot parent;
+        BlockState blockState;
 
-        public UnbakedProxyModel(UnbakedBlockStateModel parent, ModelResourceLocation modelLoc) {
+        public UnbakedProxyModel(BlockStateModel.UnbakedRoot parent, BlockState blockState) {
             this.parent = parent;
-            this.modelLoc = modelLoc;
+            this.blockState = blockState;
         }
 
         @Override
-        public BakedModel bake (ModelBaker modelBaker) {
-            BakedModel original = parent.bake(modelBaker);
+        public BlockStateModel bake (BlockState state, ModelBaker modelBaker) {
+            BlockStateModel original = parent.bake(state, modelBaker);
 
-            ResourceLocation blockId = modelLoc.id();
-            DrawerModelStore.tryAddModel(modelLoc, original);
-            if (!DrawerModelStore.INSTANCE.isTargetedModel(modelLoc))
+            Block block = state.getBlock();
+            ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
+            DrawerModelStore.tryAddModel(state, original);
+            if (!DrawerModelStore.INSTANCE.isTargetedModel(state))
                 return original;
 
-            BakedModel proxyModel;
+            BlockStateModel proxyModel;
 
             if (blockId.equals(ModBlocks.FRAMED_FULL_DRAWERS_1.getId()))
                 proxyModel = BakedModelProvider.makeFramedStandardDrawerModel(original);
@@ -76,19 +77,19 @@ public class ModelLoadPlugin implements ModelLoadingPlugin
             else
                 proxyModel = BakedModelProvider.makeStandardDrawerModel(original);
 
-            ItemModelStore.models.put(modelLoc, proxyModel);
+            ItemModelStore.models.put(state, proxyModel);
 
             return proxyModel;
         }
 
         @Override
-        public Object visualEqualityGroup (BlockState blockState) {
-            return parent.visualEqualityGroup(blockState);
+        public void resolveDependencies (Resolver resolver) {
+            parent.resolveDependencies(resolver);
         }
 
         @Override
-        public void resolveDependencies (Resolver resolver) {
-            parent.resolveDependencies(resolver);
+        public Object visualEqualityGroup (BlockState blockState) {
+            return parent.visualEqualityGroup(blockState);
         }
     }
 
@@ -96,17 +97,18 @@ public class ModelLoadPlugin implements ModelLoadingPlugin
     public void initialize (Context pluginContext) {
         DrawerModelGeometry.loadGeometryData();
         pluginContext.modifyBlockModelOnLoad().register((original, context) -> {
-            if (context.id() == null)
+            if (context.state() == null)
                 return original;
 
-            ResourceLocation blockId = context.id().id();
+            Block block = context.state().getBlock();
+            ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
             if (!blockId.getNamespace().equals(ModConstants.MOD_ID))
                 return original;
 
             if (original instanceof UnbakedProxyModel)
                 return original;
 
-            return new UnbakedProxyModel(original, context.id());
+            return new UnbakedProxyModel(original, context.state());
         });
 
         ItemModels.ID_MAPPER.put(
