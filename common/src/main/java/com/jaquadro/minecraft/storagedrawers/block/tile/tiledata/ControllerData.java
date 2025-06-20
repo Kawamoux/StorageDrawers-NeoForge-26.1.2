@@ -8,31 +8,30 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 public class ControllerData extends BlockEntityDataShim
 {
     private BlockPos controllerCoord;
 
     @Override
-    public void read (HolderLookup.Provider provider, CompoundTag tag) {
+    public void read (ValueInput input) {
         controllerCoord = null;
-        if (tag.contains("Controller")) {
-            CompoundTag ctag = tag.getCompoundOrEmpty("Controller");
-            controllerCoord = new BlockPos(ctag.getIntOr("x", 0), ctag.getIntOr("y", 0), ctag.getIntOr("z", 0));
-        }
+
+        input.child("Controller").ifPresent(t ->
+            controllerCoord = new BlockPos(t.getIntOr("x", 0), t.getIntOr("y", 0), t.getIntOr("z", 0))
+        );
     }
 
     @Override
-    public CompoundTag write (HolderLookup.Provider provider, CompoundTag tag) {
+    public void write (ValueOutput output) {
         if (controllerCoord != null) {
-            CompoundTag ctag = new CompoundTag();
+            var ctag = output.child("Controller");
             ctag.putInt("x", controllerCoord.getX());
             ctag.putInt("y", controllerCoord.getY());
             ctag.putInt("z", controllerCoord.getZ());
-            tag.put("Controller", ctag);
         }
-
-        return tag;
     }
 
     public BlockPos getCoord () {

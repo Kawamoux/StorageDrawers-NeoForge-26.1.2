@@ -52,7 +52,7 @@ public abstract class ContainerDrawers extends AbstractContainerMenu
     }
 
     protected static BlockEntityDrawers getBlockEntity(Inventory playerInv, BlockPos pos) {
-        Level level = playerInv.player.getCommandSenderWorld();
+        Level level = playerInv.player.level();
         BlockEntityDrawers blockEntity = WorldUtils.getBlockEntity(level, pos, BlockEntityDrawers.class);
         if (blockEntity == null)
             ModServices.log.error("Expected a drawers tile entity at " + pos);
@@ -96,7 +96,7 @@ public abstract class ContainerDrawers extends AbstractContainerMenu
         for (int i = 0; i < 9; i++)
             hotbarSlots.add(addSlot(new Slot(playerInventory, i, InventoryX + i * 18, HotbarY)));
 
-        isRemote = playerInventory.player.getCommandSenderWorld().isClientSide;
+        isRemote = playerInventory.player.level().isClientSide;
     }
 
     public void setLastAccessedItem (ItemStack stack) {

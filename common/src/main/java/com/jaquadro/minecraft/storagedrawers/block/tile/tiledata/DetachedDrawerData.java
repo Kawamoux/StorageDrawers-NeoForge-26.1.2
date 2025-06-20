@@ -6,6 +6,8 @@ import com.jaquadro.minecraft.storagedrawers.inventory.ItemStackHelper;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
@@ -34,8 +36,8 @@ public class DetachedDrawerData implements IDrawer
         this.storageMult = storageMult;
     }
 
-    public DetachedDrawerData (HolderLookup.Provider provider, CompoundTag serializedTag) {
-        deserializeNBT(provider, serializedTag);
+    public DetachedDrawerData (ValueInput input) {
+        deserializeNBT(input);
     }
 
     protected DetachedDrawerData (DetachedDrawerData data) {
@@ -124,47 +126,28 @@ public class DetachedDrawerData implements IDrawer
         return new DetachedDrawerData(this);
     }
 
-    public CompoundTag serializeNBT (HolderLookup.Provider provider) {
-        CompoundTag tag = new CompoundTag();
+    public void serializeNBT (ValueOutput output) {
         if (storageMult > 1)
-            tag.putInt("StorageMult", storageMult);
+            output.putInt("StorageMult", storageMult);
 
         if (protoStack.isEmpty())
-            return tag;
-
-        CompoundTag item = new CompoundTag();
-        item = (CompoundTag)protoStack.save(provider, item);
-
-        tag.put("Item", item);
-        tag.putInt("Count", count);
-
-        if (heavy)
-            tag.putBoolean("Heavy", true);
-
-        return tag;
-    }
-
-    public void deserializeNBT (HolderLookup.Provider provider, CompoundTag nbt) {
-        ItemStack tagItem = ItemStack.EMPTY;
-        int tagCount = 0;
-
-        if (nbt == null)
             return;
 
-        if (nbt.contains("Item"))
-            tagItem = ItemStack.parse(provider, nbt.getCompoundOrEmpty("Item")).orElse(ItemStack.EMPTY);
-        if (nbt.contains("Count"))
-            tagCount = nbt.getIntOr("Count", 0);
+        output.store("Item", ItemStack.CODEC, protoStack);
+        output.putInt("Count", count);
 
-        if (nbt.contains("StorageMult"))
-            storageMult = nbt.getIntOr("StorageMult", 0);
-        else
-            storageMult = ModCommonConfig.INSTANCE.GENERAL.baseStackStorage.get() * 8;
+        if (heavy)
+            output.putBoolean("Heavy", true);
+    }
 
-        if (nbt.contains("Heavy"))
-            setIsHeavy(nbt.getBooleanOr("Heavy", false));
+    public void deserializeNBT (ValueInput input) {
+        if (input == null)
+            return;
 
-        setStoredItemRaw(tagItem);
-        setStoredItemCountRaw(tagCount);
+        storageMult = input.getIntOr("StorageMult", ModCommonConfig.INSTANCE.GENERAL.baseStackStorage.get() * 8);
+
+        setIsHeavy(input.getBooleanOr("Heavy", false));
+        setStoredItemRaw(input.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY));
+        setStoredItemCountRaw(input.getIntOr("Count", 0));
     }
 }

@@ -11,23 +11,21 @@ import com.texelsaurus.minecraft.chameleon.service.ChameleonConfig;
 import com.texelsaurus.minecraft.chameleon.service.ForgeConfig;
 import com.texelsaurus.minecraft.chameleon.service.ForgeNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.registries.RegisterEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -47,17 +45,19 @@ public class StorageDrawers
     //public static WailaRegistry wailaRegistry;
     //public static SecurityRegistry securityRegistry;
 
-    public StorageDrawers () {
+    public StorageDrawers (FMLJavaModLoadingContext loadingContext) {
         ModCommonConfig.INSTANCE.context().init(ModConstants.MOD_ID, ChameleonConfig.Type.COMMON);
         ModClientConfig.INSTANCE.context().init(ModConstants.MOD_ID, ChameleonConfig.Type.CLIENT);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, ((ForgeConfig)ModCommonConfig.INSTANCE.context()).forgeSpec);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ((ForgeConfig)ModClientConfig.INSTANCE.context()).forgeSpec);
+        loadingContext.registerConfig(ModConfig.Type.COMMON, ((ForgeConfig)ModCommonConfig.INSTANCE.context()).forgeSpec);
+        loadingContext.registerConfig(ModConfig.Type.CLIENT, ((ForgeConfig)ModClientConfig.INSTANCE.context()).forgeSpec);
 
         //ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CommonConfig.spec);
         //ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ClientConfig.spec);
 
-        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        ForgeRegistryContext context = new ForgeRegistryContext(bus);
+        BusGroup busGroup = loadingContext.getModBusGroup();
+        var commonBus = FMLCommonSetupEvent.getBus(busGroup);
+
+        ForgeRegistryContext context = new ForgeRegistryContext(busGroup);
 
         ModBlocks.init(context);
         ModItems.init(context);
@@ -66,16 +66,18 @@ public class StorageDrawers
         ModDataComponents.init(context);
         ModRecipes.init(context);
 
-        bus.addListener(this::setup);
-        // bus.addListener(this::onModQueueEvent);
-        bus.addListener(this::onModConfigEvent);
-        bus.addListener(ModCreativeTabs::init);
-        bus.addListener(PlatformCapabilities::register);
+        FMLCommonSetupEvent.getBus(busGroup).addListener(this::setup);
+        ModConfigEvent.Loading.getBus(busGroup).addListener(this::onModConfigEvent);
+        RegisterEvent.getBus(busGroup).addListener(ModCreativeTabs::init);
+        RegisterCapabilitiesEvent.getBus(busGroup).addListener(PlatformCapabilities::register);
+
+        PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(this::onPlayerDisconnect);
+        EntityJoinLevelEvent.BUS.addListener(this::onEntityJoinWorldEvent);
 
         ForgeNetworking.init(ModNetworking.INSTANCE, context);
 
-        MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new PlayerEventListener());
+        //MinecraftForge.EVENT_BUS.register(this);
+        //MinecraftForge.EVENT_BUS.register(new PlayerEventListener());
 
         DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientModBusSubscriber::registerItemModels);
     }
@@ -111,12 +113,10 @@ public class StorageDrawers
             ModClientConfig.INSTANCE.setLoaded();
     }
 
-    @SubscribeEvent
     public void onPlayerDisconnect(PlayerEvent.PlayerLoggedOutEvent event) {
         //ConfigManager.serverPlayerConfigSettings.remove(event.player.getUniqueID());
     }
 
-    @SubscribeEvent
     public void onEntityJoinWorldEvent(EntityJoinLevelEvent event) {
         if (!event.getLevel().isClientSide() || !(event.getEntity() instanceof Player))
             return;

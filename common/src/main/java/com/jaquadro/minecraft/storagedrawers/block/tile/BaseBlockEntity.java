@@ -6,10 +6,14 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -46,14 +50,14 @@ public class BaseBlockEntity extends BlockEntity
     }
 
     @Override
-    public final void loadAdditional (CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
+    public final void loadAdditional (ValueInput input) {
+        super.loadAdditional(input);
 
         //failureSnapshot = null;
 
         //try {
-            readFixed(registries, tag);
-            readPortable(registries, tag);
+            readFixed(input);
+            readPortable(input);
             onLoadFinished();
         //}
         //catch (Throwable t) {
@@ -66,8 +70,8 @@ public class BaseBlockEntity extends BlockEntity
 
     protected void onLoadFinished () { }
 
-    public final void read (CompoundTag tag, HolderLookup.Provider registries) {
-        loadAdditional(tag, registries);
+    public final void read (ValueInput input) {
+        loadAdditional(input);
     }
 
     /*@Override
@@ -91,43 +95,39 @@ public class BaseBlockEntity extends BlockEntity
     }*/
 
     @Override
-    protected void saveAdditional (@NotNull CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional (ValueOutput output) {
+        super.saveAdditional(output);
 
-        tag = writeFixed(registries, tag);
-        writePortable(registries, tag);
+        writeFixed(output);
+        writePortable(output);
     }
 
-    public void readPortable (HolderLookup.Provider provider, CompoundTag tag) {
+    public void readPortable (ValueInput input) {
         if (portableShims != null) {
             for (BlockEntityDataShim shim : portableShims)
-                shim.read(provider, tag);
+                shim.read(input);
         }
     }
 
-    public CompoundTag writePortable (HolderLookup.Provider provider, CompoundTag tag) {
+    public void writePortable (ValueOutput output) {
         if (portableShims != null) {
             for (BlockEntityDataShim shim : portableShims)
-                tag = shim.write(provider, tag);
-        }
-
-        return tag;
-    }
-
-    protected void readFixed (HolderLookup.Provider provider, CompoundTag tag) {
-        if (fixedShims != null) {
-            for (BlockEntityDataShim shim : fixedShims)
-                shim.read(provider, tag);
+                shim.write(output);
         }
     }
 
-    protected CompoundTag writeFixed (HolderLookup.Provider provider, CompoundTag tag) {
+    protected void readFixed (ValueInput input) {
         if (fixedShims != null) {
             for (BlockEntityDataShim shim : fixedShims)
-                tag = shim.write(provider, tag);
+                shim.read(input);
         }
+    }
 
-        return tag;
+    protected void writeFixed (ValueOutput output) {
+        if (fixedShims != null) {
+            for (BlockEntityDataShim shim : fixedShims)
+                shim.write(output);
+        }
     }
 
     private void trapLoadFailure (Throwable t, CompoundTag tag) {
@@ -161,8 +161,8 @@ public class BaseBlockEntity extends BlockEntity
     // TODO: Forge Extension
     // @Override
     public final void onDataPacket (Connection net, ClientboundBlockEntityDataPacket pkt, HolderLookup.Provider lookupProvider) {
-        if (pkt != null && pkt.getTag() != null)
-            read(pkt.getTag(), lookupProvider);
+        if (pkt != null)
+            read(TagValueInput.create(ProblemReporter.DISCARDING, lookupProvider, pkt.getTag()));
 
         if (getLevel() != null && getLevel().isClientSide && dataPacketRequiresRenderUpdate()) {
             BlockState state = getLevel().getBlockState(getBlockPos());

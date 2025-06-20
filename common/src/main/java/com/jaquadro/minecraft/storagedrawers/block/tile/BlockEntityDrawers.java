@@ -35,8 +35,10 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -46,11 +48,17 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.UUID;
+
+import static com.ibm.icu.impl.CurrencyData.provider;
 
 public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDrawerGroup, IProtectable, INetworked, IFramedBlockEntity, Nameable, RenderDataProvider
 {
@@ -590,7 +598,8 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
         CustomData customdata = detachedDrawer.get(DataComponents.CUSTOM_DATA);
         CompoundTag tag = customdata != null ? customdata.copyTag() : new CompoundTag();
 
-        DetachedDrawerData data = new DetachedDrawerData(level.registryAccess(), tag);
+        var input = TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), tag);
+        DetachedDrawerData data = new DetachedDrawerData(input);
         ItemStack proto = data.getStoredItemPrototype();
         int count = data.getStoredItemCount();
 
@@ -613,12 +622,13 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
     }
 
     @Override
-    public void readPortable (HolderLookup.Provider provider, CompoundTag tag) {
+    public void readPortable (ValueInput input) {
         loading = true;
-        super.readPortable(provider, tag);
+        super.readPortable(input);
 
-        if (tag.contains("Lock")) {
-            EnumSet<LockAttribute> attrs = LockAttribute.getEnumSet(tag.getByteOr("Lock", (byte)0));
+        Optional<Integer> lockTag = input.getInt("Lock");
+        if (lockTag.isPresent()) {
+            EnumSet<LockAttribute> attrs = LockAttribute.getEnumSet(lockTag.get());
             if (attrs != null) {
                 drawerAttributes.setItemLocked(LockAttribute.LOCK_EMPTY, attrs.contains(LockAttribute.LOCK_EMPTY));
                 drawerAttributes.setItemLocked(LockAttribute.LOCK_POPULATED, attrs.contains(LockAttribute.LOCK_POPULATED));
@@ -628,39 +638,21 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
             drawerAttributes.setItemLocked(LockAttribute.LOCK_POPULATED, false);
         }
 
-        if (tag.contains("Shr"))
-            drawerAttributes.setIsConcealed(tag.getBooleanOr("Shr", false));
-        else
-            drawerAttributes.setIsConcealed(false);
+        drawerAttributes.setIsConcealed(input.getBooleanOr("Shr", false));
+        drawerAttributes.setIsShowingQuantity(input.getBooleanOr("Qua", false));
+        drawerAttributes.setPriority(input.getIntOr("Pri", 0));
 
+        owner = input.getString("Own").map(UUID::fromString).orElse(null);
+        securityKey = input.getString("Sec").orElse(null);
 
-        if (tag.contains("Qua"))
-            drawerAttributes.setIsShowingQuantity(tag.getBooleanOr("Qua", false));
-        else
-            drawerAttributes.setIsShowingQuantity(false);
-
-        owner = null;
-        if (tag.contains("Own"))
-            owner = UUID.fromString(tag.getStringOr("Own", ""));
-
-        securityKey = null;
-        if (tag.contains("Sec"))
-            securityKey = tag.getStringOr("Sec", "");
-
-        if (tag.contains("Pri"))
-            drawerAttributes.setPriority(tag.getIntOr("Pri", 0));
-        else
-            drawerAttributes.setPriority(0);
-
-        if (tag.contains("CustomName"))
-            name = parseCustomNameSafe(tag.get("CustomName"), provider);
+        name = parseCustomNameSafe(input, "CustomName");
 
         loading = false;
     }
 
     @Override
-    public CompoundTag writePortable (HolderLookup.Provider provider, CompoundTag tag) {
-        tag = super.writePortable(provider, tag);
+    public void writePortable (ValueOutput output) {
+        super.writePortable(output);
 
         EnumSet<LockAttribute> attrs = EnumSet.noneOf(LockAttribute.class);
         if (drawerAttributes.isItemLocked(LockAttribute.LOCK_EMPTY))
@@ -669,28 +661,26 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
             attrs.add(LockAttribute.LOCK_POPULATED);
 
         if (!attrs.isEmpty()) {
-            tag.putByte("Lock", (byte)LockAttribute.getBitfield(attrs));
+            output.putByte("Lock", (byte)LockAttribute.getBitfield(attrs));
         }
 
         if (drawerAttributes.isConcealed())
-            tag.putBoolean("Shr", true);
+            output.putBoolean("Shr", true);
 
         if (drawerAttributes.isShowingQuantity())
-            tag.putBoolean("Qua", true);
+            output.putBoolean("Qua", true);
 
         if (owner != null)
-            tag.putString("Own", owner.toString());
+            output.putString("Own", owner.toString());
 
         if (securityKey != null)
-            tag.putString("Sec", securityKey);
+            output.putString("Sec", securityKey);
 
         if (drawerAttributes.getPriority() != 0)
-            tag.putInt("Pri", drawerAttributes.getPriority());
+            output.putInt("Pri", drawerAttributes.getPriority());
 
         if (name != null)
-            tag.putString("CustomName", Component.Serializer.toJson(name, provider));
-
-        return tag;
+            output.storeNullable("CustomName", ComponentSerialization.CODEC, this.name);
     }
 
     @Override
@@ -781,8 +771,8 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
     }
 
     @Override
-    public void removeComponentsFromTag(CompoundTag tag) {
-        tag.remove("CustomName");
+    public void removeComponentsFromTag(ValueOutput output) {
+        output.discard("CustomName");
     }
 
     @Override

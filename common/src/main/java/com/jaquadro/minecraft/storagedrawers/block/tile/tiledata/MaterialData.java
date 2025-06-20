@@ -12,6 +12,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 public class MaterialData extends BlockEntityDataShim implements IFramedMaterials
@@ -141,47 +143,34 @@ public class MaterialData extends BlockEntityDataShim implements IFramedMaterial
     }
 
     @Override
-    public void read (HolderLookup.Provider provider, CompoundTag tag) {
-        frameBase = ItemStack.EMPTY;
-        if (tag.contains("MatB"))
-            frameBase = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatB")).orElse(ItemStack.EMPTY);
-
-        materialSide = ItemStack.EMPTY;
-        if (tag.contains("MatS"))
-            materialSide = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatS")).orElse(ItemStack.EMPTY);
-
-        materialFront = ItemStack.EMPTY;
-        if (tag.contains("MatF"))
-            materialFront = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatF")).orElse(ItemStack.EMPTY);
-
-        materialTrim = ItemStack.EMPTY;
-        if (tag.contains("MatT"))
-            materialTrim = ItemStack.parse(provider, tag.getCompoundOrEmpty("MatT")).orElse(ItemStack.EMPTY);
+    public void read (ValueInput input) {
+        frameBase = input.read("MatB", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        materialSide = input.read("MatS", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        materialFront = input.read("MatF", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        materialTrim = input.read("MatT", ItemStack.CODEC).orElse(ItemStack.EMPTY);
     }
 
     @Override
-    public CompoundTag write (HolderLookup.Provider provider, CompoundTag tag) {
+    public void write (ValueOutput output) {
         if (!frameBase.isEmpty())
-            tag.put("MatB", frameBase.save(provider));
-        else if (tag.contains("MatB"))
-            tag.remove("MatB");
+            output.store("MatB", ItemStack.CODEC, frameBase);
+        else
+            output.discard("MatB");
 
         if (!materialSide.isEmpty())
-            tag.put("MatS", materialSide.save(provider));
-        else if (tag.contains("MatS"))
-            tag.remove("MatS");
+            output.store("MatS", ItemStack.CODEC, materialSide);
+        else
+            output.discard("MatS");
 
         if (!materialFront.isEmpty())
-            tag.put("MatF", materialFront.save(provider));
-        else if (tag.contains("MatF"))
-            tag.remove("MatF");
+            output.store("MatF", ItemStack.CODEC, materialFront);
+        else
+            output.discard("MatF");
 
         if (!materialTrim.isEmpty())
-            tag.put("MatT", materialTrim.save(provider));
-        else if (tag.contains("MatT"))
-            tag.remove("MatT");
-
-        return tag;
+            output.store("MatT", ItemStack.CODEC, materialTrim);
+        else
+            output.discard("MatT");
     }
 
     @Override

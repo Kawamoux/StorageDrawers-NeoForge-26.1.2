@@ -1,0 +1,56 @@
+package com.jaquadro.minecraft.storagedrawers.client.model.decorator;
+
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.Sheets;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+
+public enum DecoratorRenderType
+{
+    SOLID,
+    CUTOUT,
+    TRANSLUCENT;
+
+    public static DecoratorRenderType fromItemType (ChunkSectionLayer renderType) {
+        if (renderType == null)
+            return null;
+
+        return switch (renderType) {
+            case SOLID -> DecoratorRenderType.SOLID;
+            case CUTOUT, CUTOUT_MIPPED -> DecoratorRenderType.CUTOUT;
+            case TRANSLUCENT -> DecoratorRenderType.TRANSLUCENT;
+            default -> null;
+        };
+    }
+
+    public static DecoratorRenderType fromItemType (RenderType renderType) {
+        if (renderType == Sheets.solidBlockSheet())
+            return DecoratorRenderType.SOLID;
+        if (renderType == Sheets.cutoutBlockSheet())
+            return DecoratorRenderType.CUTOUT;
+        if (renderType == Sheets.translucentItemSheet())
+            return DecoratorRenderType.TRANSLUCENT;
+        return null;
+    }
+
+    public static ChunkSectionLayer toChunkType (DecoratorRenderType renderType) {
+        if (renderType == null)
+            return null;
+
+        return switch (renderType) {
+            case SOLID -> ChunkSectionLayer.SOLID;
+            case CUTOUT -> ChunkSectionLayer.CUTOUT_MIPPED;
+            case TRANSLUCENT -> ChunkSectionLayer.TRANSLUCENT;
+        };
+    }
+
+    public static RenderType toItemType (DecoratorRenderType renderType) {
+        if (renderType == null)
+            return null;
+
+        return switch (renderType) {
+            case SOLID -> Sheets.solidBlockSheet();
+            case CUTOUT -> Sheets.cutoutBlockSheet();
+            case TRANSLUCENT -> Sheets.translucentItemSheet();
+        };
+    }
+}

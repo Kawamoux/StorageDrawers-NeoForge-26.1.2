@@ -8,8 +8,11 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Mth;
+import net.minecraft.world.ItemStackWithSlot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
@@ -311,37 +314,26 @@ public class UpgradeData extends BlockEntityDataShim
     }
 
     @Override
-    public void read (HolderLookup.Provider provider, CompoundTag tag) {
+    public void read (ValueInput input) {
         Arrays.fill(upgrades, ItemStack.EMPTY);
 
-        if (!tag.contains("Upgrades"))
+        var upgradesTag = input.list("Upgrades", ItemStackWithSlot.CODEC);
+        if (upgradesTag.isEmpty())
             return;
 
-        ListTag tagList = tag.getListOrEmpty("Upgrades");
-        for (int i = 0; i < tagList.size(); i++) {
-            CompoundTag upgradeTag = tagList.getCompoundOrEmpty(i);
-
-            Optional<Byte> slot = upgradeTag.getByte("Slot");
-            slot.ifPresent(aByte -> upgrades[aByte] = ItemStack.parse(provider, upgradeTag).orElse(ItemStack.EMPTY));
-        }
+        for (ItemStackWithSlot slotStack : upgradesTag.get())
+            upgrades[slotStack.slot()] = slotStack.stack();
 
         syncUpgrades();
     }
 
     @Override
-    public CompoundTag write (HolderLookup.Provider provider, CompoundTag tag) {
-        ListTag tagList = new ListTag();
+    public void write (ValueOutput output) {
+        var upgradesTag = output.list("Upgrades", ItemStackWithSlot.CODEC);
         for (int i = 0; i < upgrades.length; i++) {
-            if (!upgrades[i].isEmpty()) {
-                CompoundTag upgradeTag = (CompoundTag) upgrades[i].save(provider, new CompoundTag());
-                upgradeTag.putByte("Slot", (byte)i);
-
-                tagList.add(upgradeTag);
-            }
+            if (!upgrades[i].isEmpty())
+                upgradesTag.add(new ItemStackWithSlot(i, upgrades[i]));
         }
-
-        tag.put("Upgrades", tagList);
-        return tag;
     }
 
     protected void onUpgradeChanged (ItemStack oldUpgrade, ItemStack newUpgrade) { }

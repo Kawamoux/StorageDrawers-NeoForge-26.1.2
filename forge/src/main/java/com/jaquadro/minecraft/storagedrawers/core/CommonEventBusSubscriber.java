@@ -16,14 +16,14 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.event.ItemStackedOnOtherEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.NotNull;
 
 @Mod.EventBusSubscriber(modid = StorageDrawers.MOD_ID)
 public class CommonEventBusSubscriber {
     @SubscribeEvent
-    public static void playerLeftClick (@NotNull PlayerInteractEvent.LeftClickBlock event) {
+    public static boolean playerLeftClick (@NotNull PlayerInteractEvent.LeftClickBlock event) {
         BlockPos pos = event.getPos();
         Level level = event.getLevel();
         BlockState state = level.getBlockState(pos);
@@ -34,18 +34,21 @@ public class CommonEventBusSubscriber {
                 BlockHitResult hit = WorldUtils.rayTraceEyes(level, player, pos);
                 if (hit.getType() == HitResult.Type.BLOCK) {
                     blockDrawers.leftAction(state, level, pos, player, hit);
-                    event.setCanceled(blockDrawers.getFaceSlot(state, hit) >= 0);
+                    if (blockDrawers.getFaceSlot(state, hit) >= 0)
+                        return true;
                 }
             }
         }
+
+        return false;
     }
 
     @SubscribeEvent
-    public static void itemStackedOn (ItemStackedOnOtherEvent event) {
+    public static boolean itemStackedOn (ItemStackedOnOtherEvent event) {
         if (!(event.getStackedOnItem().getItem() instanceof ItemUpgradeStorage))
-            return;
+            return false;
         if (!(event.getCarriedItem().getItem() instanceof ItemUpgradeStorage))
-            return;
+            return false;
 
         if (event.getSlot() instanceof SlotUpgrade slot) {
             ItemStack stacked = event.getStackedOnItem();
@@ -61,8 +64,10 @@ public class CommonEventBusSubscriber {
             if (slot.canSwapStack(carried)) {
                 event.getSlot().set(carried);
                 event.getCarriedSlotAccess().set(stacked);
-                event.setCanceled(true);
+                return true;
             }
         }
+
+        return false;
     }
 }

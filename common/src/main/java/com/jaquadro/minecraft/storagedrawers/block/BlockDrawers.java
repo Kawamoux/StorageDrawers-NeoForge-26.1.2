@@ -24,6 +24,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -42,6 +43,9 @@ import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.pathfinder.PathComputationType;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
@@ -182,7 +186,8 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
 
         CustomData customdata = stack.get(DataComponents.BLOCK_ENTITY_DATA);
         if (customdata != null) {
-            blockEntity.readPortable(world.registryAccess(), customdata.copyTag());
+            ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), customdata.copyTag());
+            blockEntity.readPortable(input);
         }
 
 //        if (stack.hasCustomHoverName()) {
@@ -475,7 +480,10 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             data.setIsHeavy(true);
 
         ItemStack stack = new ItemStack(baseItem, 1);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(data.serializeNBT(level.registryAccess())));
+
+        TagValueOutput output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, level.registryAccess());
+        data.serializeNBT(output);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(output.buildResult()));
 
         return stack;
     }
@@ -543,8 +551,9 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         }
 
         if (hasContents) {
-            CompoundTag tiledata = tile.saveWithId(tile.getLevel().registryAccess());
-            drop.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tiledata));
+            TagValueOutput tagOutput = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, tile.getLevel().registryAccess());
+            tile.saveWithId(tagOutput);
+            drop.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tagOutput.buildResult()));
         }
 
         if (tile.hasCustomName())

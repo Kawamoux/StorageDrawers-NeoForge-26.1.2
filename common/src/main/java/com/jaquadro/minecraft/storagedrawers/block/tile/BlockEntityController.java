@@ -32,6 +32,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -784,8 +785,8 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
     }
 
     @Override
-    public void readFixed (HolderLookup.Provider provider, CompoundTag tag) {
-        super.readFixed(provider, tag);
+    public void readFixed (ValueInput input) {
+        super.readFixed(input);
 
         if (getLevel() != null && !getLevel().isClientSide)
             updateCache();

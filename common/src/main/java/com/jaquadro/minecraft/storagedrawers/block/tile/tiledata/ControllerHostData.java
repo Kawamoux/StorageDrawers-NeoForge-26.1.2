@@ -10,6 +10,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -19,32 +21,24 @@ public class ControllerHostData extends BlockEntityDataShim
     private Map<BlockPos, INetworked> nodeMap = new HashMap<>();
 
     @Override
-    public void read (HolderLookup.Provider provider, CompoundTag tag) {
+    public void read (ValueInput input) {
         nodeMap.clear();
 
-        if (tag.contains("RemoteNodes")) {
-            ListTag list = tag.getListOrEmpty("RemoteNodes");
-            for (int i = 0; i < list.size(); i++) {
-                CompoundTag ctag = list.getCompoundOrEmpty(i);
-                nodeMap.put(new BlockPos(ctag.getIntOr("x", 0), ctag.getIntOr("y", 0), ctag.getIntOr("z", 0)), null);
-            }
-        }
+        input.childrenList("RemoteNodes").ifPresent(list -> {
+            for (var t : list)
+                nodeMap.put(new BlockPos(t.getIntOr("x", 0), t.getIntOr("y", 0), t.getIntOr("z", 0)), null);
+        });
     }
 
     @Override
-    public CompoundTag write (HolderLookup.Provider provider, CompoundTag tag) {
-        ListTag list = new ListTag();
+    public void write (ValueOutput output) {
+        var list = output.childrenList("RemoteNodes");
         for (BlockPos pos : nodeMap.keySet()) {
-            CompoundTag ctag = new CompoundTag();
+            var ctag = list.addChild();
             ctag.putInt("x", pos.getX());
             ctag.putInt("y", pos.getY());
             ctag.putInt("z", pos.getZ());
-            list.add(ctag);
         }
-
-        tag.put("RemoteNodes", list);
-
-        return tag;
     }
 
     public void validateRemoteNodes (IControlGroup host, Level level) {

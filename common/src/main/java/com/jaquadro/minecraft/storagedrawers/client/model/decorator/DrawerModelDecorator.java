@@ -30,6 +30,8 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
         this.overlays = overlays;
     }
 
+    private static final List<DecoratorRenderType> defaultRenderTypes = List.of(DecoratorRenderType.CUTOUT);
+
     /*@Override
     public List<RenderType> getRenderTypes (BlockState state) {
         return List.of(RenderType.cutoutMipped());
@@ -41,21 +43,21 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
     }*/
 
     @Override
-    public List<RenderType> getRenderTypes (BlockState state) {
-        return List.of(RenderType.cutoutMipped());
+    public List<DecoratorRenderType> getRenderTypes (BlockState state) {
+        return defaultRenderTypes;
     }
 
     @Override
-    public void emitQuads (Supplier<DrawerModelContext> contextSupplier, Consumer<BlockStateModel> emitModel, RenderType renderType) {
+    public void emitQuads (Supplier<DrawerModelContext> contextSupplier, Consumer<BlockStateModel> emitModel, DecoratorRenderType renderType) {
         DrawerModelContext context = contextSupplier.get();
         if (context == null)
             return;
 
-        if (renderType == null || renderType == RenderType.cutoutMipped())
+        if (renderType == null || renderType == DecoratorRenderType.CUTOUT)
             emitDecoratedQuads(context, emitModel, renderType);
     }
 
-    public void emitDecoratedQuads(DrawerModelContext context, Consumer<BlockStateModel> emitModel, RenderType renderType) {
+    public void emitDecoratedQuads(DrawerModelContext context, Consumer<BlockStateModel> emitModel, DecoratorRenderType renderType) {
         Direction dir = context.state().getValue(BlockDrawers.FACING);
         boolean half = false;
         Block block = context.state().getBlock();
@@ -92,6 +94,7 @@ public class DrawerModelDecorator extends ModelDecorator<DrawerModelContext>
             emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.VOID, dir, half));
         if (attr.isConcealed())
             emitModel.accept(DrawerModelStore.getModel(DrawerModelStore.DynamicPart.SHROUD, dir, half));
+
         if (attr.hasFillLevel()) {
             if (block instanceof BlockCompDrawers compBlock) {
                 int count = compBlock.getDrawerCount();

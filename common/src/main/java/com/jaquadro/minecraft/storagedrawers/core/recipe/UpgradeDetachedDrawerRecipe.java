@@ -8,6 +8,7 @@ import com.jaquadro.minecraft.storagedrawers.item.ItemDetachedDrawer;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgradeStorage;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -15,6 +16,8 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,7 +44,9 @@ public class UpgradeDetachedDrawerRecipe extends CustomRecipe
 
         ItemStack ret = ctx.drawer.copy();
         CustomData cdata = ret.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        DetachedDrawerData data = new DetachedDrawerData(access, cdata.copyTag());
+
+        var input = TagValueInput.create(ProblemReporter.DISCARDING, access, cdata.copyTag());
+        DetachedDrawerData data = new DetachedDrawerData(input);
         int cap = data.getStorageMultiplier();
 
         if (ctx.upgrades.isEmpty()) {
@@ -53,7 +58,9 @@ public class UpgradeDetachedDrawerRecipe extends CustomRecipe
             data.setStorageMultiplier(data.getStorageMultiplier() + addedCap);
         }
 
-        ret.set(DataComponents.CUSTOM_DATA, CustomData.of(data.serializeNBT(access)));
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, access);
+        data.serializeNBT(output);
+        ret.set(DataComponents.CUSTOM_DATA, CustomData.of(output.buildResult()));
         return ret;
     }
 

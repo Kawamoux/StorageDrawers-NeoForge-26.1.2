@@ -29,6 +29,6 @@ public class ForgeRegistry<T> implements ChameleonRegistry<T>
 
     @Override
     public void init (InitContext context) {
-        register.register(((ForgeRegistryContext)context).getEventBus());
+        register.register(((ForgeRegistryContext)context).getBusGroup());
     }
 }

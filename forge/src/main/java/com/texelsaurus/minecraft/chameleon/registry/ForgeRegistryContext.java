@@ -1,17 +1,20 @@
 package com.texelsaurus.minecraft.chameleon.registry;
 
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.eventbus.api.bus.EventBus;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 
 public class ForgeRegistryContext extends ChameleonInit.InitContext
 {
-    private final IEventBus eventBus;
+    private final BusGroup eventBusGroup;
 
-    public ForgeRegistryContext (IEventBus eventBus) {
-        this.eventBus = eventBus;
+
+    public ForgeRegistryContext (BusGroup busGroup) {
+        this.eventBusGroup = busGroup;
     }
 
-    public IEventBus getEventBus () {
-        return eventBus;
+    public BusGroup getBusGroup () {
+        return eventBusGroup;
     }
 }

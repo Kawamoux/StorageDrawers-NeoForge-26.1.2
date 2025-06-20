@@ -15,12 +15,12 @@ import com.jaquadro.minecraft.storagedrawers.inventory.tooltip.KeyringTooltip;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
 import net.minecraft.client.gui.screens.MenuScreens;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.level.block.Block;
 
@@ -35,9 +35,9 @@ public class StorageDrawersClient implements ClientModInitializer
         ModelLoadingPlugin.register(new ModelLoadPlugin());
 
         ModBlocks.getDrawers().forEach(block ->
-            BlockRenderLayerMap.INSTANCE.putBlock(block, RenderType.cutoutMipped()));
+            BlockRenderLayerMap.putBlock(block, ChunkSectionLayer.CUTOUT_MIPPED));
         ModBlocks.getFramedBlocks().forEach(block ->
-            BlockRenderLayerMap.INSTANCE.putBlock((Block)block, RenderType.cutoutMipped()));
+            BlockRenderLayerMap.putBlock((Block)block, ChunkSectionLayer.CUTOUT_MIPPED));
 
         MenuScreens.register(ModContainers.DRAWER_CONTAINER_1.get(), DrawerScreen.Slot1::new);
         MenuScreens.register(ModContainers.DRAWER_CONTAINER_2.get(), DrawerScreen.Slot2::new);

@@ -4,6 +4,7 @@ import com.jaquadro.minecraft.storagedrawers.ModConstants;
 import com.jaquadro.minecraft.storagedrawers.client.gui.StorageGuiGraphics;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
@@ -75,7 +76,7 @@ public class DrawerScreen extends AbstractContainerScreen<ContainerDrawers>
         super.init();
 
         if (storageGuiGraphics == null && minecraft != null) {
-            storageGuiGraphics = new StorageGuiGraphics(minecraft, minecraft.renderBuffers().bufferSource());
+            storageGuiGraphics = new StorageGuiGraphics(minecraft, minecraft.gameRenderer.guiRenderState);
         }
     }
 
@@ -93,26 +94,26 @@ public class DrawerScreen extends AbstractContainerScreen<ContainerDrawers>
 
     @Override
     protected void renderLabels (GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(this.font, this.title, 8, 6, 4210752, false);
-        graphics.drawString(this.font, I18n.get("container.storagedrawers.upgrades"), 8, 75, 4210752, false);
-        graphics.drawString(this.font, this.inventory.getDisplayName().getString(), 8, this.imageHeight - 96 + 2, 4210752, false);
+        graphics.drawString(this.font, this.title, 8, 6, 0xFF404040, false);
+        graphics.drawString(this.font, I18n.get("container.storagedrawers.upgrades"), 8, 75, 0xFF404040, false);
+        graphics.drawString(this.font, this.inventory.getDisplayName().getString(), 8, this.imageHeight - 96 + 2, 0xFF404040, false);
 
         String mult = Integer.toString(menu.getStackCapacity());
-        graphics.drawString(this.font, mult, 161 - mult.length() * 6, 42, 4210752, false);
+        graphics.drawString(this.font, mult, 161 - mult.length() * 6, 42, 0xFF404040, false);
     }
 
     @Override
     protected void renderBg (GuiGraphics graphics, float partialTicks, int mouseX, int mouseY) {
         int guiX = (width - imageWidth) / 2;
         int guiY = (height - imageHeight) / 2;
-        graphics.blit(RenderType::guiTextured, background, guiX, guiY, 0, 0, imageWidth, imageHeight, 256, 256);
+        graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX, guiY, 0, 0, imageWidth, imageHeight, 256, 256);
 
         List<Slot> storageSlots = menu.getStorageSlots();
         for (Slot slot : storageSlots) {
             if (slot instanceof SlotDrawer sd && sd.getDrawer().isMissing())
-                graphics.blit(RenderType::guiTextured, background, guiX + slot.x, guiY + slot.y, smDisabledX, smMissingY, 16, 16, 256, 256);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX + slot.x, guiY + slot.y, smDisabledX, smMissingY, 16, 16, 256, 256);
             else
-                graphics.blit(RenderType::guiTextured, background, guiX + slot.x, guiY + slot.y, smDisabledX, smDisabledY, 16, 16, 256, 256);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX + slot.x, guiY + slot.y, smDisabledX, smDisabledY, 16, 16, 256, 256);
         }
 
         List<Slot> upgradeSlots = menu.getUpgradeSlots();
@@ -122,7 +123,7 @@ public class DrawerScreen extends AbstractContainerScreen<ContainerDrawers>
                 locked = ucontainer.slotIsLocked(slot.getContainerSlot());
 
             if (locked)
-                graphics.blit(RenderType::guiTextured, background, guiX + slot.x, guiY + slot.y, smDisabledX, smDisabledY, 16, 16, 256, 256);
+                graphics.blit(RenderPipelines.GUI_TEXTURED, background, guiX + slot.x, guiY + slot.y, smDisabledX, smDisabledY, 16, 16, 256, 256);
         }
     }
 

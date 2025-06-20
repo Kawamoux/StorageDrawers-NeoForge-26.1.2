@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.block.model.TextureSlots;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.*;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ResolvedModel;
@@ -138,26 +139,26 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             if (model != null) {
                 List<BlockModelPart> parts = new ArrayList<>();
                 model.collectParts(null, parts);
-                Map<RenderType, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
+                Map<ChunkSectionLayer, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
                 for (BlockModelPart part : parts) {
-                    RenderType type = part.getRenderType(state);
-                    if (!layers.containsKey(type)) {
+                    ChunkSectionLayer partType = part.getRenderType(state);
+                    if (!layers.containsKey(partType)) {
                         ItemStackRenderState.LayerRenderState renderState = itemStackRenderState.newLayer();
-                        layers.put(type, renderState);
+                        layers.put(partType, renderState);
 
                         RenderType itemRenderType = null;
-                        if (type == RenderType.SOLID)
+                        if (partType == ChunkSectionLayer.SOLID)
                             itemRenderType = Sheets.solidBlockSheet();
-                        if (type == RenderType.CUTOUT_MIPPED || type == RenderType.CUTOUT)
+                        if (partType == ChunkSectionLayer.CUTOUT_MIPPED || partType == ChunkSectionLayer.CUTOUT)
                             itemRenderType = Sheets.cutoutBlockSheet();
-                        else if (type == RenderType.translucent())
+                        else if (partType == ChunkSectionLayer.TRANSLUCENT)
                             itemRenderType = Sheets.translucentItemSheet();
 
                         renderState.setRenderType(itemRenderType);
                         renderState.setExtents(extents);
                     }
 
-                    ItemStackRenderState.LayerRenderState layer = layers.get(type);
+                    ItemStackRenderState.LayerRenderState layer = layers.get(partType);
                     properties.applyToLayer(layer, itemDisplayContext);
 
                     layer.prepareQuadList().addAll(part.getQuads(null));

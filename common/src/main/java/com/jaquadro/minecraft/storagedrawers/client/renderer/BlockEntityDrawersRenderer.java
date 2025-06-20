@@ -265,28 +265,6 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
     public static final ResourceLocation TEXTURE_IND_COMP_3 = ModConstants.loc("block/indicator/indicator_comp_on");
     public static final ResourceLocation TEXTURE_IND_COMP_2 = ModConstants.loc("block/indicator/indicator_comp2_on");
 
-    private void renderOverlay (BlockDrawers block, BlockEntityDrawers blockEntityDrawers, PoseStack matrixStack, MultiBufferSource buffer, Direction side, int combinedLight, int combinedOverlay) {
-        matrixStack.pushPose();
-
-        alignRendering(matrixStack, side);
-        BlockStateModel model = DrawerModelStore.getModel(DrawerModelStore.DynamicPart.FRAMED_CONTROLLER_SHADING, Direction.SOUTH);
-        if (model != null) {
-            List<BlockModelPart> parts = model.collectParts(randomSource);
-
-            VertexConsumer builder = buffer.getBuffer(RenderType.translucent());
-            for (BlockModelPart part : parts) {
-                for (Direction dir : Direction.values()) {
-                    for (BakedQuad quad : part.getQuads(dir))
-                        builder.putBulkData(matrixStack.last(), quad, 1, 1, 1, 1, combinedLight, combinedOverlay);
-                }
-                for (BakedQuad quad : part.getQuads(null))
-                    builder.putBulkData(matrixStack.last(), quad, 1, 1, 1, 1, combinedLight, combinedOverlay);
-            }
-        }
-
-        matrixStack.popPose();
-    }
-
     private void renderIndicator (BlockDrawers block, BlockEntityDrawers blockEntityDrawers, PoseStack matrixStack, MultiBufferSource buffer, Direction side, int combinedLight, int combinedOverlay) {
         int count = (blockEntityDrawers instanceof BlockEntityDrawersComp) ? 1 : block.getDrawerCount();
 

@@ -13,6 +13,8 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Stack;
@@ -65,15 +67,13 @@ public class FractionalDrawerGroup extends BlockEntityDataShim implements IDrawe
     }
 
     @Override
-    public void read (HolderLookup.Provider provider, CompoundTag tag) {
-        if (tag.contains("Drawers"))
-            storage.deserializeNBT(provider, tag.getCompoundOrEmpty("Drawers"));
+    public void read (ValueInput input) {
+        input.child("Drawers").ifPresent(storage::deserializeNBT);
     }
 
     @Override
-    public CompoundTag write (HolderLookup.Provider provider, CompoundTag tag) {
-        tag.put("Drawers", storage.serializeNBT(provider));
-        return tag;
+    public void write (ValueOutput output) {
+        storage.serializeNBT(output.child("Drawers"));
     }
 
     public void syncAttributes () {
@@ -526,46 +526,36 @@ public class FractionalDrawerGroup extends BlockEntityDataShim implements IDrawe
             }
         }
 
-        public CompoundTag serializeNBT (HolderLookup.Provider provider) {
-            ListTag itemList = new ListTag();
+        public void serializeNBT (ValueOutput output) {
+            var itemList = output.childrenList("Items");
             for (int i = 0; i < slotCount; i++) {
                 if (protoStack[i].isEmpty())
                     continue;
 
-                CompoundTag itemTag = new CompoundTag();
-                itemTag = (CompoundTag)protoStack[i].save(provider, itemTag);
-
-                CompoundTag slotTag = new CompoundTag();
+                var slotTag = itemList.addChild();
+                slotTag.store("Item", ItemStack.CODEC, protoStack[i]);
                 slotTag.putByte("Slot", (byte)i);
                 slotTag.putInt("Conv", convRate[i]);
-                slotTag.put("Item", itemTag);
-
-                itemList.add(slotTag);
             }
 
-            CompoundTag tag = new CompoundTag();
-            tag.putInt("Count", pooledCount);
-            tag.put("Items", itemList);
-
-            return tag;
+            output.putInt("Count", pooledCount);
         }
 
-        public void deserializeNBT (HolderLookup.Provider provider, CompoundTag tag) {
+        public void deserializeNBT (ValueInput input) {
             for (int i = 0; i < slotCount; i++) {
                 protoStack[i] = ItemStack.EMPTY;
                 matchers[i] = ItemStackMatcher.EMPTY;
                 convRate[i] = 0;
             }
 
-            pooledCount = tag.getIntOr("Count", 0);
+            pooledCount = input.getIntOr("Count", 0);
 
-            ListTag itemList = tag.getListOrEmpty("Items");
-            for (int i = 0; i < itemList.size(); i++) {
-                CompoundTag slotTag = itemList.getCompoundOrEmpty(i);
-                int slot = slotTag.getByteOr("Slot", (byte)0);
+            var itemList = input.childrenListOrEmpty("Items");
+            for (var slotTag : itemList) {
+                int slot = slotTag.getIntOr("Slot", 0);
 
-                protoStack[slot] = ItemStack.parse(provider, slotTag.getCompoundOrEmpty("Item")).orElse(ItemStack.EMPTY);
-                convRate[slot] = slotTag.getByteOr("Conv", (byte)0);
+                protoStack[slot] = slotTag.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+                convRate[slot] = slotTag.getIntOr("Conv", 0);
 
                 IDrawerAttributes attrs = getAttributes();
                 matchers[slot] = attrs.isDictConvertible()
@@ -577,7 +567,7 @@ public class FractionalDrawerGroup extends BlockEntityDataShim implements IDrawe
             normalizeGroup();
 
             // Check if cache needs to be invalidated
-            if (itemList.size() > 0) {
+            if (!itemList.isEmpty()) {
                 boolean cacheMatch = true;
                 for (int i = 0; i < slotCount; i++) {
                     cacheMatch &= ItemStackMatcher.areItemsEqual(protoStack[i], cachedProtoStack[i]);

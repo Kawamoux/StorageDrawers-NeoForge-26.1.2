@@ -8,12 +8,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.level.storage.TagValueInput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -58,7 +60,7 @@ public class ItemDetachedDrawer extends Item implements IPortable
 
     @Override
     public Optional<TooltipComponent> getTooltipImage (ItemStack stack) {
-        CustomData cdata = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        // CustomData cdata = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
 
         // TODO: Get around registry
         /*
@@ -77,7 +79,8 @@ public class ItemDetachedDrawer extends Item implements IPortable
             return false;
 
         CustomData cdata = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        DetachedDrawerData data = new DetachedDrawerData(provider, cdata.copyTag());
+        var input = TagValueInput.create(ProblemReporter.DISCARDING, provider, cdata.copyTag());
+        DetachedDrawerData data = new DetachedDrawerData(input);
         return data.isHeavy() && data.getStoredItemCount() > data.getStoredItemStackSize();
     }
 }

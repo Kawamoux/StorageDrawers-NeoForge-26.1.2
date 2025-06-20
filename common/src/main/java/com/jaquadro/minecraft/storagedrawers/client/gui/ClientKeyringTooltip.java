@@ -5,6 +5,7 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -46,7 +47,7 @@ public class ClientKeyringTooltip implements ClientTooltipComponent
     public void renderImage(Font font, int pX, int pY, int pW, int pH, GuiGraphics graphics) {
         int i = gridSizeX();
         int j = gridSizeY();
-        graphics.blitSprite(RenderType::guiTextured, SLOT_BACKGROUND_SPRITE,
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_BACKGROUND_SPRITE,
             pX, pY, this.backgroundWidth(), this.backgroundHeight());
         boolean isFull = contents.size() >= 64;
         int k = 0;
@@ -75,7 +76,7 @@ public class ClientKeyringTooltip implements ClientTooltipComponent
     }
 
     private void blit(GuiGraphics graphics, int x, int y, ResourceLocation texture) {
-        graphics.blitSprite(RenderType::guiTextured, texture, x, y, 0, 24, 24);
+        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, texture, x, y, 0, 24, 24);
     }
 
     private int gridSizeX() {

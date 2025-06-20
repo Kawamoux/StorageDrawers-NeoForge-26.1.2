@@ -10,6 +10,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -19,6 +20,8 @@ import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;
@@ -87,7 +90,7 @@ public class ItemDrawers extends BlockItem implements IPortable
 
         var x = new UpgradeData(7);
         try {
-            x.read(provider, data.copyTag());
+            x.read(TagValueInput.create(ProblemReporter.DISCARDING, provider, data.copyTag()));
         } catch (ClassCastException e) {
             return false;
         }

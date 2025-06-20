@@ -2,8 +2,8 @@ package com.jaquadro.minecraft.storagedrawers.client.model;
 
 import com.google.common.base.Suppliers;
 import com.jaquadro.minecraft.storagedrawers.ModConstants;
-import com.jaquadro.minecraft.storagedrawers.StorageDrawers;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
+import com.jaquadro.minecraft.storagedrawers.client.model.decorator.DecoratorRenderType;
 import com.jaquadro.minecraft.storagedrawers.client.model.decorator.ModelDecorator;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
@@ -12,15 +12,12 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.blockview.v2.FabricBlockView;
 import net.fabricmc.fabric.api.renderer.v1.Renderer;
-import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
-import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
 import net.fabricmc.fabric.api.renderer.v1.mesh.Mesh;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MutableMesh;
 import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBlockStateModel;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.block.model.TextureSlots;
@@ -36,7 +33,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -47,7 +43,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -60,8 +55,8 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
     private final ItemStack stack;
 
     private static Map<BlockStateModel, Mesh> meshCache = new HashMap<>();
-    private static RenderMaterial cutoutMat;
-    private static RenderMaterial transMat;
+
+    private static final List<DecoratorRenderType> decoratorRenderTypes = List.of(DecoratorRenderType.SOLID, DecoratorRenderType.CUTOUT, DecoratorRenderType.TRANSLUCENT);
 
     public PlatformDecoratedModel (BlockStateModel parent, ModelDecorator<C> decorator, ModelContextSupplier<C> contextSupplier) {
         super(parent);
@@ -99,20 +94,28 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
                 model.emitQuads(emitter, blockView, pos, state, random, cullTest);
         };
 
+        Consumer<BlockStateModel> emitModelCutout = (model) -> {
+            if (model != null) {
+                Mesh mesh = getMesh(model, state, random, DecoratorRenderType.CUTOUT);
+                mesh.outputTo(emitter);
+            }
+        };
+
         Consumer<BlockStateModel> emitModelTransparent = (model) -> {
             if (model != null) {
-                Mesh mesh = getMesh(model, state, random, RenderType.translucent());
+                Mesh mesh = getMesh(model, state, random, DecoratorRenderType.TRANSLUCENT);
                 mesh.outputTo(emitter);
             }
         };
 
         try {
-            decorator.emitQuads(supplier, emitModelOpaque, RenderType.solid());
-            decorator.emitQuads(supplier, emitModelTransparent, RenderType.translucent());
+            decorator.emitQuads(supplier, emitModelOpaque, DecoratorRenderType.SOLID);
+            decorator.emitQuads(supplier, emitModelCutout, DecoratorRenderType.CUTOUT);
+            decorator.emitQuads(supplier, emitModelTransparent, DecoratorRenderType.TRANSLUCENT);
         } catch (Exception e) { }
     }
 
-    private Mesh getMesh (BlockStateModel model, BlockState state, RandomSource randomSource, RenderType renderType) {
+    private Mesh getMesh (BlockStateModel model, BlockState state, RandomSource randomSource, DecoratorRenderType renderType) {
         if (meshCache.containsKey(model))
             return meshCache.get(model);
 
@@ -121,39 +124,22 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         return mesh;
     }
 
-    private Mesh buildMesh (BlockStateModel model, BlockState state, RandomSource randomSource, RenderType renderType) {
+    private Mesh buildMesh (BlockStateModel model, BlockState state, RandomSource randomSource, DecoratorRenderType renderType) {
         Renderer render = Renderer.get();
-        RenderMaterial mat = null;
-
-        if (renderType == RenderType.cutoutMipped()) {
-            if (cutoutMat == null)
-                cutoutMat = render.materialFinder().blendMode(BlendMode.CUTOUT_MIPPED).find();
-            mat = cutoutMat;
-        }
-        else if (renderType == RenderType.translucent()) {
-            if (transMat == null)
-                transMat = render.materialFinder().blendMode(BlendMode.TRANSLUCENT).find();
-            mat = transMat;
-        }
-
-        if (mat == null)
-            return null;
 
         MutableMesh builder = render.mutableMesh();
-        QuadEmitter quadEmit = builder.emitter();
+        QuadEmitter quadEmit = builder.emitter().renderLayer(DecoratorRenderType.toChunkType(renderType));
 
         List<BlockModelPart> parts = new ArrayList<>();
         model.collectParts(randomSource, parts);
 
         for (BlockModelPart part : parts) {
             for (var d : Direction.values()) {
-                for (var quad : part.getQuads(d)) {
-                    quadEmit.fromVanilla(quad, mat, d).emit();
-                }
+                for (var quad : part.getQuads(d))
+                    quadEmit.fromBakedQuad(quad).emit();
             }
-            for (var quad : part.getQuads(null)) {
-                quadEmit.fromVanilla(quad, mat, null).emit();
-            }
+            for (var quad : part.getQuads(null))
+                quadEmit.fromBakedQuad(quad).emit();
         }
 
         return builder.immutableCopy();
@@ -220,8 +206,8 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             }
 
             if (model != null) {
-                Map<RenderType, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
-                for (var renderType : List.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.translucent())) {
+                Map<DecoratorRenderType, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
+                for (var renderType : decoratorRenderTypes) {
                     List<BlockModelPart> parts = new ArrayList<>();
                     Consumer<BlockStateModel> emitModel = (model) -> {
                         if (model != null)
@@ -239,15 +225,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
                         ItemStackRenderState.LayerRenderState renderState = itemStackRenderState.newLayer();
                         layers.put(renderType, renderState);
 
-                        RenderType itemRenderType = null;
-                        if (renderType == RenderType.solid())
-                            itemRenderType = Sheets.solidBlockSheet();
-                        if (renderType == RenderType.cutoutMipped() || renderType == RenderType.cutout())
-                            itemRenderType = Sheets.cutoutBlockSheet();
-                        else if (renderType == RenderType.translucent())
-                            itemRenderType = Sheets.translucentItemSheet();
-
-                        renderState.setRenderType(itemRenderType);
+                        renderState.setRenderType(DecoratorRenderType.toItemType(renderType));
                         renderState.setExtents(extents);
                     }
 

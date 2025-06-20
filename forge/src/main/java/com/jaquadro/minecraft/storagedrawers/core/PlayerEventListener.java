@@ -1,5 +1,6 @@
 package com.jaquadro.minecraft.storagedrawers.core;
 
+import com.jaquadro.minecraft.storagedrawers.StorageDrawers;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.IPortable;
 import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgradeRemote;
@@ -13,21 +14,21 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent.Phase;
 import net.minecraftforge.event.TickEvent.PlayerTickEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
+import net.minecraftforge.fml.common.Mod;
 
-/** Punishes players holding filled drawers, if enabled in config */
+@Mod.EventBusSubscriber(modid = StorageDrawers.MOD_ID)
 public class PlayerEventListener
 {
-
-	private void applyDebuff(Player plr)
+	private static void applyDebuff(Player plr)
 	{
 		// slowness IV for 5 seconds
 		plr.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 100, 3, true, true));
 	}
 
 	@SubscribeEvent
-	public void onPlayerPickup(EntityItemPickupEvent event) {
+	public static void onPlayerPickup(EntityItemPickupEvent event) {
 		if (!ModCommonConfig.INSTANCE.GENERAL.heavyDrawers.get())
 			return;
 
@@ -35,7 +36,7 @@ public class PlayerEventListener
 	}
 
 	@SubscribeEvent
-	public void onPlayerTick(PlayerTickEvent event) {
+	public static void onPlayerTick(PlayerTickEvent event) {
 		// every 3 seconds, in the END phase
 		if(event.phase != Phase.END || event.player.tickCount % 60 != 0)
 			return;
@@ -59,7 +60,7 @@ public class PlayerEventListener
 		}
 	}
 
-	private boolean checkItemDebuf (ItemStack stack, Player player) {
+	private static boolean checkItemDebuf (ItemStack stack, Player player) {
 		Item item = stack.getItem();
 		if (item instanceof IPortable ip) {
 			if (ip.isHeavy(player.level().registryAccess(), stack)) {

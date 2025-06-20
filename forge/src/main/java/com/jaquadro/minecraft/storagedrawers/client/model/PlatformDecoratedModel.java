@@ -2,24 +2,21 @@ package com.jaquadro.minecraft.storagedrawers.client.model;
 
 import com.google.common.base.Suppliers;
 import com.jaquadro.minecraft.storagedrawers.StorageDrawers;
-import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataProvider;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
+import com.jaquadro.minecraft.storagedrawers.client.model.decorator.DecoratorRenderType;
 import com.jaquadro.minecraft.storagedrawers.client.model.decorator.ModelDecorator;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.block.model.TextureSlots;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.ItemModel;
 import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.item.ModelRenderProperties;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ResolvedModel;
 import net.minecraft.core.BlockPos;
@@ -32,10 +29,8 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraftforge.client.ChunkRenderTypeSet;
 import net.minecraftforge.client.extensions.IForgeBlockStateModel;
 import net.minecraftforge.client.model.data.ModelData;
 import net.minecraftforge.client.model.data.ModelProperty;
@@ -44,7 +39,6 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -54,6 +48,8 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
 
     private final ModelDecorator<C> decorator;
     private final ModelContextSupplier<C> contextSupplier;
+
+    private static final List<DecoratorRenderType> decoratorRenderTypes = List.of(DecoratorRenderType.SOLID, DecoratorRenderType.CUTOUT, DecoratorRenderType.TRANSLUCENT);
 
     public PlatformDecoratedModel (BlockStateModel parent, ModelDecorator<C> decorator, ModelContextSupplier<C> contextSupplier) {
         super(parent);
@@ -67,7 +63,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
     }
 
     @Override
-    public void collectParts (RandomSource random, List<BlockModelPart> dest, ModelData data, @Nullable RenderType renderType) {
+    public void collectParts (RandomSource random, List<BlockModelPart> dest, ModelData data, @Nullable ChunkSectionLayer renderType) {
         BlockState state = data.get(BLOCKSTATE);
         if (state == null) {
             parent.collectParts(random, dest, data, renderType);
@@ -86,13 +82,13 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         };
 
         try {
-            decorator.emitQuads(supplier, emitModel, renderType);
+            decorator.emitQuads(supplier, emitModel, DecoratorRenderType.fromItemType(renderType));
         } catch (Exception e) { }
     }
 
     @Override
-    public ChunkRenderTypeSet getRenderTypes (@NotNull BlockState state, @NotNull RandomSource rand, @NotNull ModelData data) {
-        return ChunkRenderTypeSet.of(decorator.getRenderTypes(state));
+    public Collection<ChunkSectionLayer> getRenderTypes (@NotNull BlockState state, @NotNull RandomSource rand, @NotNull ModelData data) {
+        return decorator.getRenderTypes(state).stream().map(DecoratorRenderType::toChunkType).toList();
     }
 
     public static class PlatformDecoratedItemModel implements ItemModel
@@ -156,8 +152,8 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             }
 
             if (model != null) {
-                Map<RenderType, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
-                for (var renderType : List.of(RenderType.solid(), RenderType.cutoutMipped(), RenderType.translucent())) {
+                Map<DecoratorRenderType, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
+                for (var renderType : decoratorRenderTypes) {
                     List<BlockModelPart> parts = new ArrayList<>();
                     model.collectParts(null, parts, renderType);
                     if (parts.isEmpty())
@@ -167,15 +163,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
                         ItemStackRenderState.LayerRenderState renderState = itemStackRenderState.newLayer();
                         layers.put(renderType, renderState);
 
-                        RenderType itemRenderType = null;
-                        if (renderType == RenderType.solid())
-                            itemRenderType = Sheets.solidBlockSheet();
-                        if (renderType == RenderType.cutoutMipped() || renderType == RenderType.cutout())
-                            itemRenderType = Sheets.cutoutBlockSheet();
-                        else if (renderType == RenderType.translucent())
-                            itemRenderType = Sheets.translucentItemSheet();
-
-                        renderState.setRenderType(itemRenderType);
+                        renderState.setRenderType(DecoratorRenderType.toItemType(renderType));
                         renderState.setExtents(extents);
                     }
 
@@ -243,7 +231,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             collectParts(randomSource, list, null);
         }
 
-        public void collectParts (RandomSource randomSource, List<BlockModelPart> list, RenderType renderType) {
+        public void collectParts (RandomSource randomSource, List<BlockModelPart> list, DecoratorRenderType renderType) {
             Supplier<C> supplier = () -> parent.contextSupplier.makeContext(stack);
             ModelDecorator<C> decorator = parent.decorator;
             if (decorator.shouldRenderBase(supplier, stack))

@@ -11,3 +11,5 @@ accessible method net/minecraft/client/renderer/block/model/BlockModel getElemen
 accessible field net/minecraft/world/item/crafting/RecipeManager recipes Lnet/minecraft/world/item/crafting/RecipeMap;
 accessible field net/minecraft/world/item/crafting/ShapedRecipe pattern Lnet/minecraft/world/item/crafting/ShapedRecipePattern;
 accessible field net/minecraft/world/item/crafting/ShapedRecipe result Lnet/minecraft/world/item/ItemStack;
+
+accessible field net/minecraft/client/renderer/GameRenderer guiRenderState Lnet/minecraft/client/gui/render/state/GuiRenderState;

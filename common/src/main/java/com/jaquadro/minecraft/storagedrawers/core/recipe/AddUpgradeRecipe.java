@@ -7,6 +7,8 @@ import com.jaquadro.minecraft.storagedrawers.item.ItemDrawers;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
@@ -14,6 +16,8 @@ import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.TagValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +44,11 @@ public class AddUpgradeRecipe extends CustomRecipe
         ItemStack ret = ctx.drawer.copy();
 
         CustomData orig = ret.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
-        CustomData data = CustomData.of(ctx.data.write(registries, orig.copyTag()));
+
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
+        ctx.data.write(output);
+
+        CustomData data = CustomData.of(orig.copyTag().merge(output.buildResult()));
         ret.set(DataComponents.BLOCK_ENTITY_DATA, data);
 
         return ret;
@@ -87,7 +95,7 @@ public class AddUpgradeRecipe extends CustomRecipe
 
         CustomData custom = ret.drawer.get(DataComponents.BLOCK_ENTITY_DATA);
         if (custom != null)
-            ret.data.read(registries, custom.copyTag());
+            ret.data.read(TagValueInput.create(ProblemReporter.DISCARDING, registries, custom.copyTag()));
 
         for (ItemStack upgrade : ret.upgrades) {
             if (upgrade.getItem() == ModItems.ONE_STACK_UPGRADE.get())

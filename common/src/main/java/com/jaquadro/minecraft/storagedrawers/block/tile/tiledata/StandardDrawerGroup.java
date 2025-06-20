@@ -3,6 +3,7 @@ package com.jaquadro.minecraft.storagedrawers.block.tile.tiledata;
 import com.jaquadro.minecraft.storagedrawers.api.storage.*;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute;
 import com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities;
+import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.jaquadro.minecraft.storagedrawers.inventory.ItemStackHelper;
 import com.jaquadro.minecraft.storagedrawers.util.ItemStackMatcher;
 import com.jaquadro.minecraft.storagedrawers.util.ItemStackTagMatcher;
@@ -11,6 +12,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Predicate;
@@ -49,29 +52,22 @@ public abstract class StandardDrawerGroup extends BlockEntityDataShim implements
     }
 
     @Override
-    public void read (HolderLookup.Provider provider, CompoundTag tag) {
-        if (!tag.contains("Drawers"))
-            return;
+    public void read (ValueInput input) {
+        var itemList = input.childrenListOrEmpty("Drawers");
 
-        ListTag itemList = tag.getListOrEmpty("Drawers");
-        for (int i = 0; i < itemList.size(); i++) {
-            if (i < slots.length)
-                slots[i].deserializeNBT(provider, itemList.getCompoundOrEmpty(i));
-        }
+        int i = 0;
+        for (var item : itemList)
+            slots[i++].deserializeNBT(item);
     }
 
     @Override
-    public CompoundTag write (HolderLookup.Provider provider, CompoundTag tag) {
+    public void write (ValueOutput output) {
         if (slots == null)
-            return tag;
+            return;
 
-        ListTag itemList = new ListTag();
+        var itemList = output.childrenList("Drawers");
         for (DrawerData slot : slots)
-            itemList.add(slot.serializeNBT(provider));
-
-        tag.put("Drawers", itemList);
-
-        return tag;
+            slot.serializeNBT(itemList.addChild());
     }
 
     @NotNull
@@ -387,37 +383,21 @@ public abstract class StandardDrawerGroup extends BlockEntityDataShim implements
                 onItemChanged();
         }
 
-        public CompoundTag serializeNBT (HolderLookup.Provider provider) {
-            CompoundTag tag = new CompoundTag();
-            tag.putBoolean("Missing", missing);
+        public void serializeNBT (ValueOutput output) {
+            output.putBoolean("Missing", missing);
 
             if (protoStack.isEmpty())
-                return tag;
+                return;
 
-            CompoundTag item = new CompoundTag();
-            item = (CompoundTag)protoStack.save(provider, item);
-
-            tag.put("Item", item);
-            tag.putInt("Count", count);
-
-            return tag;
+            output.store("Item", ItemStack.CODEC, protoStack);
+            output.putInt("Count", count);
         }
 
-        public void deserializeNBT (HolderLookup.Provider provider, CompoundTag nbt) {
-            ItemStack tagItem = ItemStack.EMPTY;
-            int tagCount = 0;
-            boolean tagMissing = false;
+        public void deserializeNBT (ValueInput input) {
+            setStoredItemRaw(input.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY));
+            setStoredItemCountRaw(input.getIntOr("Count", 0));
 
-            if (nbt.contains("Item"))
-                tagItem = ItemStack.parse(provider, nbt.getCompoundOrEmpty("Item")).orElse(ItemStack.EMPTY);
-            if (nbt.contains("Count"))
-                tagCount = nbt.getIntOr("Count", 0);
-            if (nbt.contains("Missing"))
-                tagMissing = nbt.getBooleanOr("Missing", false);
-
-            setStoredItemRaw(tagItem);
-            setStoredItemCountRaw(tagCount);
-            this.missing = tagMissing;
+            missing = input.getBooleanOr("Missing", false);
         }
 
         public void syncAttributes () {

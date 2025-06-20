@@ -5,7 +5,7 @@ import net.darkhax.curseforgegradle.Constants as CFG_Constants
 
 plugins {
     id("modloader-conv")
-    id("net.minecraftforge.gradle") version ("[6.0.24,6.2)")
+    id("net.minecraftforge.gradle") version ("[6.0.36,6.2)")
     id("org.spongepowered.mixin") version ("0.7-SNAPSHOT")
     id("com.modrinth.minotaur")
 }
@@ -51,6 +51,7 @@ minecraft {
 dependencies {
     "minecraft"("net.minecraftforge:forge:${Versions.minecraft}-${Versions.forge}")
     annotationProcessor("org.spongepowered:mixin:0.8.5-SNAPSHOT:processor")
+    // annotationProcessor("net.minecraftforge:eventbus-validator:7.0-beta.7")
     implementation("net.sf.jopt-simple:jopt-simple:5.0.4") { version { strictly("5.0.4") } }
 
     // JEI

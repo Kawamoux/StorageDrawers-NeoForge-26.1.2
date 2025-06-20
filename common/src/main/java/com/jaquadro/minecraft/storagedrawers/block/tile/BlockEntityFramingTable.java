@@ -18,6 +18,7 @@ import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
 import net.minecraft.world.MenuProvider;
@@ -30,6 +31,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,29 +75,22 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
     }
 
     @Override
-    protected void readFixed (HolderLookup.Provider provider, CompoundTag tag) {
-        super.readFixed(provider, tag);
+    protected void readFixed (ValueInput input) {
+        super.readFixed(input);
 
-        inputStack = ItemStack.EMPTY;
-        if (tag.contains("Input"))
-            inputStack = ItemStack.parse(provider, tag.getCompoundOrEmpty("Input")).orElse(ItemStack.EMPTY);
-
-        resultStack = ItemStack.EMPTY;
-        if (tag.contains("Result"))
-            resultStack = ItemStack.parse(provider, tag.getCompoundOrEmpty("Result")).orElse(ItemStack.EMPTY);
+        inputStack = input.read("Input", ItemStack.CODEC).orElse(ItemStack.EMPTY);
+        resultStack = input.read("Result", ItemStack.CODEC).orElse(ItemStack.EMPTY);
     }
 
     @Override
-    protected CompoundTag writeFixed (HolderLookup.Provider provider, CompoundTag tag) {
-        tag = super.writeFixed(provider, tag);
+    protected void writeFixed (ValueOutput output) {
+        super.writeFixed(output);
 
         if (!inputStack.isEmpty())
-            tag.put("Input", inputStack.save(provider));
+            output.store("Input", ItemStack.CODEC, inputStack);
 
         if (!resultStack.isEmpty())
-            tag.put("Result", resultStack.save(provider));
-
-        return tag;
+            output.store("Result", ItemStack.CODEC, resultStack);
     }
 
     public boolean isItemValidTarget (ItemStack stack) {
@@ -157,23 +153,23 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
     }
 
     @Override
-    public void removeComponentsFromTag(CompoundTag tag) {
-        tag.remove("CustomName");
+    public void removeComponentsFromTag(ValueOutput output) {
+        output.discard("CustomName");
     }
 
     @Override
-    public void readPortable (HolderLookup.Provider provider, CompoundTag tag) {
-        super.readPortable(provider, tag);
-        if (tag.contains("CustomName"))
-            name = parseCustomNameSafe(tag.get("CustomName"), provider);
+    public void readPortable (ValueInput input) {
+        super.readPortable(input);
+
+        name = parseCustomNameSafe(input, "CustomName");
     }
 
     @Override
-    public CompoundTag writePortable (HolderLookup.Provider provider, CompoundTag tag) {
-        tag = super.writePortable(provider, tag);
+    public void writePortable (ValueOutput output) {
+        super.writePortable(output);
+
         if (name != null)
-            tag.putString("CustomName", Component.Serializer.toJson(name, provider));
-        return tag;
+            output.storeNullable("CustomName", ComponentSerialization.CODEC, this.name);
     }
 
     public static class ContentProvider implements ContentMenuProvider<PositionContent>
