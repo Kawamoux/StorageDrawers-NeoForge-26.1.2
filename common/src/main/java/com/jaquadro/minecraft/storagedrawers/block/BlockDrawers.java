@@ -184,10 +184,16 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         if (blockEntity == null)
             return;
 
-        CustomData customdata = stack.get(DataComponents.BLOCK_ENTITY_DATA);
-        if (customdata != null) {
-            ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), customdata.copyTag());
+        CustomData blockEntityData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        if (blockEntityData != null) {
+            ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), blockEntityData.copyTag());
             blockEntity.readPortable(input);
+        } else {
+            CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+            if (customData != null) {
+                ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), customData.copyTag());
+                blockEntity.readPortable(input);
+            }
         }
 
 //        if (stack.hasCustomHoverName()) {

@@ -43,13 +43,20 @@ public class AddUpgradeRecipe extends CustomRecipe
             return ItemStack.EMPTY;
         ItemStack ret = ctx.drawer.copy();
 
-        CustomData orig = ret.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
-
         var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
         ctx.data.write(output);
 
-        CustomData data = CustomData.of(orig.copyTag().merge(output.buildResult()));
-        ret.set(DataComponents.BLOCK_ENTITY_DATA, data);
+        CustomData blockData = ret.get(DataComponents.BLOCK_ENTITY_DATA);
+        if (blockData != null) {
+            CustomData data = CustomData.of(blockData.copyTag().merge(output.buildResult()));
+            ret.set(DataComponents.BLOCK_ENTITY_DATA, data);
+
+            return ret;
+        }
+
+        CustomData upgradeData = ret.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        CustomData data = CustomData.of(upgradeData.copyTag().merge(output.buildResult()));
+        ret.set(DataComponents.CUSTOM_DATA, data);
 
         return ret;
     }
@@ -93,9 +100,14 @@ public class AddUpgradeRecipe extends CustomRecipe
             }
         };
 
-        CustomData custom = ret.drawer.get(DataComponents.BLOCK_ENTITY_DATA);
-        if (custom != null)
-            ret.data.read(TagValueInput.create(ProblemReporter.DISCARDING, registries, custom.copyTag()));
+        CustomData blocKEntityData = ret.drawer.get(DataComponents.BLOCK_ENTITY_DATA);
+        if (blocKEntityData != null)
+            ret.data.read(TagValueInput.create(ProblemReporter.DISCARDING, registries, blocKEntityData.copyTag()));
+        else {
+            CustomData customData = ret.drawer.get(DataComponents.CUSTOM_DATA);
+            if (customData != null)
+                ret.data.read(TagValueInput.create(ProblemReporter.DISCARDING, registries, customData.copyTag()));
+        }
 
         for (ItemStack upgrade : ret.upgrades) {
             if (upgrade.getItem() == ModItems.ONE_STACK_UPGRADE.get())

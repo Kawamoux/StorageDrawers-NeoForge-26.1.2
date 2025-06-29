@@ -132,8 +132,8 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             }
 
             if ((stack == null || !ItemStack.isSameItemSameComponents(stack, itemStack)) && parent != null) {
-                stack = itemStack;
-                model = new ItemRender<>(parent, itemStack);
+                stack = itemStack.transmuteCopy(itemStack.getItem());
+                model = new ItemRender<>(parent, stack);
             }
 
             if (model != null) {
