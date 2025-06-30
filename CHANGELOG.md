@@ -1,3 +1,6 @@
+[17.0.2]
+- Fix regression in Controller IO block name
+
 [17.0.1]
 - Fix remote group upgrade language key (contrib by Jack McKalling)
 - Fix framing table sometimes not persisting inventory changes on save/quit
