@@ -1,3 +1,6 @@
+[18.0.0]
+- Updated to Minecraft 1.21.7
+
 [17.0.2]
 - Fix regression in Controller IO block name
 

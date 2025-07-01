@@ -32,7 +32,7 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 import java.util.function.Function;
 
-@EventBusSubscriber(modid = StorageDrawers.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = StorageDrawers.MOD_ID, value = Dist.CLIENT)
 public class ClientModBusSubscriber
 {
     @SubscribeEvent

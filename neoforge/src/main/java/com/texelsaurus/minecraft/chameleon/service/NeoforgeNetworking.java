@@ -1,5 +1,6 @@
 package com.texelsaurus.minecraft.chameleon.service;
 
+import com.jaquadro.minecraft.storagedrawers.client.NeoForgeClient;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import com.texelsaurus.minecraft.chameleon.network.ChameleonPacket;
 import com.texelsaurus.minecraft.chameleon.registry.NeoforgeRegistryContext;
@@ -53,6 +54,6 @@ public class NeoforgeNetworking implements ChameleonNetworking
 
     @Override
     public void sendToServer (ChameleonPacket packet) {
-        PacketDistributor.sendToServer(packet);
+        NeoForgeClient.sendToServer(packet);
     }
 }
