@@ -23,10 +23,10 @@
         ]
     },
     "depends": {
-        "fabricloader": ">=${fabric_loader}",
+        "fabricloader": ">=${fabric_loader_min}",
         "fabric-api": "*",
         "java": ">=${java_version}",
-        "minecraft": ">=${minecraft_version} <${minecraft_version_upper}"
+        "minecraft": ">=${minecraft_version_lower} <${minecraft_version_upper}"
     },
     "custom": {},
     "mixins": []

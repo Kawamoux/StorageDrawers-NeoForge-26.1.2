@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 public class StorageGuiGraphics extends GuiGraphics
 {
     private final Minecraft minecraft;
+    private GuiGraphics baseGraphics;
 
     @NotNull
     public ItemStack overrideStack;
@@ -25,6 +26,18 @@ public class StorageGuiGraphics extends GuiGraphics
 
         this.minecraft = minecraft;
         overrideStack = ItemStack.EMPTY;
+    }
+
+    public StorageGuiGraphics (Minecraft minecraft, GuiGraphics graphics) {
+        super(minecraft, graphics.pose(), minecraft.gameRenderer.guiRenderState);
+
+        this.baseGraphics = graphics;
+        this.minecraft = minecraft;
+        this.overrideStack = ItemStack.EMPTY;
+    }
+
+    public GuiGraphics baseGraphics () {
+        return baseGraphics;
     }
 
     public void renderItemDecorations(Font font, ItemStack item, int x, int y, @Nullable String text) {

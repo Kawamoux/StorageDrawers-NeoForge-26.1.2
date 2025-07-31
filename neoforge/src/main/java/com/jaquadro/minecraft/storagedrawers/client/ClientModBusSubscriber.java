@@ -51,10 +51,10 @@ public class ClientModBusSubscriber
         event.registerBlockEntityRenderer(ModBlockEntities.FRAMING_TABLE.get(), BlockEntityFramingRenderer::new);
     }
 
-    @OnlyIn(Dist.CLIENT)
-    public static void setup(FMLClientSetupEvent event) {
-        ModLoadingContext.get().getActiveContainer().registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
-    }
+    //@OnlyIn(Dist.CLIENT)
+    //public static void setup(FMLClientSetupEvent event) {
+    //    ModLoadingContext.get().getActiveContainer().registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+    //}
 
     @SubscribeEvent
     public static void registerClientTooltips(RegisterClientTooltipComponentFactoriesEvent event) {

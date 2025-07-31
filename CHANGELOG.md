@@ -1,3 +1,6 @@
+[18.0.1]
+- Updated to Minecraft 1.21.8
+
 [18.0.0]
 - Updated to Minecraft 1.21.7
 
