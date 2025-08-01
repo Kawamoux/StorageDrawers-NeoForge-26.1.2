@@ -103,6 +103,9 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
 
         @Override
         public void update (ItemStackRenderState itemStackRenderState, ItemStack itemStack, ItemModelResolver itemModelResolver, ItemDisplayContext itemDisplayContext, @Nullable ClientLevel clientLevel, @Nullable LivingEntity livingEntity, int i) {
+            itemStackRenderState.appendModelIdentityElement(this);
+            itemStackRenderState.appendModelIdentityElement(itemStack);
+
             if (state == null) {
                 var blockOption = BuiltInRegistries.BLOCK.get(location);
                 if (blockOption.isEmpty())
