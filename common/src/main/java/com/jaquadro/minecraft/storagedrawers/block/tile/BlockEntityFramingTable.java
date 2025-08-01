@@ -5,10 +5,12 @@ import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedSourceBlock;
 import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedBlock;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.components.item.FrameData;
+import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlockEntities;
 import com.jaquadro.minecraft.storagedrawers.core.ModContainers;
 import com.jaquadro.minecraft.storagedrawers.core.ModDataComponents;
 import com.jaquadro.minecraft.storagedrawers.inventory.*;
+import com.jaquadro.minecraft.storagedrawers.util.WorldUtils;
 import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
 import com.texelsaurus.minecraft.chameleon.inventory.content.PositionContent;
 import net.minecraft.core.BlockPos;
@@ -21,6 +23,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Inventory;
@@ -28,11 +31,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -127,7 +132,23 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
             return false;
 
         BlockState state = blockItem.getBlock().defaultBlockState();
-        return state.isSolid();
+        if (state.getBlock().hasDynamicShape())
+            return false;
+
+        if (!ModCommonConfig.INSTANCE.GENERAL.restrictFramingMaterials.get())
+            return state.isSolid();
+
+        // Will always throw unless overridden, which usually means it's a block that we don't
+        // want to be a valid material
+        if (state.getLightBlock() < 15)
+            return false;
+
+        if (!Block.isShapeFullBlock(state.getOcclusionShape()))
+            return false;
+        if (state.propagatesSkylightDown())
+            return false;
+
+        return true;
     }
 
     @Override
@@ -170,6 +191,20 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
 
         if (name != null)
             output.storeNullable("CustomName", ComponentSerialization.CODEC, this.name);
+    }
+
+    @Override
+    public void preRemoveSideEffects (BlockPos pos, BlockState state) {
+        super.preRemoveSideEffects(pos, state);
+
+        for (int i = 0; i < BlockEntityFramingTable.SLOT_RESULT; i++)
+            Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), inventory().getItem(i));
+    }
+
+    // Forge extension
+    public AABB getRenderBoundingBox() {
+        BlockPos pos = getBlockPos();
+        return AABB.encapsulatingFullBlocks(pos.offset(-1, 0, -1), pos.offset(1, 1, 1));
     }
 
     public static class ContentProvider implements ContentMenuProvider<PositionContent>
@@ -283,12 +318,12 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
                 case SLOT_TRIM -> entity.materialData.setTrim(stack);
             }
 
-            rebuildResult();
             setChanged();
         }
 
         @Override
         public void setChanged () {
+            rebuildResult();
             this.entity.setChanged();
         }
 

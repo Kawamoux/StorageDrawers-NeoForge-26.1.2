@@ -1,3 +1,10 @@
+[18.0.2]
+- Fixed shift+clicking additional blocks into framing table not updating output
+- Fixed framing tables not dropping contents when broken
+- Limit framed materials to solid opaque blocks (within reasonable heuristic)
+- Added restrictFramingMaterials config option to control new material limit
+- NEO/FORGE: Fixed items on framing table vanishing at oblique viewing angles
+
 [18.0.1]
 - Updated to Minecraft 1.21.8
 
