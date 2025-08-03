@@ -1,6 +1,7 @@
 [18.0.3]
 - Fixed key buttons on Controller IO blocks
 - Fixed pick block not selecting matching hotbar framed blocks
+- Fixed particle icon of framed drawers not using material
 
 [18.0.2]
 - Fixed shift+clicking additional blocks into framing table not updating output

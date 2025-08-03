@@ -2,6 +2,8 @@ package com.jaquadro.minecraft.storagedrawers.client.model;
 
 import com.google.common.base.Suppliers;
 import com.jaquadro.minecraft.storagedrawers.StorageDrawers;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.DrawerModelProperties;
+import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.FramedModelProperties;
 import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataProvider;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
@@ -9,6 +11,7 @@ import com.jaquadro.minecraft.storagedrawers.client.model.decorator.ModelDecorat
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
@@ -17,6 +20,7 @@ import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.block.model.TextureSlots;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.*;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ResolvedModel;
 import net.minecraft.core.BlockPos;
@@ -25,6 +29,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -73,6 +78,31 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         } else {
             parent.collectParts(level, blockPos, state, randomSource, list);
         }
+    }
+
+    @Override
+    public TextureAtlasSprite particleIcon (BlockAndTintGetter level, BlockPos pos, BlockState state) {
+        BlockEntity entity = level.getBlockEntity(pos);
+        if (entity instanceof RenderDataProvider renderProvider) {
+            Object renderData = renderProvider.getRenderData();
+            MaterialData matData = null;
+            if (renderData instanceof DrawerModelProperties drawerProps)
+                matData = new MaterialData(drawerProps.material);
+            else if (renderData instanceof FramedModelProperties frameProps)
+                matData = new MaterialData(frameProps.material);
+
+            if (matData != null) {
+                ItemStack side = matData.getEffectiveSide();
+                if (side != ItemStack.EMPTY) {
+                    if (side.getItem() instanceof BlockItem blockItem) {
+                        BlockStateModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockItem.getBlock().defaultBlockState());
+                        return model.particleIcon();
+                    }
+                }
+            }
+        }
+
+        return super.particleIcon(level, pos, state);
     }
 
     public static class PlatformDecoratedItemModel implements ItemModel
