@@ -84,6 +84,7 @@ public class ItemKeyring extends Item
         if (targetStack.getItem() == ModItems.KEYRING.get() && contents.size() > 0) {
             ItemStack newStack = getKeyring(contents.itemCopyStream().findFirst().orElse(ItemStack.EMPTY));
             if (!newStack.isEmpty()) {
+                newStack.applyComponents(targetStack.getComponentsPatch());
                 newStack.set(ModDataComponents.KEYRING_CONTENTS.get(), contents);
                 slot.set(newStack);
             }
@@ -112,8 +113,12 @@ public class ItemKeyring extends Item
         if (context.getPlayer().isShiftKeyDown())
             return InteractionResult.PASS;
 
-        if (key != null)
-            return key.get().useOn(context);
+        if (key != null) {
+            InteractionResult result = key.get().useOn(context);
+            if (result == InteractionResult.SUCCESS)
+                context.getPlayer().getCooldowns().addCooldown(context.getItemInHand(), 5);
+            return result;
+        }
 
         return InteractionResult.PASS;
     }
