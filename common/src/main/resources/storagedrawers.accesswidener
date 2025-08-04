@@ -14,3 +14,4 @@ accessible field net/minecraft/world/item/crafting/ShapedRecipe pattern Lnet/min
 accessible field net/minecraft/world/item/crafting/ShapedRecipe result Lnet/minecraft/world/item/ItemStack;
 
 accessible field net/minecraft/client/renderer/GameRenderer guiRenderState Lnet/minecraft/client/gui/render/state/GuiRenderState;
+accessible field com/mojang/blaze3d/vertex/PoseStack$Pose trustedNormals Z

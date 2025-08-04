@@ -178,16 +178,7 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         matrix.popPose();
     }
 
-    private static final Matrix3f ITEM_LIGHT_ROTATION_3D = (new Matrix3f()).rotationYXZ(.261799f, -.261799f, 0);
-    /*Util.make(() -> {
-        Matrix4f mat = (new Matrix4f()).rotationYXZ(.261799f, -.261799f, 0);
-        return mat;
-        //Quaternionf quaternion = new Quaternionf(Vector3f.XP, -15f, true);
-        //quaternion.mul(new Quaternionf(Vector3f.YP, 15f, true));
-        //return quaternion;
-    });*/
-    private static final Matrix3f ITEM_LIGHT_ROTATION_FLAT = (new Matrix3f()).rotationYXZ(0, -.785398f, 0);
-    //new Quaternionf(Vector3f.XP, -45f, true);
+    private static final Matrix3f ITEM_LIGHT_ROTATION_3D = (new Matrix3f()).rotationYXZ(.36f, -.36f, -.014f);
 
     private void renderFastItem(@NotNull ItemStack itemStack, BlockState state, int slot, PoseStack matrix, MultiBufferSource buffer, int combinedLight, int combinedOverlay, Direction side) {
         BlockDrawers block = (BlockDrawers)state.getBlock();
@@ -204,24 +195,14 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         alignRendering(matrix, side);
         matrix.translate(moveX / 16, 1 - moveY / 16, 1 - moveZ);
         matrix.mulPose((new Matrix4f()).scale(scaleX, scaleY, 0.001f));
+        matrix.last().trustedNormals = true;
 
         try {
             context.getItemModelResolver().updateForTopItem(
                 this.itemRenderState, itemStack, ItemDisplayContext.GUI, context.getBlockEntityRenderDispatcher().level, null, 0
             );
 
-            //BakedModel itemModel = itemRenderer.getModel(itemStack, null, null, 0);
-
-            //if (itemModel.isGui3d())
-                matrix.last().normal().mul(ITEM_LIGHT_ROTATION_3D);
-            //else
-            //    matrix.last().normal().mul(ITEM_LIGHT_ROTATION_FLAT);
-
-            //ItemDisplayContext context = ItemDisplayContext.GUI;
-            //if (itemModel instanceof SpecialModelRenderer)
-            //    context = ItemDisplayContext.FIXED;
-
-            //itemRenderer.renderItem(itemStack, context, false, matrix, buffer, combinedLight, combinedOverlay, itemModel);
+            matrix.last().normal().rotateYXZ(-getRotationYForSide2D(side), 0, 0).mul(ITEM_LIGHT_ROTATION_3D);
             this.itemRenderState.render(matrix, buffer, combinedLight, combinedOverlay);
         } catch (Exception e) {
             // Shrug
@@ -237,21 +218,6 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         matrix.mulPose((new Matrix4f()).rotateYXZ(getRotationYForSide2D(side), 0, 0));
         matrix.translate(-.5f, 0, -.5f);
     }
-
-//    private void moveRendering (PoseStack matrix, float scaleX, float scaleY, float offsetX, float offsetY, float offsetZ) {
-//        // NOTE: RenderItem expects to be called in a context where Y increases toward the bottom of the screen
-//        // However, for in-world rendering the opposite is true. So we translate up by 1 along Y, and then flip
-//        // along Y. Since the item is drawn at the back of the drawer, we also translate by `1-offsetZ` to move
-//        // it to the front.
-//
-//        // The 0.00001 for the Z-scale both flattens the item and negates the 32.0 Z-scale done by RenderItem.
-//
-//        matrix.translate(0, 1, 1-offsetZ);
-//        matrix.scale(1 / 16f, -1 / 16f, 0.00005f);
-//
-//        matrix.translate(offsetX, offsetY, 0);
-//        matrix.scale(scaleX, scaleY, 1);
-//    }
 
     private static final float[] sideRotationY2D = { 0, 0, 2, 0, 3, 1 };
 
