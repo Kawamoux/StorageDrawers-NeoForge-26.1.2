@@ -26,11 +26,18 @@ public class KeyringContents implements TooltipComponent
         .map(KeyringContents::new, kc -> kc.items);
 
     private static final int NO_STACK_INDEX = -1;
+    public static final int NO_SELECTED_ITEM_INDEX = -1;
 
     final List<ItemStack> items;
+    final int selectedItem;
+
+    public KeyringContents (List<ItemStack> items, int selectedItem) {
+        this.items = items;
+        this.selectedItem = selectedItem;
+    }
 
     public KeyringContents (List<ItemStack> items) {
-        this.items = items;
+        this(items, NO_SELECTED_ITEM_INDEX);
     }
 
     public ItemStack getItemUnsafe (int index) {
@@ -53,6 +60,37 @@ public class KeyringContents implements TooltipComponent
         return items.size();
     }
 
+    public boolean isEmpty () {
+        return items.isEmpty();
+    }
+
+    public int getSelectedItem () {
+        return selectedItem;
+    }
+
+    public boolean hasSelectedItem () {
+        return selectedItem != NO_SELECTED_ITEM_INDEX;
+    }
+
+    public int getMaxShowSize() {
+        return 16;
+    }
+
+    public int getShowRowSize() {
+        return 4;
+    }
+
+    public int getNumberOfItemsToShow () {
+        int count = size();
+        int maxShowCount = getMaxShowSize();
+        int rowSize = getShowRowSize();
+
+        int adjCount = count > maxShowCount ? maxShowCount - 1 : maxShowCount;
+        int remainder = count % rowSize;
+        int filled = remainder == 0 ? 0 : rowSize - remainder;
+        return Math.min(count, adjCount - filled);
+    }
+
     @Override
     public boolean equals (Object obj) {
         if (this == obj)
@@ -72,9 +110,11 @@ public class KeyringContents implements TooltipComponent
 
     public static class Mutable {
         private final List<ItemStack> items;
+        private int selectedItem;
 
         public Mutable (KeyringContents contents) {
             items = new ArrayList<>(contents.items);
+            selectedItem = contents.selectedItem;
         }
 
         public int size() {
@@ -83,6 +123,7 @@ public class KeyringContents implements TooltipComponent
 
         public Mutable clearItems() {
             items.clear();
+            selectedItem = NO_SELECTED_ITEM_INDEX;
             return this;
         }
 
@@ -120,6 +161,14 @@ public class KeyringContents implements TooltipComponent
             ItemStack stack = slot.getItem();
             int toAdd = getMaxAmountToAdd(stack);
             return tryInsert(slot.safeTake(stack.getCount(), toAdd, player));
+        }
+
+        public void toggleSelectedItem (int index) {
+            selectedItem = selectedItem != index && !indexIsOutsideAllowedBounds(index) ? index : NO_SELECTED_ITEM_INDEX;
+        }
+
+        private boolean indexIsOutsideAllowedBounds (int index) {
+            return index < 0 || index >= this.items.size();
         }
 
         @Nullable

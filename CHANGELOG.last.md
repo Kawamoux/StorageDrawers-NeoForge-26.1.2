@@ -1,4 +1,5 @@
 - Fixed key buttons on Controller IO blocks
 - Fixed pick block not selecting matching hotbar framed blocks
 - Adjusted framed material heuristic to exclude some additional transparent blocks
+- Restyled keyring tooltip to match newer bundles
 - Fixed particle icon of framed drawers not using material

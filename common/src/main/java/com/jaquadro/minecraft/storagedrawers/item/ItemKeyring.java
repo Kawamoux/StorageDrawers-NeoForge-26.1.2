@@ -135,13 +135,19 @@ public class ItemKeyring extends Item
         if (!tooltipdisplay.shows(ModDataComponents.KEYRING_CONTENTS.get()))
             return Optional.empty();
 
+        if (!stack.has(ModDataComponents.KEYRING_CONTENTS.get()))
+            return Optional.of(new KeyringTooltip(new KeyringContents(List.of())));
+
         return Optional.ofNullable(stack.get(ModDataComponents.KEYRING_CONTENTS.get())).map(KeyringTooltip::new);
     }
 
     @Override
     public void appendHoverText (ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, display, tooltip, flag);
-        ComponentUtil.appendSplitDescription(tooltip, getDescription());
+
+        KeyringContents contents = stack.get(ModDataComponents.KEYRING_CONTENTS.get());
+        if (contents == null || contents.isEmpty())
+            ComponentUtil.appendSplitDescription(tooltip, getDescription());
     }
 
     @Override
