@@ -1,5 +1,6 @@
 [18.0.4]
 - Fixed shading for item labels
+- Fixed detached drawers not showing contents in tooltip
 
 [18.0.3]
 - Fixed key buttons on Controller IO blocks

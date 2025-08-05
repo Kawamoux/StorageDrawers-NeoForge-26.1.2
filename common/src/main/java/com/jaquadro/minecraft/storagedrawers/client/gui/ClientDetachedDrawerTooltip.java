@@ -53,10 +53,10 @@ public class ClientDetachedDrawerTooltip implements ClientTooltipComponent
         renderSlot(pX + 3, pY + 3, graphics, font);
 
         String count = CountFormatter.formatApprox(font, item.getCount());
-        graphics.drawString(font, count, pX + 22, pY + 8, 0x808080, false);
+        graphics.drawString(font, count, pX + 22, pY + 8, 0xFF808080, false);
 
         if (forceCapCheck)
-            graphics.drawString(font, Integer.toString(stackLimit), pX + 83, pY + 8, 0x808080, false);
+            graphics.drawString(font, Integer.toString(stackLimit), pX + 83, pY + 8, 0xFF808080, false);
     }
 
     private void renderSlot(int pX, int pY, GuiGraphics graphics, Font font) {

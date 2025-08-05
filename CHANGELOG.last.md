@@ -1,1 +1,2 @@
 - Fixed shading for item labels
+- Fixed detached drawers not showing contents in tooltip
