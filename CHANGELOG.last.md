@@ -1,2 +1,3 @@
 - Fixed shading for item labels
 - Fixed detached drawers not showing contents in tooltip
+- Possible fix for restoring detached drawer leaving drawer without a label

@@ -1,6 +1,7 @@
 [18.0.4]
 - Fixed shading for item labels
 - Fixed detached drawers not showing contents in tooltip
+- Possible fix for restoring detached drawer leaving drawer without a label
 
 [18.0.3]
 - Fixed key buttons on Controller IO blocks
