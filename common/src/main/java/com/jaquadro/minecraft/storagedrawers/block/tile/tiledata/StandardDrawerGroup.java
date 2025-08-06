@@ -4,14 +4,21 @@ import com.jaquadro.minecraft.storagedrawers.api.storage.*;
 import com.jaquadro.minecraft.storagedrawers.api.storage.attribute.LockAttribute;
 import com.jaquadro.minecraft.storagedrawers.capabilities.Capabilities;
 import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
+import com.jaquadro.minecraft.storagedrawers.config.StorageBlacklist;
 import com.jaquadro.minecraft.storagedrawers.inventory.ItemStackHelper;
+import com.jaquadro.minecraft.storagedrawers.item.ItemDetachedDrawer;
+import com.jaquadro.minecraft.storagedrawers.item.ItemDrawers;
 import com.jaquadro.minecraft.storagedrawers.util.ItemStackMatcher;
 import com.jaquadro.minecraft.storagedrawers.util.ItemStackTagMatcher;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jetbrains.annotations.NotNull;
@@ -346,11 +353,23 @@ public abstract class StandardDrawerGroup extends BlockEntityDataShim implements
 
         @Override
         public boolean canItemBeStored (@NotNull ItemStack itemPrototype, Predicate<ItemStack> matchPredicate) {
+            return canItemBeStored(itemPrototype, matchPredicate, false);
+        }
+
+        @Override
+        public boolean canItemBeStoredManual (@NotNull ItemStack itemPrototype, Predicate<ItemStack> matchPredicate) {
+            return canItemBeStored(itemPrototype, matchPredicate, true);
+        }
+
+        private boolean canItemBeStored (@NotNull ItemStack itemPrototype, Predicate<ItemStack> matchPredicate, boolean manualStore) {
             if (isMissing())
                 return false;
 
+            if (StorageBlacklist.INSTANCE.isBlacklisted(itemPrototype))
+                return false;
+
             IDrawerAttributes attrs = getAttributes();
-            if (protoStack.isEmpty() && !attrs.isItemLocked(LockAttribute.LOCK_EMPTY))
+            if (protoStack.isEmpty() && (manualStore || !attrs.isItemLocked(LockAttribute.LOCK_EMPTY)))
                 return true;
 
             if (matchPredicate == null)
