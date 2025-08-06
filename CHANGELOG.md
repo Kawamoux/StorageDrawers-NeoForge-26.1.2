@@ -2,6 +2,8 @@
 - Fixed shading for item labels
 - Fixed detached drawers not showing contents in tooltip
 - Possible fix for restoring detached drawer leaving drawer without a label
+- Prevent drawers with contents being able to stack if contents identical
+- NEO/FORGE: Shift+clicking an upgrade on a drawer will store it
 
 [18.0.3]
 - Fixed key buttons on Controller IO blocks

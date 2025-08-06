@@ -497,6 +497,8 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         ItemStack savedItem = data.getStoredItemPrototype().copyWithCount(data.getStoredItemCount());
         DetachedDrawerContents contents = new DetachedDrawerContents(savedItem, cap, data.isHeavy());
         stack.set(ModDataComponents.DETACHED_DRAWER_CONTENTS.get(), contents);
+        if (!drawer.isEmpty())
+            stack.set(DataComponents.MAX_STACK_SIZE, 1);
 
         return stack;
     }
@@ -567,6 +569,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             TagValueOutput tagOutput = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, tile.getLevel().registryAccess());
             tile.saveWithId(tagOutput);
             drop.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tagOutput.buildResult()));
+            drop.set(DataComponents.MAX_STACK_SIZE, 1);
         }
 
         if (tile.hasCustomName())
