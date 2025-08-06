@@ -87,4 +87,9 @@ public class ItemDetachedDrawer extends Item implements IPortable
         DetachedDrawerData data = new DetachedDrawerData(input);
         return data.isHeavy() && data.getStoredItemCount() > data.getStoredItemStackSize();
     }
+
+    @Override
+    public boolean canFitInsideContainerItems () {
+        return false;
+    }
 }
