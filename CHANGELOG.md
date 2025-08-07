@@ -6,6 +6,7 @@
 - Prevent drawers from being stored in bundles and shulker boxes
 - Added config option to prevent storing filled drawers in drawers
 - Added config option to blacklist items or namespaces from being stored
+- Fixed scheduled tick exceptions showing in logs
 - NEO/FORGE: Shift+clicking an upgrade on a drawer will store it
 
 [18.0.3]
