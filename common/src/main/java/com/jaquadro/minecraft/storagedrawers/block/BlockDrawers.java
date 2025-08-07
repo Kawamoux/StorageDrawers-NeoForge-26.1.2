@@ -322,7 +322,11 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             String securityKey = ((ItemPersonalKey) item.getItem()).getSecurityProviderKey();
             ISecurityProvider provider = ModSecurity.registry.getProvider(securityKey);
 
-            if (blockEntity.getOwner() == null) {
+            if (Objects.equals(securityKey, "unlock")) {
+                blockEntity.setOwner(null);
+                blockEntity.setSecurityProvider(null);
+            }
+            else if (blockEntity.getOwner() == null) {
                 blockEntity.setOwner(context.player.getUUID());
                 blockEntity.setSecurityProvider(provider);
             }
