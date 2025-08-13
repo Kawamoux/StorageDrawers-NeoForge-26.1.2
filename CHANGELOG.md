@@ -1,3 +1,7 @@
+[18.0.5]
+- Fixed crash pulling drawer with >99 items
+- Fixed crash pulling/creating empty drawer
+
 [18.0.4]
 - Fixed shading for item labels
 - Fixed detached drawers not showing contents in tooltip

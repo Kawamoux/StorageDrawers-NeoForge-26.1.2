@@ -1,10 +1,2 @@
-- Fixed shading for item labels
-- Fixed detached drawers not showing contents in tooltip
-- Possible fix for restoring detached drawer leaving drawer without a label
-- Prevent drawers with contents being able to stack if contents identical
-- Prevent drawers from being stored in bundles and shulker boxes
-- Added config option to prevent storing filled drawers in drawers
-- Added config option to blacklist items or namespaces from being stored
-- Fixed scheduled tick exceptions showing in logs
-- Added admin personal key to unlock any player's drawers (creative/no-recipe)
-- NEO/FORGE: Shift+clicking an upgrade on a drawer will store it
+- Fixed crash pulling drawer with >99 items
+- Fixed crash pulling/creating empty drawer
