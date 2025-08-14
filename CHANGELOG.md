@@ -1,6 +1,7 @@
 [18.0.5]
 - Fixed crash pulling drawer with >99 items
 - Fixed crash pulling/creating empty drawer
+- Fixed startup crash when Epic Fight or other specific mods are present
 
 [18.0.4]
 - Fixed shading for item labels
