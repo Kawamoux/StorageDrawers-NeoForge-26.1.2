@@ -8,9 +8,9 @@ public class PlatformResourceFactory implements ResourceFactory
     @Override
     public BlockEntityType.BlockEntitySupplier<BlockEntityDrawersStandard> createBlockEntityDrawersStandard (int slotCount) {
         return switch (slotCount) {
-            case 1 -> BlockEntityDrawersStandard.Slot1::new;
-            case 2 -> BlockEntityDrawersStandard.Slot2::new;
-            case 4 -> BlockEntityDrawersStandard.Slot4::new;
+            case 1 -> PlatformBlockEntityDrawersStandard.Slot1::new;
+            case 2 -> PlatformBlockEntityDrawersStandard.Slot2::new;
+            case 4 -> PlatformBlockEntityDrawersStandard.Slot4::new;
             default -> null;
         };
     }
@@ -18,8 +18,8 @@ public class PlatformResourceFactory implements ResourceFactory
     @Override
     public BlockEntityType.BlockEntitySupplier<BlockEntityDrawersComp> createBlockEntityDrawersComp (int slotCount) {
         return switch (slotCount) {
-            case 2 -> BlockEntityDrawersComp.Slot2::new;
-            case 3 -> BlockEntityDrawersComp.Slot3::new;
+            case 2 -> PlatformBlockEntityDrawersComp.Slot2::new;
+            case 3 -> PlatformBlockEntityDrawersComp.Slot3::new;
             default -> null;
         };
     }

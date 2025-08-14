@@ -2,5 +2,6 @@
 - Fixed crash pulling drawer with >99 items
 - Fixed crash pulling/creating empty drawer
 - Fixed startup crash when Epic Fight or other specific mods are present
+- Fixed drawers with remote upgrades not maintaining link when moved by external mods
 - Piglins love keys
 - Removed space in dist jar

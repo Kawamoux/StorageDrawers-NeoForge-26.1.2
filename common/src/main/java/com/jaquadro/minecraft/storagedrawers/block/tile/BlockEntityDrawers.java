@@ -251,6 +251,21 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
         checkBoundController();
     }
 
+    public void onEntityLoad () {
+        try {
+            if (getLevel() == null || getLevel().isClientSide)
+                return;
+
+            BlockPos pos = getBlockPos();
+            try {
+                if (!getLevel().getBlockTicks().hasScheduledTick(pos, getBlockState().getBlock()))
+                    getLevel().scheduleTick(pos, getBlockState().getBlock(), 1);
+            } catch (Exception e) {
+                // Ignore
+            }
+        } catch (Exception e) { }
+    }
+
     @Override
     public boolean supportsDirectControllerLink () {
         return true;
