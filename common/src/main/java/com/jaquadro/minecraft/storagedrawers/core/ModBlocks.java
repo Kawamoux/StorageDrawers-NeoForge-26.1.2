@@ -1,10 +1,12 @@
 package com.jaquadro.minecraft.storagedrawers.core;
 
 import com.jaquadro.minecraft.storagedrawers.ModConstants;
+import com.jaquadro.minecraft.storagedrawers.api.config.IDrawerConfig;
 import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedBlock;
 import com.jaquadro.minecraft.storagedrawers.block.*;
 import com.jaquadro.minecraft.storagedrawers.block.framed.*;
 import com.jaquadro.minecraft.storagedrawers.block.meta.*;
+import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import com.texelsaurus.minecraft.chameleon.registry.ChameleonRegistry;
@@ -212,29 +214,51 @@ public final class ModBlocks
         return ResourceKey.create(Registries.BLOCK, modLoc(name));
     }
 
+    static IDrawerConfig getStandardConfig (int drawerCount, boolean halfDepth) {
+        ModCommonConfig.Drawers base = ModCommonConfig.INSTANCE.DRAWERS;
+        if (drawerCount == 1)
+            return halfDepth ? base.halfDrawers1x1 : base.fullDrawers1x1;
+        else if (drawerCount == 2)
+            return halfDepth ? base.halfDrawers1x2 : base.fullDrawers1x2;
+        else if (drawerCount == 4)
+            return halfDepth ? base.halfDrawers2x2 : base.fullDrawers2x2;
+
+        return null;
+    }
+
+    static IDrawerConfig getCompConfig (boolean halfDepth) {
+        ModCommonConfig.Drawers base = ModCommonConfig.INSTANCE.DRAWERS;
+        return halfDepth ? base.halfCompacting : base.fullCompacting;
+    }
+
     static RegistryEntry<BlockStandardDrawers> registerWoodenDrawerBlock(ResourceLocation name, int drawerCount, boolean halfDepth) {
         return registerWoodenDrawerBlock(BLOCKS, name, drawerCount, halfDepth);
     }
 
     static RegistryEntry<BlockStandardDrawers> registerWoodenDrawerBlock(ChameleonRegistry<Block> register, String name, int drawerCount, boolean halfDepth) {
-        return register.register(name, () -> new BlockStandardDrawers(drawerCount, halfDepth, getWoodenDrawerBlockProperties().setId(modKey(name))));
+        IDrawerConfig config = getStandardConfig(drawerCount, halfDepth);
+        return register.register(name, () -> new BlockStandardDrawers(drawerCount, halfDepth, config, getWoodenDrawerBlockProperties().setId(modKey(name))));
     }
 
     static RegistryEntry<BlockStandardDrawers> registerWoodenDrawerBlock(ChameleonRegistry<Block> register, ResourceLocation material, int drawerCount, boolean halfDepth) {
         String name = material.getPath() + (halfDepth ? "_half_drawers_" : "_full_drawers_") + drawerCount;
-        return register.register(name, () -> new BlockStandardDrawers(drawerCount, halfDepth, getWoodenDrawerBlockProperties().setId(modKey(name))).setMatKey(material));
+        IDrawerConfig config = getStandardConfig(drawerCount, halfDepth);
+        return register.register(name, () -> new BlockStandardDrawers(drawerCount, halfDepth, config, getWoodenDrawerBlockProperties().setId(modKey(name))).setMatKey(material));
     }
 
     static RegistryEntry<BlockFramedStandardDrawers> registerFramedDrawerBlock(String name, int drawerCount, boolean halfDepth) {
-        return BLOCKS.register(name, () -> (BlockFramedStandardDrawers)new BlockFramedStandardDrawers(drawerCount, halfDepth, getWoodenDrawerBlockProperties().setId(modKey(name))).setMatKey("framed"));
+        IDrawerConfig config = getStandardConfig(drawerCount, halfDepth);
+        return BLOCKS.register(name, () -> (BlockFramedStandardDrawers)new BlockFramedStandardDrawers(drawerCount, halfDepth, config, getWoodenDrawerBlockProperties().setId(modKey(name))).setMatKey("framed"));
     }
 
     static RegistryEntry<BlockCompDrawers> registerCompactingDrawerBlock(String name, int drawerCount, boolean halfDepth) {
-        return BLOCKS.register(name, () -> new BlockCompDrawers(drawerCount, halfDepth, getStoneDrawerBlockProperties().setId(modKey(name))));
+        IDrawerConfig config = getCompConfig(halfDepth);
+        return BLOCKS.register(name, () -> new BlockCompDrawers(drawerCount, halfDepth, config, getStoneDrawerBlockProperties().setId(modKey(name))));
     }
 
     static RegistryEntry<BlockFramedCompDrawers> registerFramedCompactingDrawerBlock(String name, int drawerCount, boolean halfDepth) {
-        return BLOCKS.register(name, () -> new BlockFramedCompDrawers(drawerCount, halfDepth, getStoneDrawerBlockProperties().setId(modKey(name))));
+        IDrawerConfig config = getCompConfig(halfDepth);
+        return BLOCKS.register(name, () -> new BlockFramedCompDrawers(drawerCount, halfDepth, config, getStoneDrawerBlockProperties().setId(modKey(name))));
     }
 
     static RegistryEntry<BlockTrim> registerTrimBlock(ResourceLocation name) {

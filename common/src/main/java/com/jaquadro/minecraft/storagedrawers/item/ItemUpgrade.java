@@ -51,13 +51,16 @@ public class ItemUpgrade extends Item
     public void appendHoverText (ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, display, tooltip, flag);
         ComponentUtil.appendSplitDescription(tooltip, getDescription());
+
+        if (!isEnabled())
+            tooltip.accept(Component.translatable("itemConfig.storagedrawers.disabled_upgrade")
+                .withStyle(ChatFormatting.YELLOW));
     }
 
     @NotNull
     public Component getDescription() {
         return isEnabled()
-            ? Component.translatable(this.getDescriptionId() + ".desc")
-            : Component.translatable("itemConfig.storagedrawers.disabled_upgrade").withStyle(ChatFormatting.RED);
+            ? Component.translatable(this.getDescriptionId() + ".desc") : Component.empty();
     }
 
     public boolean isEnabled () {

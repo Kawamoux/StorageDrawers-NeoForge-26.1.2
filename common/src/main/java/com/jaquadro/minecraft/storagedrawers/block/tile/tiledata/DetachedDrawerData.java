@@ -144,7 +144,7 @@ public class DetachedDrawerData implements IDrawer
         if (input == null)
             return;
 
-        storageMult = input.getIntOr("StorageMult", ModCommonConfig.INSTANCE.GENERAL.baseStackStorage.get() * 8);
+        storageMult = input.getIntOr("StorageMult", ModCommonConfig.INSTANCE.DRAWERS.baseStackStorage.get() * 8);
 
         setIsHeavy(input.getBooleanOr("Heavy", false));
         setStoredItemRaw(input.read("Item", ItemStack.CODEC).orElse(ItemStack.EMPTY));

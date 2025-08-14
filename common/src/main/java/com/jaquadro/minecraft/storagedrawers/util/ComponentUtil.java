@@ -6,13 +6,18 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class ComponentUtil
 {
     public static List<MutableComponent> getSplitDescription (Item item) {
-        return getSplitDescription(item.getName());
+        Component description = item.getName();
+        if (description.equals(Component.empty()))
+            return new LinkedList<>();
+
+        return Arrays.stream(description.getString().split("\n")).map(Component::literal).toList();
     }
 
     public static List<MutableComponent> getSplitDescription (Component description) {

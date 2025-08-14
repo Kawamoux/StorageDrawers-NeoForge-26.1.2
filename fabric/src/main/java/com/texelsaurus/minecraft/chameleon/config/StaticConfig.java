@@ -20,6 +20,7 @@ public class StaticConfig implements ChameleonConfig
         localSpec = spec;
     }
 
+
     @Override
     public <T extends ChameleonConfig> T create (ConfigSpec spec) {
         return (T)new StaticConfig(spec);
@@ -60,6 +61,16 @@ public class StaticConfig implements ChameleonConfig
 
     @Override
     public void popGroup () {
+
+    }
+
+    @Override
+    public void comment (String comment) {
+
+    }
+
+    @Override
+    public void comment (String... comment) {
 
     }
 

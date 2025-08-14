@@ -1,6 +1,7 @@
 package com.jaquadro.minecraft.storagedrawers.item;
 
 import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributesModifiable;
+import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -43,6 +44,9 @@ public class ItemPriorityKey extends ItemKey
     @Override
     public InteractionResult use (Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
+        if (!ModCommonConfig.INSTANCE.TOOLS.priorityKey.enable.get())
+            return InteractionResult.PASS;
+
         if (!player.isShiftKeyDown())
             return InteractionResult.PASS;
 
@@ -50,5 +54,10 @@ public class ItemPriorityKey extends ItemKey
         nextKey.set(DataComponents.CUSTOM_DATA, stack.get(DataComponents.CUSTOM_DATA));
 
         return InteractionResult.SUCCESS.heldItemTransformedTo(nextKey);
+    }
+
+    @Override
+    public boolean isEnabled () {
+        return ModCommonConfig.INSTANCE.TOOLS.priorityKey.enable.get();
     }
 }

@@ -10,7 +10,7 @@ public class ItemUpgradePortability extends ItemUpgrade
 
     @Override
     public boolean isEnabled () {
-        return ModCommonConfig.INSTANCE.UPGRADES.enablePortabilityUpgrade.get()
-            && ModCommonConfig.INSTANCE.GENERAL.heavyDrawers.get();
+        boolean heavy = ModCommonConfig.INSTANCE.DRAWERS.anyHeavyDrawers();
+        return heavy && ModCommonConfig.INSTANCE.UPGRADES.portabilityUpgrade.enableUpgrade.get();
     }
 }

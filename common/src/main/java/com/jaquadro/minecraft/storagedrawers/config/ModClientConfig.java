@@ -1,17 +1,17 @@
 package com.jaquadro.minecraft.storagedrawers.config;
 
 import com.texelsaurus.minecraft.chameleon.ChameleonServices;
-import com.texelsaurus.minecraft.chameleon.service.ChameleonConfig;
 import com.texelsaurus.minecraft.chameleon.config.ConfigSpec;
+import com.texelsaurus.minecraft.chameleon.service.ChameleonConfig;
 
 public class ModClientConfig extends ConfigSpec
 {
     public static ModClientConfig INSTANCE = new ModClientConfig();
 
     private final ChameleonConfig commonConfig;
-    public ModClientConfig.General GENERAL;
-    public ModClientConfig.Integration INTEGRATION;
-    public ModClientConfig.Render RENDER;
+    public General GENERAL;
+    public Integration INTEGRATION;
+    public Render RENDER;
 
     private ModClientConfig () {
         commonConfig = ChameleonServices.CONFIG.create(this);
@@ -23,9 +23,32 @@ public class ModClientConfig extends ConfigSpec
 
     @Override
     public void init() {
-        GENERAL = new ModClientConfig.General();
-        INTEGRATION = new ModClientConfig.Integration();
-        RENDER = new ModClientConfig.Render();
+        GENERAL = new General();
+        INTEGRATION = new Integration();
+        RENDER = new Render();
+    }
+
+    class ConfigSection {
+        protected final String name;
+        protected final String[] comment;
+
+        public ConfigSection (String name, String... comment) {
+            this.name = name;
+            this.comment = comment;
+        }
+
+        public ConfigSection build () {
+            if (comment != null && comment.length > 0)
+                commonConfig.comment(comment);
+            commonConfig.pushGroup(name);
+
+            buildEntries();
+
+            commonConfig.popGroup();
+            return this;
+        }
+
+        protected void buildEntries () { }
     }
 
     public class General {
@@ -64,10 +87,38 @@ public class ModClientConfig extends ConfigSpec
         }
     }
 
-    public class Render {
+    public class Render
+    {
+        public class FramedDrawers extends ConfigSection
+        {
+            public ChameleonConfig.ConfigEntry<Boolean> renderTranslucentMaterials;
+
+            public FramedDrawers (String name, String... comment) {
+                super(name, comment);
+
+                renderTranslucentMaterials = commonConfig.define("renderTranslucentMaterials", true)
+                    .comment("", "Attempts to render 'non-opaque' materials on the translucent render pass.",
+                        "This may cause artifacting, particularly if using non-opaque materials on the 'front' face.");
+            }
+
+            @Override
+            protected void buildEntries () {
+                super.buildEntries();
+                renderTranslucentMaterials.build();
+            }
+
+            @Override
+            public FramedDrawers build () {
+                super.build();
+                return this;
+            }
+        }
+
         public final ChameleonConfig.ConfigEntry<Double> labelRenderDistance;
         public final ChameleonConfig.ConfigEntry<Double> quantityRenderDistance;
         public final ChameleonConfig.ConfigEntry<Double> quantityFadeDistance;
+
+        public final FramedDrawers framedDrawers;
 
         public Render() {
             commonConfig.pushGroup("Render");
@@ -76,11 +127,14 @@ public class ModClientConfig extends ConfigSpec
                 .comment("Distance in blocks before item labels stop rendering")
                 .build();
             quantityRenderDistance = commonConfig.define("quantityRenderDistance", 10.0)
-                .comment("Distance in blocks before quantity numbers stop rendering")
+                .comment("", "Distance in blocks before quantity numbers stop rendering")
                 .build();
             quantityFadeDistance = commonConfig.define("quantityFadeDistance", 20.0)
-                .comment("Distance in blocks before quantity numbers begin to fade out")
+                .comment("", "Distance in blocks before quantity numbers begin to fade out")
                 .build();
+
+            framedDrawers = new FramedDrawers("FramedDrawers",
+                "Render settings specific to framed drawers.").build();
 
             commonConfig.popGroup();
         }

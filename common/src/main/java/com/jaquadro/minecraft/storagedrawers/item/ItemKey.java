@@ -61,16 +61,24 @@ public class ItemKey extends Item
     public void appendHoverText (ItemStack stack, TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
         super.appendHoverText(stack, context, display, tooltip, flag);
         ComponentUtil.appendSplitDescription(tooltip, getDescription());
+
+        if (!isEnabled())
+            tooltip.accept(Component.translatable("itemConfig.storagedrawers.disabled_tool")
+                .withStyle(ChatFormatting.YELLOW));
     }
 
     @NotNull
     public Component getDescription() {
-        return Component.translatable(this.getDescriptionId() + ".desc");
+        return isEnabled()
+            ? Component.translatable(this.getDescriptionId() + ".desc") : Component.empty();
     }
 
     @Override
     @NotNull
     public InteractionResult useOn (UseOnContext context) {
+        if (!isEnabled())
+            return InteractionResult.PASS;
+
         BlockEntity blockEntity = WorldUtils.getBlockEntity(context.getLevel(), context.getClickedPos(), BlockEntity.class);
         if (blockEntity == null)
             return InteractionResult.PASS;
@@ -92,4 +100,8 @@ public class ItemKey extends Item
 
 
     protected void handleDrawerAttributes (IDrawerAttributesModifiable attrs) { }
+
+    public boolean isEnabled () {
+        return true;
+    }
 }

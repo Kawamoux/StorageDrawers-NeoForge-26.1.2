@@ -1,36 +1,25 @@
 package com.jaquadro.minecraft.storagedrawers.block;
 
 import com.jaquadro.minecraft.storagedrawers.ModServices;
-import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityFramingTable;
 import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlockEntities;
-import com.jaquadro.minecraft.storagedrawers.inventory.ContainerDrawers1;
-import com.jaquadro.minecraft.storagedrawers.inventory.ContainerDrawers2;
-import com.jaquadro.minecraft.storagedrawers.inventory.ContainerDrawers4;
-import com.jaquadro.minecraft.storagedrawers.inventory.ContainerDrawersComp3;
 import com.jaquadro.minecraft.storagedrawers.util.WorldUtils;
 import com.mojang.serialization.MapCodec;
 import com.texelsaurus.minecraft.chameleon.inventory.ContentMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Containers;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -191,6 +180,9 @@ public class BlockFramingTable extends HorizontalDirectionalBlock implements Ent
     }
 
     private void openUI(Level level, BlockPos pos, Player player) {
+        if (!ModCommonConfig.INSTANCE.GENERAL.enableUI.get() || !ModCommonConfig.INSTANCE.DRAWERS.framed.enable.get())
+            return;
+
         MenuProvider provider = level.getBlockState(pos).getMenuProvider(level, pos);
         if (ModCommonConfig.INSTANCE.GENERAL.debugTrace.get())
             ModServices.log.info("Open BlockDrawers UI " + pos);
