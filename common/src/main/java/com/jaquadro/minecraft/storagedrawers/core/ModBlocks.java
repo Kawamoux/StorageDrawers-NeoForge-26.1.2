@@ -148,9 +148,9 @@ public final class ModBlocks
         CONTROLLER_IO = registerControllerIOBlock("controller_io");
 
     public static final RegistryEntry<BlockFramedController> FRAMED_CONTROLLER = BLOCKS.register("framed_controller",
-        () -> new BlockFramedController(getStoneBlockProperties().setId(modKey("framed_controller"))));
+        () -> new BlockFramedController(getStoneBlockProperties().setId(modKey("framed_controller")).noOcclusion()));
     public static final RegistryEntry<BlockFramedControllerIO> FRAMED_CONTROLLER_IO = BLOCKS.register("framed_controller_io",
-        () -> new BlockFramedControllerIO(getStoneBlockProperties().setId(modKey("framed_controller_io"))));
+        () -> new BlockFramedControllerIO(getStoneBlockProperties().setId(modKey("framed_controller_io")).noOcclusion()));
 
     public static final RegistryEntry<BlockFramingTable> FRAMING_TABLE = registerFramingTableBlock("framing_table");
 
@@ -178,8 +178,8 @@ public final class ModBlocks
         META_FRAMED_DRAWERS_TRIM = registerMetaFacingSizedSlottedBlock("meta_framed_drawers_trim"),
         META_FRAMED_DRAWERS_FRONT = registerMetaFacingSizedSlottedBlock("meta_framed_drawers_front"),
         META_FRAMED_DRAWERS_SHADING = registerMetaFacingSizedSlottedBlock("meta_framed_drawers_shading"),
-        META_FRAMED_TRIM_SIDE = registerMetaBlock("meta_framed_trim_side"),
-        META_FRAMED_TRIM_TRIM = registerMetaBlock("meta_framed_trim_trim"),
+        META_FRAMED_TRIM_SIDE = registerMetaTransBlock("meta_framed_trim_side"),
+        META_FRAMED_TRIM_TRIM = registerMetaTransBlock("meta_framed_trim_trim"),
         META_FRAMED_CONTROLLER_SIDE = registerMetaFacingBlock("meta_framed_controller_side"),
         META_FRAMED_CONTROLLER_TRIM = registerMetaFacingBlock("meta_framed_controller_trim"),
         META_FRAMED_CONTROLLER_FRONT = registerMetaFacingBlock("meta_framed_controller_front"),
@@ -248,7 +248,7 @@ public final class ModBlocks
 
     static RegistryEntry<BlockFramedStandardDrawers> registerFramedDrawerBlock(String name, int drawerCount, boolean halfDepth) {
         IDrawerConfig config = getStandardConfig(drawerCount, halfDepth);
-        return BLOCKS.register(name, () -> (BlockFramedStandardDrawers)new BlockFramedStandardDrawers(drawerCount, halfDepth, config, getWoodenDrawerBlockProperties().setId(modKey(name))).setMatKey("framed"));
+        return BLOCKS.register(name, () -> (BlockFramedStandardDrawers)new BlockFramedStandardDrawers(drawerCount, halfDepth, config, getWoodenDrawerBlockProperties().setId(modKey(name)).noOcclusion()).setMatKey("framed"));
     }
 
     static RegistryEntry<BlockCompDrawers> registerCompactingDrawerBlock(String name, int drawerCount, boolean halfDepth) {
@@ -258,7 +258,7 @@ public final class ModBlocks
 
     static RegistryEntry<BlockFramedCompDrawers> registerFramedCompactingDrawerBlock(String name, int drawerCount, boolean halfDepth) {
         IDrawerConfig config = getCompConfig(halfDepth);
-        return BLOCKS.register(name, () -> new BlockFramedCompDrawers(drawerCount, halfDepth, config, getStoneDrawerBlockProperties().setId(modKey(name))));
+        return BLOCKS.register(name, () -> new BlockFramedCompDrawers(drawerCount, halfDepth, config, getStoneDrawerBlockProperties().setId(modKey(name)).noOcclusion()));
     }
 
     static RegistryEntry<BlockTrim> registerTrimBlock(ResourceLocation name) {
@@ -275,7 +275,8 @@ public final class ModBlocks
     }
 
     static RegistryEntry<BlockFramedTrim> registerFramedTrimBlock(String name) {
-        return BLOCKS.register(name, () -> (BlockFramedTrim)new BlockFramedTrim(getWoodenDrawerBlockProperties().setId(modKey(name))).setMatKey("framed"));
+        return BLOCKS.register(name, () -> (BlockFramedTrim)new BlockFramedTrim(
+            getWoodenDrawerBlockProperties().setId(modKey(name)).noOcclusion().isViewBlocking((a, b, c) -> false)).setMatKey("framed"));
     }
 
     static RegistryEntry<BlockController> registerControllerBlock(String name) {
@@ -293,6 +294,11 @@ public final class ModBlocks
     static RegistryEntry<BlockMeta> registerMetaBlock (String name) {
         EXCLUDE_ITEMS.add(name);
         return BLOCKS.register(name, () -> new BlockMeta(Properties.of().air().setId(modKey(name))));
+    }
+
+    static RegistryEntry<BlockMeta> registerMetaTransBlock (String name) {
+        EXCLUDE_ITEMS.add(name);
+        return BLOCKS.register(name, () -> new BlockMetaTrans(Properties.of().air().setId(modKey(name))));
     }
 
     static RegistryEntry<BlockMeta> registerMetaFacingBlock (String name) {

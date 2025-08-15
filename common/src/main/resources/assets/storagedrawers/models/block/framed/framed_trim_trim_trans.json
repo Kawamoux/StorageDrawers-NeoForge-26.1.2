@@ -1,0 +1,4 @@
+{
+    "parent": "storagedrawers:block/framed/framed_trim_trim",
+    "render_type": "translucent"
+}

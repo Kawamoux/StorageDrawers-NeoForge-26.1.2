@@ -11,6 +11,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
@@ -105,6 +106,18 @@ public class MaterialData extends BlockEntityDataShim implements IFramedMaterial
     @NotNull
     public ItemStack getEffectiveTrim () {
         return !materialTrim.isEmpty() ? materialTrim : materialSide;
+    }
+
+    public boolean isMatOpaque (ItemStack mat) {
+        if (mat.getItem() instanceof BlockItem blockItem)
+            return blockItem.getBlock().defaultBlockState().canOcclude();
+        return false;
+    }
+
+    public boolean allMatOpaque () {
+        return isMatOpaque(materialSide)
+            && (materialFront.isEmpty() || isMatOpaque(materialFront))
+            && (materialTrim.isEmpty() || isMatOpaque(materialTrim));
     }
 
     public void setFrameBase (@NotNull ItemStack frameBase) {

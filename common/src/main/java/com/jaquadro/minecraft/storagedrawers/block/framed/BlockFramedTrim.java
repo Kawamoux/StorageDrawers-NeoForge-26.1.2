@@ -9,6 +9,7 @@ import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityControllerIO;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityTrim;
 import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedBlockEntity;
+import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.components.item.FrameData;
 import com.jaquadro.minecraft.storagedrawers.core.ModDataComponents;
 import com.jaquadro.minecraft.storagedrawers.util.WorldUtils;
@@ -16,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.EntityBlock;
@@ -23,6 +25,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,5 +102,27 @@ public class BlockFramedTrim extends BlockTrim implements EntityBlock, IFramedBl
             case SIDE, TRIM -> true;
             case FRONT -> false;
         };
+    }
+
+    protected float getShadeBrightness(BlockState state, BlockGetter level, BlockPos pos) {
+        BlockEntityTrim tile = WorldUtils.getBlockEntity(level, pos, BlockEntityTrim.class);
+        if (tile == null)
+            return 1f;
+
+        MaterialData data = tile.material();
+        if (data == null)
+            return 1f;
+
+        return data.allMatOpaque() ? 0.8f : 1f;
+    }
+
+    @Override
+    protected boolean propagatesSkylightDown (BlockState $$0) {
+        return true;
+    }
+
+    @Override
+    protected VoxelShape getVisualShape (BlockState $$0, BlockGetter $$1, BlockPos $$2, CollisionContext $$3) {
+        return Shapes.empty();
     }
 }

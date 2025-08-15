@@ -2,11 +2,16 @@ package com.jaquadro.minecraft.storagedrawers.client.model;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
+import com.texelsaurus.minecraft.chameleon.ChameleonServices;
+import com.texelsaurus.minecraft.chameleon.render.ChameleonBlockModelPart;
+import com.texelsaurus.minecraft.chameleon.render.ReplacementBlockPart;
+import com.texelsaurus.minecraft.chameleon.service.ChameleonRender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -24,14 +29,15 @@ import java.util.Map;
 public class SpriteReplacementModel extends ParentModel
 {
     private TextureAtlasSprite sprite;
-    private Map<BlockModelPart, ReplacementBlockPart> cache = new HashMap<>();
+    private ChunkSectionLayer layer;
+    private Map<BlockModelPart, ChameleonBlockModelPart> cache = new HashMap<>();
 
     public SpriteReplacementModel (@NotNull BlockStateModel parent, TextureAtlasSprite sprite) {
         super(parent);
         this.sprite = sprite;
     }
 
-    public SpriteReplacementModel (@NotNull BlockStateModel parent, ItemStack stack) {
+    public SpriteReplacementModel (@NotNull BlockStateModel parent, ItemStack stack, ChunkSectionLayer renderLayer) {
         super(parent);
 
         if (stack != null && stack.getItem() instanceof BlockItem blockItem) {
@@ -40,6 +46,12 @@ public class SpriteReplacementModel extends ParentModel
             BlockStateModel model = disp.getBlockModel(block.defaultBlockState());
             sprite = model.particleIcon();
         }
+
+        layer = renderLayer;
+    }
+
+    public SpriteReplacementModel (@NotNull BlockStateModel parent, ItemStack stack) {
+        this(parent, stack, null);
     }
 
     @Override
@@ -53,9 +65,12 @@ public class SpriteReplacementModel extends ParentModel
             if (cache.containsKey(part))
                 list.add(cache.get(part));
             else {
-                ReplacementBlockPart replacement = new ReplacementBlockPart(part, sprite);
-                if (cache.size() < 10)
-                    cache.put(part, replacement);
+                ChameleonBlockModelPart replacement = ChameleonServices.RENDER.createReplacementPart(part, sprite);
+                replacement.setRenderType(layer);
+
+                //if (cache.size() < 10)
+                //    cache.put(part, replacement);
+
                 list.add(replacement);
             }
         });
@@ -69,7 +84,7 @@ public class SpriteReplacementModel extends ParentModel
         return sprite;
     }
 
-    private static class ReplacementBlockPart implements BlockModelPart
+    /*private static class ReplacementBlockPart implements BlockModelPart
     {
         private BlockModelPart parent;
         private TextureAtlasSprite sprite;
@@ -125,5 +140,5 @@ public class SpriteReplacementModel extends ParentModel
             float diff = sprite.getV1() - sprite.getV0();
             return (v - sprite.getV0()) / diff;
         }
-    }
+    }*/
 }

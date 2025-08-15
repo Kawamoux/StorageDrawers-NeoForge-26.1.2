@@ -3,10 +3,7 @@ package com.jaquadro.minecraft.storagedrawers.client.model;
 import com.jaquadro.minecraft.storagedrawers.ModConstants;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.EnumCompDrawer;
-import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacing;
-import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacingSized;
-import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacingSizedOpen;
-import com.jaquadro.minecraft.storagedrawers.block.meta.BlockMetaFacingSizedSlotted;
+import com.jaquadro.minecraft.storagedrawers.block.meta.*;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.block.BlockModelShaper;
@@ -223,8 +220,10 @@ public class DrawerModelStore
             addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 2), ModBlocks.META_FRAMED_DRAWERS_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 2));
             addOverlay(getVariant(DynamicPart.FRAMED_DRAWERS_SHADING, dir, half, 4), ModBlocks.META_FRAMED_DRAWERS_SHADING.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir).setValue(BlockMetaFacingSized.HALF, half).setValue(BlockMetaFacingSizedSlotted.SLOTS, 4));
 
-            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_SIDE), ModBlocks.META_FRAMED_TRIM_SIDE.get().defaultBlockState());
-            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_TRIM), ModBlocks.META_FRAMED_TRIM_TRIM.get().defaultBlockState());
+            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_SIDE, false), ModBlocks.META_FRAMED_TRIM_SIDE.get().defaultBlockState().setValue(BlockMetaTrans.TRANS, false));
+            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_SIDE, true), ModBlocks.META_FRAMED_TRIM_SIDE.get().defaultBlockState().setValue(BlockMetaTrans.TRANS, true));
+            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_TRIM, false), ModBlocks.META_FRAMED_TRIM_TRIM.get().defaultBlockState().setValue(BlockMetaTrans.TRANS, false));
+            addOverlay(getVariant(DynamicPart.FRAMED_TRIM_TRIM, true), ModBlocks.META_FRAMED_TRIM_TRIM.get().defaultBlockState().setValue(BlockMetaTrans.TRANS, true));
 
             addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_SIDE, dir), ModBlocks.META_FRAMED_CONTROLLER_SIDE.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir));
             addOverlay(getVariant(DynamicPart.FRAMED_CONTROLLER_TRIM, dir), ModBlocks.META_FRAMED_CONTROLLER_TRIM.get().defaultBlockState().setValue(BlockMetaFacingSized.FACING, dir));
@@ -283,6 +282,10 @@ public class DrawerModelStore
         return "";
     }
 
+    static String getVariant(boolean trans) {
+        return "trans=" + trans;
+    }
+
     static String getVariant(Direction dir) {
         return "facing=" + dir.getName();
     }
@@ -301,6 +304,10 @@ public class DrawerModelStore
 
     static String getVariant(DynamicPart part) {
         return "part=" + part.getName();
+    }
+
+    static String getVariant(DynamicPart part, boolean trans) {
+        return "part=" + part.getName() + ",trans=" + trans;
     }
 
     static String getVariant(DynamicPart part, Direction dir) {
@@ -349,6 +356,10 @@ public class DrawerModelStore
 
     public static BlockStateModel getModel(DynamicPart part) {
         return getModel(getVariant(part));
+    }
+
+    public static BlockStateModel getModel(DynamicPart part, boolean trans) {
+        return getModel(getVariant(part, trans));
     }
 
     public static BlockStateModel getModel(DynamicPart part, Direction dir) {

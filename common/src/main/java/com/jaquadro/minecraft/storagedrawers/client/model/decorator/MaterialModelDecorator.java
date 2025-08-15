@@ -9,6 +9,7 @@ import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.client.model.DrawerModelStore;
 import com.jaquadro.minecraft.storagedrawers.client.model.SpriteReplacementModel;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.FramedModelContext;
+import com.jaquadro.minecraft.storagedrawers.config.ModClientConfig;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
@@ -80,7 +81,11 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
 
         MaterialData matData = context.materialData();
         if (matData != null && !matData.getEffectiveSide().isEmpty()) {
-            if (renderType == null || renderType == DecoratorRenderType.SOLID)
+            boolean shouldRender = renderType == null || renderType == DecoratorRenderType.CUTOUT;
+            if (ModClientConfig.INSTANCE.RENDER.framedDrawers.renderTranslucentMaterials.get())
+                shouldRender = shouldRender || renderType == DecoratorRenderType.TRANSLUCENT;
+
+            if (shouldRender)
                 emitFramedQuads(context, emitModel, renderType);
             if (shaded && (renderType == null || renderType == DecoratorRenderType.TRANSLUCENT))
                 emitFramedOverlayQuads(context, emitModel, renderType);
@@ -95,14 +100,18 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
 
         MaterialData matData = context.materialData();
         if (matData != null && !matData.getEffectiveSide().isEmpty()) {
-            if (renderType == null || renderType == DecoratorRenderType.SOLID)
+            boolean shouldRender = renderType == null || renderType == DecoratorRenderType.CUTOUT;
+            if (ModClientConfig.INSTANCE.RENDER.framedDrawers.renderTranslucentMaterials.get())
+                shouldRender = shouldRender || renderType == DecoratorRenderType.TRANSLUCENT;
+
+            if (shouldRender)
                 emitFramedQuads(context, emitModel, renderType);
             if (shaded && (renderType == null || renderType == DecoratorRenderType.TRANSLUCENT))
                 emitFramedOverlayQuads(context, emitModel, renderType);
         }
     }
 
-    private BlockStateModel getReplacementModel (BlockStateModel baseModel, ItemStack material) {
+    private BlockStateModel getReplacementModel (BlockStateModel baseModel, ItemStack material, DecoratorRenderType renderType) {
         Map<ResourceLocation, BlockStateModel> matCache;
         if (replacementCache.containsKey(baseModel))
             matCache = replacementCache.get(baseModel);
@@ -116,7 +125,13 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         if (matCache.containsKey(matName))
             replacedModel = matCache.get(matName);
         else {
-            replacedModel = new SpriteReplacementModel(baseModel, material);
+            ChunkSectionLayer layer = ChunkSectionLayer.SOLID;
+            if (renderType == DecoratorRenderType.CUTOUT)
+                layer = ChunkSectionLayer.CUTOUT;
+            else if (renderType == DecoratorRenderType.TRANSLUCENT)
+                layer = ChunkSectionLayer.TRANSLUCENT;
+
+            replacedModel = new SpriteReplacementModel(baseModel, material, layer);
             matCache.put(matName, replacedModel);
         }
 
@@ -126,7 +141,34 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
     public void emitFramedQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel, DecoratorRenderType renderType) {
         Block block = context.state().getBlock();
 
+        boolean renderTrans = ModClientConfig.INSTANCE.RENDER.framedDrawers.renderTranslucentMaterials.get();
+        boolean checkOpaque = renderTrans && renderType != null;
+        boolean opaquePass = renderType == DecoratorRenderType.CUTOUT;
+
         if (block instanceof IFramedBlock fb) {
+            MaterialData matData = context.materialData();
+            if (matData != null && !matData.isEmpty()) {
+                BiConsumer<ItemStack, DrawerModelStore.DynamicPart> emitPart = (item, part) -> {
+                    boolean opaque = matData.isMatOpaque(item);
+                    DecoratorRenderType render = (!renderTrans || opaque)
+                        ? DecoratorRenderType.CUTOUT : DecoratorRenderType.TRANSLUCENT;
+
+                    if (!checkOpaque || opaquePass == opaque) {
+                        BlockStateModel storeModel = getStoreModel(context, part, render == DecoratorRenderType.TRANSLUCENT);
+                        emitModel.accept(getReplacementModel(storeModel, item, render));
+                    }
+                };
+
+                if (matSet.sidePart() != null && fb.supportsFrameMaterial(FrameMaterial.SIDE))
+                    emitPart.accept(matData.getEffectiveSide(), matSet.sidePart());
+                if (matSet.trimPart() != null && fb.supportsFrameMaterial(FrameMaterial.TRIM))
+                    emitPart.accept(matData.getEffectiveTrim(), matSet.trimPart());
+                if (matSet.frontPart() != null && fb.supportsFrameMaterial(FrameMaterial.FRONT))
+                    emitPart.accept(matData.getEffectiveFront(), matSet.frontPart());
+            }
+        }
+
+        /*if (block instanceof IFramedBlock fb) {
             MaterialData matData = context.materialData();
             if (matData != null && !matData.isEmpty()) {
                 if (matSet.sidePart() != null && fb.supportsFrameMaterial(FrameMaterial.SIDE)) {
@@ -144,7 +186,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
                         matData.getEffectiveFront()));
                 }
             }
-        }
+        }*/
     }
 
     public void emitFramedOverlayQuads(FramedModelContext context, Consumer<BlockStateModel> emitModel, DecoratorRenderType renderType) {
@@ -159,6 +201,10 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
 
     protected abstract BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part);
 
+    protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part, boolean trans) {
+        return getStoreModel(context, part);
+    }
+
     public static class Single<C extends FramedModelContext> extends MaterialModelDecorator<C>
     {
         public Single (DrawerModelStore.FrameMatSet matSet, boolean shaded) {
@@ -168,6 +214,11 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
         @Override
         protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part) {
             return DrawerModelStore.getModel(part);
+        }
+
+        @Override
+        protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part, boolean trans) {
+            return DrawerModelStore.getModel(part, trans);
         }
     }
 

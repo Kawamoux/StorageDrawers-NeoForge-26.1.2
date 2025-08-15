@@ -139,7 +139,7 @@ public class BlockEntityFramingTable extends BaseBlockEntity implements Nameable
                 return false;
 
             try {
-                if (!Block.isShapeFullBlock(state.getOcclusionShape()))
+                if (!Block.isShapeFullBlock(state.getShape(null, null)))
                     return false;
             } catch (Exception e) { }
         }
