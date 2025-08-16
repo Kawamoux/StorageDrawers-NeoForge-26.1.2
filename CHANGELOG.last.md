@@ -1,10 +1,6 @@
-- New config file (storagedrawers-common-v2.toml)
-- Reworked storage tiers
-- Added copper and netherite storage upgrades
-- Partial support for cutout/translucent materials.
-- Framed blocks do not occlude light
-- Fixed gold_keyrings tag error
-
+- Renamed several list config entries for consistency with 1.20.1, check your values
+- Fixed incorrect default ore types in conversion config
+- 
 WARNING: This release REPLACES the existing storage drawers config file.
 The original file will be left unchanged, but it will not be read from.
 If you've changed your config, take a look at the new storagedrawers-common-v2.toml

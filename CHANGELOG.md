@@ -1,3 +1,7 @@
+[18.1.1]
+- Renamed several list config entries for consistency with 1.20.1, check your values
+- Fixed incorrect default ore types in conversion config
+
 [18.1.0]
 - New config file (storagedrawers-common-v2.toml)
 - Reworked storage tiers
