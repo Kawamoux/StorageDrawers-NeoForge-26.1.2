@@ -216,10 +216,10 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
             return DrawerModelStore.getModel(part);
         }
 
-        @Override
+        /*@Override
         protected BlockStateModel getStoreModel (FramedModelContext context, DrawerModelStore.DynamicPart part, boolean trans) {
             return DrawerModelStore.getModel(part, trans);
-        }
+        }*/
     }
 
     public static class Facing<C extends FramedModelContext> extends MaterialModelDecorator<C>
