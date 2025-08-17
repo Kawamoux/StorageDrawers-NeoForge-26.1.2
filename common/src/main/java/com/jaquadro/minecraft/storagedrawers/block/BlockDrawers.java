@@ -283,6 +283,9 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         if (!SecurityManager.hasAccess(context.player, blockEntity))
             return Optional.of(InteractionResult.PASS);
 
+        if (context.level.isClientSide())
+            return Optional.of(InteractionResult.SUCCESS);
+
         ItemStack keyItem = null;
         if (item.getItem() instanceof ItemKeyring keyring)
             keyItem = keyring.getKey();
@@ -423,6 +426,9 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         if (!SecurityManager.hasAccess(context.player, blockEntityDrawers))
             return InteractionResult.PASS;
 
+        if (context.level.isClientSide())
+            return InteractionResult.SUCCESS;
+
         blockEntityDrawers.interactPutItemsIntoSlot(context.slot, context.player);
 
         if (item.isEmpty())
@@ -439,6 +445,9 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
 
         if (!SecurityManager.hasAccess(context.player, blockEntityDrawers))
             return InteractionResult.PASS;
+
+        if (context.level.isClientSide())
+            return InteractionResult.SUCCESS;
 
         IDrawer drawer = blockEntityDrawers.getGroup().getDrawer(context.slot);
 

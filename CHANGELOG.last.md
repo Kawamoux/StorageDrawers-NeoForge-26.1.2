@@ -1,1 +1,3 @@
 - Fixed swapping upgrade with stack count > 1 voiding extra items
+- Fixed remote upgrade name in ru_ru and es_es (Jack McKalling)
+- Improved consistency with claimed/protected chunks (e.g. via FTB Chunks)
