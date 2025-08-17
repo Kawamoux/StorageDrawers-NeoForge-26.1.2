@@ -239,8 +239,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
 
             @Override
             public void resolveDependencies (Resolver resolver) {
-                resolver.markDependency(model);
-                resolver.markDependency(ResourceLocation.fromNamespaceAndPath(StorageDrawers.MOD_ID, "block/oak_full_drawers_2"));
+                // Uses meta parts, nothing to resolve
             }
         }
     }

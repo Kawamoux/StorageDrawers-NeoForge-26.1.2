@@ -29,11 +29,13 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.ticks.LevelTicks;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -290,8 +292,13 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
 
         BlockPos pos = getBlockPos();
         try {
-            if (!getLevel().getBlockTicks().hasScheduledTick(pos, getBlockState().getBlock()))
-                getLevel().scheduleTick(pos, getBlockState().getBlock(), 1);
+            if (getLevel().getBlockTicks() instanceof LevelTicks<Block> levelTicks) {
+                long tickLoc = ChunkPos.asLong(pos);
+                if (levelTicks.allContainers.get(tickLoc) != null) {
+                    if (!getLevel().getBlockTicks().hasScheduledTick(pos, getBlockState().getBlock()))
+                        getLevel().scheduleTick(pos, getBlockState().getBlock(), 1);
+                }
+            }
         } catch (Exception e) {
             // Ignore
         }

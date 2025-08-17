@@ -86,6 +86,8 @@ public class StorageDrawers
         CompTierRegistry.INSTANCE.initialize();
         StorageBlacklist.INSTANCE.initialize();
         MaterialBlacklist.INSTANCE.initialize();
+        ConversionRegistry.INSTANCE.initialize();
+
         PlatformCapabilities.initHandlers();
 
         //oreDictRegistry = new OreDictRegistry();

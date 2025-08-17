@@ -4,6 +4,10 @@
 - Renamed several list config entries for consistency with 1.20.1, check your values
 - Fixed incorrect default ore types in conversion config
 - Fixed rendering of framed controller io blocks
+- Fixed conversion rules not loading
+- Fixed incorrect default ore types in conversion config
+- Added option to disable logging startup rules, deny lists, etc.
+- Fixed scheduled tick errors in log
 
 [18.1.0]
 - New config file (storagedrawers-common-v2.toml)
