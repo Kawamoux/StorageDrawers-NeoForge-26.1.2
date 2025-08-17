@@ -1,6 +1,5 @@
 {
     "variants": {
-        "trans=false": { "model": "storagedrawers:block/framed/framed_trim_sides" },
-        "trans=true": { "model": "storagedrawers:block/framed/framed_trim_sides_trans" }
+        "": { "model": "storagedrawers:block/framed/framed_trim_sides" }
     }
 }

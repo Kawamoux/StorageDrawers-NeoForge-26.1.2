@@ -1,6 +1,7 @@
 {
     "parent": "block/block",
     "textures": {
+        "particle": "storagedrawers:block/indicator/missing_slots_4",
         "missing": "storagedrawers:block/indicator/missing_slots_4"
     },
     "elements": [ {

@@ -1,6 +1,7 @@
 {
     "parent": "block/block",
     "textures": {
+        "particle": "storagedrawers:block/indicator/lock_claim_icon",
         "lock": "storagedrawers:block/indicator/lock_claim_icon"
     },
     "render_type": "cutout_mipped",

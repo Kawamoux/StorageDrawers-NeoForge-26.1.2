@@ -1,6 +1,7 @@
 {
     "parent": "block/block",
     "textures": {
+        "particle": "storagedrawers:block/indicator/indicator_comp2_off",
         "indicator": "storagedrawers:block/indicator/indicator_comp2_off",
         "indicatorOn": "storagedrawers:block/indicator/indicator_comp2_on"
     },

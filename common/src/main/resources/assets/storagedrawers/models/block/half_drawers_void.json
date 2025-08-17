@@ -1,6 +1,7 @@
 {
     "parent": "block/block",
     "textures": {
+        "particle": "storagedrawers:block/indicator/void_icon",
         "void": "storagedrawers:block/indicator/void_icon"
     },
     "render_type": "cutout_mipped",

@@ -1,5 +1,6 @@
 [18.1.1]
 - Fixed meta blockstate loading errors (though they were harmless)
+- Fixed model and texture loading errors (also harmless)
 - Renamed several list config entries for consistency with 1.20.1, check your values
 - Fixed incorrect default ore types in conversion config
 - Fixed rendering of framed controller io blocks
