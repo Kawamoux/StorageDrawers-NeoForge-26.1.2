@@ -1,3 +1,6 @@
+[18.1.2]
+- Fixed swapping upgrade with stack count > 1 voiding extra items
+
 [18.1.1]
 - Fixed meta blockstate loading errors (though they were harmless)
 - Fixed model and texture loading errors (also harmless)
