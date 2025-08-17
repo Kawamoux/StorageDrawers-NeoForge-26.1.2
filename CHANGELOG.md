@@ -8,6 +8,8 @@
 - Fixed incorrect default ore types in conversion config
 - Added option to disable logging startup rules, deny lists, etc.
 - Fixed scheduled tick errors in log
+- Fixed server startup crash due to loading client class file
+- Removed COFH personal key recipe
 
 [18.1.0]
 - New config file (storagedrawers-common-v2.toml)

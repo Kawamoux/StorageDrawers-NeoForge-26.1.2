@@ -12,9 +12,17 @@ public final class ChameleonServices
     public static final ChameleonCapabilities CAPABILITY = load(ChameleonCapabilities.class);
     public static final ChameleonContainer CONTAINER = load(ChameleonContainer.class);
     public static final ChameleonPlatform PLATFORM = load(ChameleonPlatform.class);
-    public static final ChameleonRender RENDER = load(ChameleonRender.class);
+    public static final ChameleonRender RENDER = clientLoad(ChameleonRender.class);
 
     private static <T> T load(Class<T> clazz) {
+        final T service = ServiceLoader.load(clazz).findFirst().orElseThrow();
+        return service;
+    }
+
+    private static <T> T clientLoad(Class<T> clazz) {
+        if (!PLATFORM.isPhysicalClient())
+            return null;
+
         final T service = ServiceLoader.load(clazz).findFirst().orElseThrow();
         return service;
     }
