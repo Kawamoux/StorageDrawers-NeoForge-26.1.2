@@ -64,6 +64,7 @@ public final class ModItems
         SHROUD_KEY = register("shroud_key", (p) -> new ItemShroudKey(p), new Item.Properties()),
         PERSONAL_KEY = register("personal_key", (p) -> new ItemPersonalKey(null, p), new Item.Properties()),
         PERSONAL_KEY_COFH = register("personal_key_cofh", (p) -> new ItemPersonalKey("cofh", p), new Item.Properties()),
+        PERSONAL_KEY_FTB = register("personal_key_ftb", (p) -> new ItemPersonalKey("ftb", p), new Item.Properties()),
         PERSONAL_KEY_UNLOCK = register("personal_key_unlock", (p) -> new ItemPersonalKey("unlock", p), new Item.Properties()),
         PRIORITY_KEY = register("priority_key", (p) -> new ItemPriorityKey(0, 1, p), new Item.Properties()),
         PRIORITY_KEY_P1 = register("priority_key_p1", (p) -> new ItemPriorityKey(1, 2, p), new Item.Properties()),
@@ -79,6 +80,7 @@ public final class ModItems
         KEYRING_SHROUD = register("keyring_shroud", (p) -> new ItemKeyring(SHROUD_KEY, p), new Item.Properties().stacksTo(1)),
         KEYRING_PERSONAL = register("keyring_personal", (p) -> new ItemKeyring(PERSONAL_KEY, p), new Item.Properties().stacksTo(1)),
         KEYRING_PERSONAL_COFH = register("keyring_personal_cofh", (p) -> new ItemKeyring(PERSONAL_KEY_COFH, p), new Item.Properties().stacksTo(1)),
+        KEYRING_PERSONAL_FTB = register("keyring_personal_ftb", (p) -> new ItemKeyring(PERSONAL_KEY_FTB, p), new Item.Properties().stacksTo(1)),
         KEYRING_PERSONAL_UNLOCK = register("keyring_personal_unlock", (p) -> new ItemKeyring(PERSONAL_KEY_UNLOCK, p), new Item.Properties().stacksTo(1)),
         KEYRING_PRIORITY = register("keyring_priority", (p) -> new ItemKeyring(PRIORITY_KEY, p), new Item.Properties().stacksTo(1)),
         KEYRING_PRIORITY_P1 = register("keyring_priority_p1", (p) -> new ItemKeyring(PRIORITY_KEY_P1, p), new Item.Properties().stacksTo(1)),
@@ -103,6 +105,7 @@ public final class ModItems
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_SHROUD);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PERSONAL);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PERSONAL_COFH);
+        EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PERSONAL_FTB);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PERSONAL_UNLOCK);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PRIORITY);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PRIORITY_P1);
