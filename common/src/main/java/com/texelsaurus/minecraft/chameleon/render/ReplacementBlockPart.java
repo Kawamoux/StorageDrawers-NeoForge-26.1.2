@@ -4,8 +4,10 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
+import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -25,6 +27,10 @@ public abstract class ReplacementBlockPart implements ChameleonBlockModelPart
         for (Direction dir : Direction.values()) {
             part.getQuads(dir).forEach(quad -> quads.add(remapQuad(quad, sprite)));
         }
+    }
+
+    public ReplacementBlockPart (BlockModelPart parent, BlockModelPart replacement) {
+        this(parent, replacement.particleIcon());
     }
 
     @Override

@@ -11,6 +11,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 public class ControllerData extends BlockEntityDataShim
 {
     private BlockPos controllerCoord;
+    private boolean needsValidation;
 
     @Override
     public void read (ValueInput input) {
@@ -19,6 +20,8 @@ public class ControllerData extends BlockEntityDataShim
         input.child("Controller").ifPresent(t ->
             controllerCoord = new BlockPos(t.getIntOr("x", 0), t.getIntOr("y", 0), t.getIntOr("z", 0))
         );
+
+        needsValidation = input.getBooleanOr("Validate", false);
     }
 
     @Override
@@ -29,6 +32,9 @@ public class ControllerData extends BlockEntityDataShim
             ctag.putInt("y", controllerCoord.getY());
             ctag.putInt("z", controllerCoord.getZ());
         }
+
+        if (needsValidation)
+            output.putBoolean("Validate", needsValidation);
     }
 
     public BlockPos getCoord () {
@@ -65,5 +71,13 @@ public class ControllerData extends BlockEntityDataShim
         }
 
         return false;
+    }
+
+    public boolean needsValidation () {
+        return needsValidation;
+    }
+
+    public void setNeedsValidation (boolean state) {
+        needsValidation = state;
     }
 }

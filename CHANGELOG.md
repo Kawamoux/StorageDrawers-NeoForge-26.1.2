@@ -1,9 +1,20 @@
+[18.3.0]
+- Added bamboo as a default compacting rule
+- Added config option to show quantify labels by default
+- Added Hopper Upgrade
+- Added Magnet upgrades
+- Added Pause Key
+- Fixed empty tag left on empty keyrings
+- Added nl_nl translation (Jack McKalling)
+- Updated translations from latest crowdin export
+
 [18.2.0]
 - Fixed swapping upgrade with stack count > 1 voiding extra items
 - Fixed remote upgrade name in ru_ru and es_es (Jack McKalling)
 - Improved consistency with claimed/protected chunks (e.g. via FTB Chunks)
 - Fixed remote upgrades showing bound description when not bound
 - Fixed admin key description indicating it's disabled
+- Added FTB variant of Personal Key (but FTB Teams is not here yet)
 
 [18.1.1]
 - Fixed meta blockstate loading errors (though they were harmless)

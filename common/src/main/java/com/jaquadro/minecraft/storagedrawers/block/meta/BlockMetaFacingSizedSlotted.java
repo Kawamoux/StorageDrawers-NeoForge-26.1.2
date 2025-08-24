@@ -5,6 +5,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 public abstract class BlockMetaFacingSizedSlotted
 {
@@ -31,6 +32,19 @@ public abstract class BlockMetaFacingSizedSlotted
         @Override
         protected void createBlockStateDefinition (StateDefinition.Builder<Block, BlockState> builder) {
             builder.add(FACING).add(HALF).add(SLOTS);
+        }
+    }
+
+    public static class Label extends BlockMetaFacingSized {
+        public static final IntegerProperty SLOT = IntegerProperty.create("slot", 1, 6);
+
+        public Label (BlockBehaviour.Properties properties) {
+            super(properties);
+        }
+
+        @Override
+        protected void createBlockStateDefinition (StateDefinition.Builder<Block, BlockState> builder) {
+            builder.add(FACING).add(HALF).add(SLOT);
         }
     }
 }

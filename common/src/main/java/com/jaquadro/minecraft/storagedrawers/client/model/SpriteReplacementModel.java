@@ -37,6 +37,12 @@ public class SpriteReplacementModel extends ParentModel
         this.sprite = sprite;
     }
 
+    public SpriteReplacementModel (@NotNull BlockStateModel parent, BlockStateModel replacement, ChunkSectionLayer renderLayer) {
+        super(parent);
+        this.sprite = replacement.particleIcon();
+        this.layer = renderLayer;
+    }
+
     public SpriteReplacementModel (@NotNull BlockStateModel parent, ItemStack stack, ChunkSectionLayer renderLayer) {
         super(parent);
 

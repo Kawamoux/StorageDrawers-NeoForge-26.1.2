@@ -50,6 +50,10 @@ public final class ModItems
         FILL_LEVEL_UPGRADE = register("fill_level_upgrade", (p) -> new ItemUpgradeFillLevel(p), new Item.Properties()),
         BALANCE_FILL_UPGRADE = register("balance_fill_upgrade", (p) -> new ItemUpgradeBalance(p), new Item.Properties()),
         PORTABILITY_UPGRADE = register("portability_upgrade", (p) -> new ItemUpgradePortability(p), new Item.Properties()),
+        HOPPER_UPGRADE = register("hopper_upgrade", (p) -> new ItemUpgradeHopper(p), new Item.Properties()),
+        MAGNET_UPGRADE = register("magnet_upgrade", (p) -> new ItemUpgradeMagnet(EnumUpgradeMagnet.LEVEL1, p), new Item.Properties()),
+        MAGNET_UPGRADE_2 = register("magnet_upgrade_2", (p) -> new ItemUpgradeMagnet(EnumUpgradeMagnet.LEVEL2, p), new Item.Properties()),
+        MAGNET_UPGRADE_3 = register("magnet_upgrade_3", (p) -> new ItemUpgradeMagnet(EnumUpgradeMagnet.LEVEL3, p), new Item.Properties()),
         REMOTE_UPGRADE = register("remote_upgrade", (p) -> new ItemUpgradeRemote(false, false, p), new Item.Properties()),
         REMOTE_UPGRADE_BOUND = register("remote_upgrade_bound", (p) -> new ItemUpgradeRemote(false, true, p), new Item.Properties()),
         REMOTE_GROUP_UPGRADE = register("remote_group_upgrade", (p) -> new ItemUpgradeRemote(true, false, p), new Item.Properties()),
@@ -66,6 +70,7 @@ public final class ModItems
         PERSONAL_KEY_COFH = register("personal_key_cofh", (p) -> new ItemPersonalKey("cofh", p), new Item.Properties()),
         PERSONAL_KEY_FTB = register("personal_key_ftb", (p) -> new ItemPersonalKey("ftb", p), new Item.Properties()),
         PERSONAL_KEY_UNLOCK = register("personal_key_unlock", (p) -> new ItemPersonalKey("unlock", p), new Item.Properties()),
+        SUSPEND_KEY = register("suspend_key", (p) -> new ItemSuspendKey(p), new Item.Properties()),
         PRIORITY_KEY = register("priority_key", (p) -> new ItemPriorityKey(0, 1, p), new Item.Properties()),
         PRIORITY_KEY_P1 = register("priority_key_p1", (p) -> new ItemPriorityKey(1, 2, p), new Item.Properties()),
         PRIORITY_KEY_P2 = register("priority_key_p2", (p) -> new ItemPriorityKey(2, -1, p), new Item.Properties()),
@@ -82,6 +87,7 @@ public final class ModItems
         KEYRING_PERSONAL_COFH = register("keyring_personal_cofh", (p) -> new ItemKeyring(PERSONAL_KEY_COFH, p), new Item.Properties().stacksTo(1)),
         KEYRING_PERSONAL_FTB = register("keyring_personal_ftb", (p) -> new ItemKeyring(PERSONAL_KEY_FTB, p), new Item.Properties().stacksTo(1)),
         KEYRING_PERSONAL_UNLOCK = register("keyring_personal_unlock", (p) -> new ItemKeyring(PERSONAL_KEY_UNLOCK, p), new Item.Properties().stacksTo(1)),
+        KEYRING_SUSPEND = register("keyring_suspend", (p) -> new ItemKeyring(SUSPEND_KEY, p), new Item.Properties().stacksTo(1)),
         KEYRING_PRIORITY = register("keyring_priority", (p) -> new ItemKeyring(PRIORITY_KEY, p), new Item.Properties().stacksTo(1)),
         KEYRING_PRIORITY_P1 = register("keyring_priority_p1", (p) -> new ItemKeyring(PRIORITY_KEY_P1, p), new Item.Properties().stacksTo(1)),
         KEYRING_PRIORITY_P2 = register("keyring_priority_p2", (p) -> new ItemKeyring(PRIORITY_KEY_P2, p), new Item.Properties().stacksTo(1)),
@@ -107,6 +113,7 @@ public final class ModItems
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PERSONAL_COFH);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PERSONAL_FTB);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PERSONAL_UNLOCK);
+        EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_SUSPEND);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PRIORITY);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PRIORITY_P1);
         EXCLUDE_ITEMS_CREATIVE_TAB.add(KEYRING_PRIORITY_P2);
