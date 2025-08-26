@@ -1,3 +1,6 @@
+[18.3.1]
+- Balance upgrade works fully across controller networks
+
 [18.3.0]
 - Added bamboo as a default compacting rule
 - Added config option to show quantify labels by default

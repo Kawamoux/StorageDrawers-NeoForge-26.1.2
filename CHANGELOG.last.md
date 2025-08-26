@@ -1,8 +1,1 @@
-- Added bamboo as a default compacting rule
-- Added config option to show quantify labels by default
-- Added Hopper Upgrade
-- Added Magnet upgrades
-- Added Pause Key
-- Fixed empty tag left on empty keyrings
-- Added nl_nl translation (Jack McKalling)
-- Updated translations from latest crowdin export
+- Balance upgrade works fully across controller networks
