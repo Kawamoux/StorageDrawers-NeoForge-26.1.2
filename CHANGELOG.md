@@ -1,5 +1,6 @@
 [18.3.1]
 - Balance upgrade works fully across controller networks
+- Fixed additive and maxRange magnet upgrade config values
 
 [18.3.0]
 - Added bamboo as a default compacting rule
