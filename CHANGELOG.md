@@ -1,3 +1,6 @@
+[18.3.2]
+- Fixed item dupe from integer overflow
+
 [18.3.1]
 - Balance upgrade works fully across controller networks
 - Fixed additive and maxRange magnet upgrade config values
