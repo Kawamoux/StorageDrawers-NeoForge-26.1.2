@@ -392,6 +392,19 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
     }
 
     @Override
+    public void preRemoveSideEffects (BlockPos pos, BlockState state) {
+        if (ModCommonConfig.INSTANCE.DRAWERS.storage.dropMode.get() == ModCommonConfig.DropMode.DROP) {
+            if (level != null) {
+                DrawerInventoryHelper.dropUpgradeItems(level, pos, upgrades());
+                if (!getDrawerAttributes().isUnlimitedVending())
+                    DrawerInventoryHelper.dropInventoryItems(level, pos, getGroup());
+            }
+        }
+
+        super.preRemoveSideEffects(pos, state);
+    }
+
+    @Override
     public UUID getOwner () {
         if (!ModCommonConfig.INSTANCE.TOOLS.personalKey.enable.get())
             return null;

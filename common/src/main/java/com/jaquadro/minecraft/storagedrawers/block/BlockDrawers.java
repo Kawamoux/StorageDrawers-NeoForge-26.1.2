@@ -624,24 +624,26 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         if (tile == null)
             return drop;
 
-        boolean hasUpgradeContents = false;
-        boolean hasItemContents = false;
-        for (int i = 0; i < tile.getGroup().getDrawerCount(); i++) {
-            IDrawer drawer = tile.getGroup().getDrawer(i);
-            if (!drawer.isEmpty() || drawer.isMissing())
-                hasItemContents = true;
-        }
-        for (int i = 0; i < tile.upgrades().getSlotCount(); i++) {
-            if (!tile.upgrades().getUpgrade(i).isEmpty())
-                hasUpgradeContents = true;
-        }
+        if (ModCommonConfig.INSTANCE.DRAWERS.storage.dropMode.get() == ModCommonConfig.DropMode.KEEP) {
+            boolean hasUpgradeContents = false;
+            boolean hasItemContents = false;
+            for (int i = 0; i < tile.getGroup().getDrawerCount(); i++) {
+                IDrawer drawer = tile.getGroup().getDrawer(i);
+                if (!drawer.isEmpty() || drawer.isMissing())
+                    hasItemContents = true;
+            }
+            for (int i = 0; i < tile.upgrades().getSlotCount(); i++) {
+                if (!tile.upgrades().getUpgrade(i).isEmpty())
+                    hasUpgradeContents = true;
+            }
 
-        if (hasItemContents || hasUpgradeContents) {
-            TagValueOutput tagOutput = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, tile.getLevel().registryAccess());
-            tile.saveWithId(tagOutput);
-            drop.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tagOutput.buildResult()));
-            if (hasItemContents)
-                drop.set(DataComponents.MAX_STACK_SIZE, 1);
+            if (hasItemContents || hasUpgradeContents) {
+                TagValueOutput tagOutput = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, tile.getLevel().registryAccess());
+                tile.saveWithId(tagOutput);
+                drop.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tagOutput.buildResult()));
+                if (hasItemContents)
+                    drop.set(DataComponents.MAX_STACK_SIZE, 1);
+            }
         }
 
         if (tile.hasCustomName())
