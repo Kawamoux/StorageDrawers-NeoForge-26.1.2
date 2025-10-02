@@ -68,7 +68,7 @@ public class ClientModBusSubscriber {
     }
 
     @SubscribeEvent
-    public static void registerTextures (TextureStitchEvent event) {
+    public static void registerTextures (TextureStitchEvent.Post event) {
         if (ModBlocks.OAK_FULL_DRAWERS_1 == null) {
             StorageDrawers.log.warn("Block objects not set in TextureStitchEvent.  Is your mod environment broken?");
             return;

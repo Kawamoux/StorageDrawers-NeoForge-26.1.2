@@ -11,8 +11,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.event.TickEvent.Phase;
-import net.minecraftforge.event.TickEvent.PlayerTickEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
@@ -36,13 +35,13 @@ public class PlayerEventListener
 	}
 
 	@SubscribeEvent
-	public static void onPlayerTick(PlayerTickEvent event) {
+	public static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
 		// every 3 seconds, in the END phase
-		if(event.phase != Phase.END || event.player.tickCount % 60 != 0)
+		if(event.player().tickCount % 60 != 0)
 			return;
 
-		if (event.side == LogicalSide.SERVER)
-			ItemUpgradeRemote.validateInventory(event.player.getInventory(), event.player.level());
+		if (event.side() == LogicalSide.SERVER)
+			ItemUpgradeRemote.validateInventory(event.player().getInventory(), event.player().level());
 
 		if (!ModCommonConfig.INSTANCE.DRAWERS.anyHeavyDrawers())
 			return;
@@ -53,9 +52,9 @@ public class PlayerEventListener
 		//		return;
 		//}
 
-		Inventory inv = event.player.getInventory();
+		Inventory inv = event.player().getInventory();
 		for (int i = 0; i < inv.getContainerSize(); i++) {
-			if (checkItemDebuf(inv.getItem(i), event.player))
+			if (checkItemDebuf(inv.getItem(i), event.player()))
 				return;
 		}
 	}
