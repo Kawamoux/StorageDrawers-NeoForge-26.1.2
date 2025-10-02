@@ -174,7 +174,7 @@ public abstract class BlockEntityDrawersStandard extends BlockEntityDrawers
             // DrawerPopulatedEvent event = new DrawerPopulatedEvent(this);
             // NeoForge.EVENT_BUS.post(event);
 
-            if (getLevel() != null && !getLevel().isClientSide) {
+            if (getLevel() != null && !getLevel().isClientSide()) {
                 setChanged();
                 markBlockForUpdate();
             }
@@ -182,7 +182,7 @@ public abstract class BlockEntityDrawersStandard extends BlockEntityDrawers
 
         @Override
         protected void onAmountChanged () {
-            if (getLevel() != null && !getLevel().isClientSide) {
+            if (getLevel() != null && !getLevel().isClientSide()) {
                 syncClientCount(slot, getStoredItemCount());
                 setChanged();
             }

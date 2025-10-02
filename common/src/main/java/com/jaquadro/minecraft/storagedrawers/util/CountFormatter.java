@@ -9,18 +9,29 @@ public class CountFormatter
         return formatApprox(font, drawer);
     }
 
+    public static String format (Font font, int itemCount) {
+        return formatApprox(font, itemCount);
+    }
+
     public static String formatStackNotation (IDrawer drawer) {
         if (drawer == null || drawer.isEmpty())
             return "";
 
+        return fromStackNotation(drawer.getStoredItemCount(), drawer.getStoredItemStackSize());
+    }
+
+    public static String fromStackNotation (int itemCount, int stackSize) {
+        if (itemCount == 0 || stackSize == 0)
+            return "";
+
         String text;
-        int stacks = drawer.getStoredItemCount() / drawer.getStoredItemStackSize();
-        int remainder = drawer.getStoredItemCount() - (stacks * drawer.getStoredItemStackSize());
+        int stacks = itemCount / stackSize;
+        int remainder = itemCount - (stacks * stackSize);
 
         if (stacks > 0 && remainder > 0)
-            text = stacks + "x" + drawer.getStoredItemStackSize() + "+" + remainder;
+            text = stacks + "x" + stackSize + "+" + remainder;
         else if (stacks > 0)
-            text = stacks + "x" + drawer.getStoredItemStackSize();
+            text = stacks + "x" + stackSize;
         else
             text = String.valueOf(remainder);
 
@@ -31,7 +42,14 @@ public class CountFormatter
         if (drawer == null || drawer.isEmpty())
             return "";
 
-        return String.valueOf(drawer.getStoredItemCount());
+        return formatExact(drawer.getStoredItemCount());
+    }
+
+    public static String formatExact (int itemCount) {
+        if (itemCount == 0)
+            return "";
+
+        return String.valueOf(itemCount);
     }
 
     public static String formatApprox (Font font, IDrawer drawer) {

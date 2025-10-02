@@ -95,6 +95,10 @@ public class ModelLoadPlugin implements ModelLoadingPlugin
 
     @Override
     public void initialize (Context pluginContext) {
+        ItemModels.ID_MAPPER.put(
+            ModConstants.loc("framed_block"), PlatformDecoratedModel.PlatformDecoratedItemModel.Unbaked.MAP_CODEC
+        );
+
         DrawerModelGeometry.loadGeometryData();
         pluginContext.modifyBlockModelOnLoad().register((original, context) -> {
             if (context.state() == null)
@@ -110,9 +114,5 @@ public class ModelLoadPlugin implements ModelLoadingPlugin
 
             return new UnbakedProxyModel(original, context.state());
         });
-
-        ItemModels.ID_MAPPER.put(
-            ModConstants.loc("framed_block"), PlatformDecoratedModel.PlatformDecoratedItemModel.Unbaked.MAP_CODEC
-        );
     }
 }

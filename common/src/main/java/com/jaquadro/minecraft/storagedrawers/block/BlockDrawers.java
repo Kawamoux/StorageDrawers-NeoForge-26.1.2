@@ -41,11 +41,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.pathfinder.PathComputationType;
@@ -216,9 +218,9 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         if (blockEntity == null)
             return;
 
-        CustomData blockEntityData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        TypedEntityData<BlockEntityType<?>> blockEntityData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
         if (blockEntityData != null) {
-            ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), blockEntityData.copyTag());
+            ValueInput input = TagValueInput.create(ProblemReporter.DISCARDING, world.registryAccess(), blockEntityData.copyTagWithoutId());
             blockEntity.readPortable(input);
         } else {
             CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
@@ -289,7 +291,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
 
         // Drawer UI
         if (item.isEmpty()) {
-            if (!context.level.isClientSide && context.player.isShiftKeyDown()) {
+            if (!context.level.isClientSide() && context.player.isShiftKeyDown()) {
                 openUI(context);
                 return Optional.of(InteractionResult.SUCCESS);
             }
@@ -405,7 +407,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         // Drawer upgrades
         if (item.getItem() instanceof ItemUpgrade && !context.player.isShiftKeyDown()) {
             if (entity.getGroup().hasMissingDrawers() && ModCommonConfig.INSTANCE.DRAWERS.detached.forceMaxCapacityCheck.get()) {
-                if (!context.level.isClientSide)
+                if (!context.level.isClientSide())
                     context.player.displayClientMessage(Component.translatable("message.storagedrawers.missing_slots_upgrade"), true);
 
                 return Optional.of(InteractionResult.PASS);
@@ -424,14 +426,14 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             }
 
             if (!entity.upgrades().canAddUpgrade(item)) {
-                if (!context.level.isClientSide)
+                if (!context.level.isClientSide())
                     context.player.displayClientMessage(Component.translatable("message.storagedrawers.cannot_add_upgrade"), true);
 
                 return Optional.of(InteractionResult.PASS);
             }
 
             if (!entity.upgrades().addUpgrade(item)) {
-                if (!context.level.isClientSide)
+                if (!context.level.isClientSide())
                     context.player.displayClientMessage(Component.translatable("message.storagedrawers.max_upgrades"), true);
 
                 return Optional.of(InteractionResult.PASS);
@@ -640,7 +642,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
             if (hasItemContents || hasUpgradeContents) {
                 TagValueOutput tagOutput = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, tile.getLevel().registryAccess());
                 tile.saveWithId(tagOutput);
-                drop.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(tagOutput.buildResult()));
+                drop.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(tile.getType(), tagOutput.buildResult()));
                 if (hasItemContents)
                     drop.set(DataComponents.MAX_STACK_SIZE, 1);
             }
@@ -688,7 +690,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
     }
 
     @Override
-    public int getAnalogOutputSignal(BlockState state, Level blockAccess, BlockPos pos) {
+    public int getAnalogOutputSignal(BlockState state, Level blockAccess, BlockPos pos, Direction dir) {
         if (!hasAnalogOutputSignal(state))
             return 0;
 
@@ -728,7 +730,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
         if (ModCommonConfig.INSTANCE.GENERAL.debugTrace.get())
             ModServices.log.info("BlockDrawers [{}] tick", pos);
 
-        if (world.isClientSide)
+        if (world.isClientSide())
             return;
 
         BlockEntityDrawers blockEntity = WorldUtils.getBlockEntity(world, pos, BlockEntityDrawers.class);

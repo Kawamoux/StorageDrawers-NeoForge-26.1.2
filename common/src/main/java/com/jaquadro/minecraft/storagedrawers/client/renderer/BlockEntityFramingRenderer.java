@@ -4,11 +4,15 @@ import com.jaquadro.minecraft.storagedrawers.api.framing.IFramedSourceBlock;
 import com.jaquadro.minecraft.storagedrawers.block.*;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityFramingTable;
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
+import com.jaquadro.minecraft.storagedrawers.client.renderer.state.FramingRenderState;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
@@ -16,103 +20,100 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
-public class BlockEntityFramingRenderer implements BlockEntityRenderer<BlockEntityFramingTable>
+public class BlockEntityFramingRenderer implements BlockEntityRenderer<BlockEntityFramingTable, FramingRenderState>
 {
     private final BlockEntityRendererProvider.Context context;
-    private final ItemStackRenderState itemRenderState = new ItemStackRenderState();
 
     public BlockEntityFramingRenderer(BlockEntityRendererProvider.Context context) {
         this.context = context;
     }
 
     @Override
-    public void render (@NotNull BlockEntityFramingTable blockEntityTable, float partialTickTime, @NotNull PoseStack matrix, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay, Vec3 camPosition) {
-        Level level = blockEntityTable.getLevel();
-        if (level == null)
-            return;
+    public FramingRenderState createRenderState () {
+        return new FramingRenderState();
+    }
 
-        BlockState state = blockEntityTable.getBlockState();
-        if (!(state.getBlock() instanceof BlockFramingTable))
-            return;
+    @Override
+    public void extractRenderState (BlockEntityFramingTable blockEntity, FramingRenderState renderState, float partialTick, Vec3 cameraPos, @Nullable ModelFeatureRenderer.CrumblingOverlay crumbleOverlay) {
+        BlockEntityRenderer.super.extractRenderState(blockEntity, renderState, partialTick, cameraPos, crumbleOverlay);
 
-        if (state.getValue(BlockFramingTable.PART) != EnumFramingTablePart.RIGHT)
-            return;
+        int longPos = (int)blockEntity.getBlockPos().asLong();
 
-        MaterialData matData = blockEntityTable.material();
-        if (matData == null)
-            return;
+        MaterialData matData = blockEntity.material();
+        if (matData != null) {
+            renderState.sideSlotItem = getRenderState(matData.getSide(), blockEntity.getLevel(), longPos + 1);
+            renderState.trimSlotItem = getRenderState(matData.getTrim(), blockEntity.getLevel(), longPos + 2);
+            renderState.frontSlotItem = getRenderState(matData.getFront(), blockEntity.getLevel(), longPos + 3);
 
-        renderSlot(blockEntityTable, matData.getSide(), matrix, buffer, combinedLight, combinedOverlay, 1f, .5f + .65f, .15f, .225f - .5f);
-        renderSlot(blockEntityTable, matData.getTrim(), matrix, buffer, combinedLight, combinedOverlay, 1f, .5f - .65f, .15f, .225f - .5f);
-        renderSlot(blockEntityTable, matData.getFront(), matrix, buffer, combinedLight, combinedOverlay, 1f, .5f + .65f, .15f, -.225f - .5f);
+            ItemStack target = blockEntity.inventory().getItem(0);
+            if (target != null && target.getItem() instanceof BlockItem blockItem) {
+                Block targetBlock = blockItem.getBlock();
+                if (targetBlock instanceof IFramedSourceBlock fsb) {
+                    ItemStack result = fsb.makeFramedItem(target,
+                        matData.getEffectiveSide(), matData.getEffectiveTrim(), matData.getEffectiveFront());
 
-        if (matData.getEffectiveSide().isEmpty())
-            return;
-
-        ItemStack target = blockEntityTable.inventory().getItem(0);
-        if (target == null || target.isEmpty())
-            return;
-
-        if (target.getItem() instanceof BlockItem blockItem) {
-            Block targetBlock = blockItem.getBlock();
-            if (targetBlock instanceof IFramedSourceBlock fsb) {
-                ItemStack result = fsb.makeFramedItem(target,
-                    matData.getEffectiveSide(), matData.getEffectiveTrim(), matData.getEffectiveFront());
-
-                renderSlot(blockEntityTable, result, matrix, buffer, combinedLight, combinedOverlay, 1.6f, .5f, .1f, -.5f);
+                    renderState.mainSlotItem = getRenderState(result, blockEntity.getLevel(), longPos);
+                }
             }
         }
     }
 
-    private void renderSlot (BlockEntityFramingTable blockEntityTable, ItemStack item, PoseStack matrix, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay, float scale, float tx, float ty, float tz) {
-        if (item == null)
+    private ItemStackRenderState getRenderState (ItemStack itemStack, Level level, int id) {
+        ItemStackRenderState itemState = new ItemStackRenderState();
+        context.itemModelResolver().updateForTopItem(
+            itemState, itemStack, ItemDisplayContext.GROUND, level, null, id
+        );
+        return itemState;
+    }
+
+    @Override
+    public void submit (FramingRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        if (!(renderState.blockState.getBlock() instanceof BlockFramingTable))
             return;
 
-        Block itemBlock = Block.byItem(item.getItem());
-        if (itemBlock == Blocks.AIR)
+        if (renderState.blockState.getValue(BlockFramingTable.PART) != EnumFramingTablePart.RIGHT)
             return;
 
-        Direction facing = blockEntityTable.getBlockState().getValue(BlockFramingTable.FACING);
-        matrix.pushPose();
+        renderSlot(renderState, renderState.mainSlotItem, poseStack, submitNodeCollector, cameraRenderState, 1.6f, .5f, .1f, -.5f);
+        renderSlot(renderState, renderState.sideSlotItem, poseStack, submitNodeCollector, cameraRenderState, 1f, .5f + .65f, .15f, .225f - .5f);
+        renderSlot(renderState, renderState.trimSlotItem, poseStack, submitNodeCollector, cameraRenderState, 1f, .5f - .65f, .15f, .225f - .5f);
+        renderSlot(renderState, renderState.frontSlotItem, poseStack, submitNodeCollector, cameraRenderState, 1f, .5f + .65f, .15f, -.225f - .5f);
+    }
+
+    private void renderSlot (FramingRenderState renderState, ItemStackRenderState itemState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, float scale, float tx, float ty, float tz) {
+        if (itemState == null || itemState.isEmpty())
+            return;
+
+        Direction facing = renderState.blockState.getValue(BlockFramingTable.FACING);
+        poseStack.pushPose();
 
         switch (facing) {
-            case NORTH -> matrix.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(180)));
-            case EAST -> matrix.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(90)));
-            case WEST -> matrix.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(270)));
-            case SOUTH -> matrix.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(0)));
+            case NORTH -> poseStack.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(180)));
+            case EAST -> poseStack.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(90)));
+            case WEST -> poseStack.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(270)));
+            case SOUTH -> poseStack.mulPose((new Matrix4f()).rotateY((float)Math.toRadians(0)));
         }
 
         switch (facing) {
-            case NORTH -> matrix.translate(-.5f, 0.8f, 0f);
-            case EAST -> matrix.translate(-.5f, 0.8f, 1f);
-            case WEST -> matrix.translate(.5f, 0.8f, 0f);
-            case SOUTH -> matrix.translate(.5f, 0.8f, 1f);
+            case NORTH -> poseStack.translate(-.5f, 0.8f, 0f);
+            case EAST -> poseStack.translate(-.5f, 0.8f, 1f);
+            case WEST -> poseStack.translate(.5f, 0.8f, 0f);
+            case SOUTH -> poseStack.translate(.5f, 0.8f, 1f);
         }
 
-        matrix.translate(tx, ty, tz);
-
-        matrix.mulPose((new Matrix4f()).scale(scale, scale, scale));
-
-        //ItemRenderer renderer = Minecraft.getInstance().getItemRenderer();
-        //BakedModel model = renderer.getModel(item, null, null, 0);
+        poseStack.translate(tx, ty, tz);
+        poseStack.mulPose((new Matrix4f()).scale(scale, scale, scale));
 
         try {
-            context.getItemModelResolver().updateForTopItem(
-                itemRenderState, item, ItemDisplayContext.GROUND, context.getBlockEntityRenderDispatcher().level, null, 0
-            );
-
-            itemRenderState.render(matrix, buffer, combinedLight, combinedOverlay);
-            //renderer.render(item, ItemDisplayContext.GROUND, false, matrix, buffer, combinedLight, combinedOverlay, model);
+            itemState.submit(poseStack, submitNodeCollector, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0);
         } catch (Exception e) { }
 
-        matrix.popPose();
+        poseStack.popPose();
     }
 
     // NeoForge extension

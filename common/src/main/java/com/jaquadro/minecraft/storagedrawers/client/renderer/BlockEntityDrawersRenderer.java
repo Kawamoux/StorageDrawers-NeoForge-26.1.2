@@ -3,10 +3,13 @@ package com.jaquadro.minecraft.storagedrawers.client.renderer;
 import com.jaquadro.minecraft.storagedrawers.ModConstants;
 import com.jaquadro.minecraft.storagedrawers.api.storage.Drawers;
 import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawer;
+import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributes;
+import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerGroup;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawersComp;
 import com.jaquadro.minecraft.storagedrawers.client.model.DrawerModelStore;
+import com.jaquadro.minecraft.storagedrawers.client.renderer.state.DrawersRenderState;
 import com.jaquadro.minecraft.storagedrawers.config.ModClientConfig;
 import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.jaquadro.minecraft.storagedrawers.util.CountFormatter;
@@ -16,20 +19,27 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.BlockModelPart;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.feature.ModelFeatureRenderer;
+import net.minecraft.client.renderer.item.ItemModelResolver;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ARGB;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemDisplayContext;
@@ -39,19 +49,15 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEntityDrawers>
+public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEntityDrawers, DrawersRenderState>
 {
-    private final ItemStack[] renderStacks = new ItemStack[4];
-
-    private ItemRenderer itemRenderer;
-    private ItemStackRenderState itemRenderState = new ItemStackRenderState();
-    private RandomSource randomSource = RandomSource.create();
-
     private final BlockEntityRendererProvider.Context context;
 
     public BlockEntityDrawersRenderer (BlockEntityRendererProvider.Context context) {
@@ -59,46 +65,59 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
     }
 
     @Override
-    public void render (@NotNull BlockEntityDrawers blockEntityDrawers, float partialTickTime, @NotNull PoseStack matrix, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay, Vec3 camPosition) {
+    public DrawersRenderState createRenderState () {
+        return new DrawersRenderState();
+    }
 
-        Player player = Minecraft.getInstance().player;
-        if (player == null)
+    @Override
+    public void extractRenderState (BlockEntityDrawers blockEntity, DrawersRenderState renderState, float partialTick, Vec3 cameraPos, @Nullable ModelFeatureRenderer.CrumblingOverlay crumbleOverlay) {
+        BlockEntityRenderer.super.extractRenderState(blockEntity, renderState, partialTick, cameraPos, crumbleOverlay);
+
+        renderState.cameraPos = cameraPos;
+        renderState.enforcedLightLevel = blockEntity.upgrades().hasIlluminationUpgrade()
+            ? ModCommonConfig.INSTANCE.UPGRADES.illuminationUpgrade.illuminationLevel.get()
+            : ModCommonConfig.INSTANCE.UPGRADES.illuminationUpgrade.minIlluminationLevel.get();
+
+        int blockLight = Math.max(renderState.lightCoords % 65536, renderState.enforcedLightLevel * 16);
+        renderState.lightCoords = (renderState.lightCoords & 0xFFFF0000) | blockLight;
+
+        IDrawerAttributes attr = blockEntity.getDrawerAttributes();
+        renderState.isConcealed = attr.isConcealed();
+        renderState.showCount = attr.isShowingQuantity();
+        renderState.showFill = attr.hasFillLevel();
+
+        int longPos = (int)blockEntity.getBlockPos().asLong();
+
+        renderState.items = new ArrayList<>();
+        IDrawerGroup group = blockEntity.getGroup();
+
+        for (int i = 0; i < group.getDrawerCount(); i++) {
+            IDrawer drawer = group.getDrawer(i);
+            ItemStackRenderState itemState = new ItemStackRenderState();
+            context.itemModelResolver().updateForTopItem(itemState, drawer.getStoredItemPrototype(), ItemDisplayContext.GUI, blockEntity.getLevel(), null, longPos + i);
+            renderState.items.add(new DrawersRenderState.SlotState(itemState, drawer.getStoredItemCount(), drawer.getMaxCapacity()));
+        }
+    }
+
+    @Override
+    public void submit (DrawersRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        if (!(renderState.blockState.getBlock() instanceof BlockDrawers))
             return;
 
-        Level level = blockEntityDrawers.getLevel();
-        if (level == null)
+        Direction side = renderState.blockState.getValue(BlockDrawers.FACING);
+        if (playerBehindBlock(renderState.blockPos, side))
             return;
 
-        BlockState state = blockEntityDrawers.getBlockState();
-        if (!(state.getBlock() instanceof BlockDrawers))
-            return;
-
-        //renderOverlay((BlockDrawers)state.getBlock(), blockEntityDrawers, matrix, buffer, state.getValue(BlockDrawers.FACING), combinedLight, combinedOverlay);
-
-        Direction side = state.getValue(BlockDrawers.FACING);
-        if (playerBehindBlock(blockEntityDrawers.getBlockPos(), side))
-            return;
-
-        float distance = (float)Math.sqrt(blockEntityDrawers.getBlockPos().distToCenterSqr(player.position()));
-
+        float distance = (float)Math.sqrt(renderState.blockPos.distToCenterSqr(renderState.cameraPos));
         double renderDistance = ModClientConfig.INSTANCE.RENDER.labelRenderDistance.get();
         if (renderDistance > 0 && distance > renderDistance)
             return;
 
-        itemRenderer = Minecraft.getInstance().getItemRenderer();
+        if (!renderState.isConcealed)
+            renderFastItemSet(renderState, poseStack, submitNodeCollector, cameraRenderState, distance);
 
-        int enforcedLightLevel = blockEntityDrawers.upgrades().hasIlluminationUpgrade()
-            ? ModCommonConfig.INSTANCE.UPGRADES.illuminationUpgrade.illuminationLevel.get()
-            : ModCommonConfig.INSTANCE.UPGRADES.illuminationUpgrade.minIlluminationLevel.get();
-        int blockLight = Math.max(combinedLight % 65536, enforcedLightLevel * 16);
-        combinedLight = (combinedLight & 0xFFFF0000) | blockLight;
-
-        if (!blockEntityDrawers.getDrawerAttributes().isConcealed())
-            renderFastItemSet(blockEntityDrawers, state, matrix, buffer, combinedLight, combinedOverlay, side, partialTickTime, distance);
-
-        if (blockEntityDrawers.getDrawerAttributes().hasFillLevel())
-            renderIndicator((BlockDrawers)state.getBlock(), blockEntityDrawers, matrix, buffer, state.getValue(BlockDrawers.FACING), combinedLight, combinedOverlay);
-
+        //if (renderState.showFill)
+        //    renderIndicator(renderState, poseStack, submitNodeCollector, cameraRenderState, distance);
     }
 
     private boolean playerBehindBlock(BlockPos blockPos, Direction facing) {
@@ -116,26 +135,12 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         };
     }
 
-    private void renderFastItemSet (BlockEntityDrawers blockEntityDrawers, BlockState state, PoseStack matrix, MultiBufferSource buffer, int combinedLight, int combinedOverlay, Direction side, float partialTickTime, float distance) {
-        int drawerCount = blockEntityDrawers.getGroup().getDrawerCount();
+    private void renderFastItemSet (DrawersRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, float distance) {
+        int drawerCount = renderState.items.size();
+        for (int i = 0; i < drawerCount; i++)
+            renderFastItem(i, renderState, poseStack, submitNodeCollector, cameraRenderState);
 
-        for (int i = 0; i < drawerCount; i++) {
-            renderStacks[i] = ItemStack.EMPTY;
-            IDrawer drawer = blockEntityDrawers.getGroup().getDrawer(i);
-            if (!drawer.isEnabled() || drawer.isEmpty())
-                continue;
-
-            ItemStack itemStack = drawer.getStoredItemPrototype();
-            renderStacks[i] = itemStack;
-        }
-
-        for (int i = 0; i < drawerCount; i++) {
-            ItemStack itemStack = renderStacks[i];
-            if (!itemStack.isEmpty())
-                renderFastItem(itemStack, state, i, matrix, buffer, combinedLight, combinedOverlay, side);
-        }
-
-        if (blockEntityDrawers.getDrawerAttributes().isShowingQuantity()) {
+        if (renderState.showCount) {
             float alpha = 1;
             double fadeDistance = ModClientConfig.INSTANCE.RENDER.quantityFadeDistance.get();
             if (fadeDistance == 0 || distance > fadeDistance)
@@ -144,8 +149,8 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
             double renderDistance = ModClientConfig.INSTANCE.RENDER.quantityRenderDistance.get();
             if (renderDistance == 0 || distance < renderDistance) {
                 for (int i = 0; i < drawerCount; i++) {
-                    String format = CountFormatter.format(this.context.getFont(), blockEntityDrawers.getGroup().getDrawer(i));
-                    renderText(format, state, i, matrix, buffer, combinedLight, side, alpha);
+                      String format = CountFormatter.format(this.context.font(), renderState.items.get(i).count());
+                    renderText(i, format, renderState, poseStack, submitNodeCollector, cameraRenderState, alpha);
                 }
             }
         }
@@ -153,13 +158,20 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
 
     private static final int TEXT_COLOR_TRANSPARENT = ARGB.color(0, 255, 255, 255);
 
-    private void renderText (String text, BlockState state, int slot, PoseStack matrix, MultiBufferSource buffer, int combinedLight, Direction side, float alpha) {
+    private void renderText (int slot, String text, DrawersRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState, float alpha) {
+        DrawersRenderState.SlotState slotInfo = renderState.items.get(slot);
+        ItemStackRenderState itemState = slotInfo.itemState();
+        if (itemState == null || itemState.isEmpty())
+            return;
+
         if (text == null || text.isEmpty())
             return;
 
-        Font fontRenderer = this.context.getFont();
+        Font fontRenderer = this.context.font();
 
-        BlockDrawers block = (BlockDrawers)state.getBlock();
+        if (!(renderState.blockState.getBlock() instanceof BlockDrawers block))
+            return;
+
         AABB labelGeometry = block.countGeometry[slot];
         int textWidth = fontRenderer.width(text);
 
@@ -167,58 +179,70 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         float y = 16f - (float)labelGeometry.minY - (float)labelGeometry.getYsize();
         float z = (float)labelGeometry.minZ * .0625f - .01f;
 
-        matrix.pushPose();
+        poseStack.pushPose();
 
-        alignRendering(matrix, side);
-        matrix.translate(x / 16, 1 - y / 16, 1 - z);
+        Direction side = renderState.blockState.getValue(BlockDrawers.FACING);
+        alignRendering(poseStack, side);
+        poseStack.translate(x / 16, 1 - y / 16, 1 - z);
         // Text is rendered upside-down and flipped by default, so Y needs to be inverted
-        matrix.scale(1/128f, -1/128f, 1);
+        poseStack.scale(1/128f, -1/128f, 1);
 
         int color = (int)(255 * alpha) << 24 | TEXT_COLOR_TRANSPARENT;
-        fontRenderer.drawInBatch(text, -textWidth / 2f, 0, color, false, matrix.last().pose(), buffer, Font.DisplayMode.NORMAL, 0, combinedLight); // 15728880
+        submitNodeCollector.submitText(poseStack, -textWidth / 2f, 0, FormattedCharSequence.forward(text, Style.EMPTY), false, Font.DisplayMode.POLYGON_OFFSET, renderState.lightCoords, color, 0, 0);
+        // fontRenderer.drawInBatch(text, -textWidth / 2f, 0, color, false, poseStack.last().pose(), buffer, Font.DisplayMode.NORMAL, 0, combinedLight); // 15728880
 
-        matrix.popPose();
+        poseStack.popPose();
     }
 
     private static final Matrix3f ITEM_LIGHT_ROTATION_3D = (new Matrix3f()).rotationYXZ(.36f, -.36f, -.014f);
 
-    private void renderFastItem(@NotNull ItemStack itemStack, BlockState state, int slot, PoseStack matrix, MultiBufferSource buffer, int combinedLight, int combinedOverlay, Direction side) {
-        BlockDrawers block = (BlockDrawers)state.getBlock();
-        AABB labelGeometry = block.labelGeometry[slot];
+    private void renderFastItem(int slot, DrawersRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        DrawersRenderState.SlotState slotInfo = renderState.items.get(slot);
+        ItemStackRenderState itemState = slotInfo.itemState();
+        if (itemState == null || itemState.isEmpty())
+            return;
 
+        if (!(renderState.blockState.getBlock() instanceof BlockDrawers block))
+            return;
+
+        AABB labelGeometry = block.labelGeometry[slot];
         float scaleX = (float)labelGeometry.getXsize() / 16;
         float scaleY = (float)labelGeometry.getYsize() / 16;
         float moveX = (float)labelGeometry.minX + (8 * scaleX);
         float moveY = 16f - (float)labelGeometry.maxY + (8 * scaleY);
         float moveZ = (float)labelGeometry.minZ * .0625f - 0.0025f;
 
-        matrix.pushPose();
+        poseStack.pushPose();
 
-        alignRendering(matrix, side);
-        matrix.translate(moveX / 16, 1 - moveY / 16, 1 - moveZ);
-        matrix.mulPose((new Matrix4f()).scale(scaleX, scaleY, 0.001f));
-        matrix.last().trustedNormals = true;
+        Direction side = renderState.blockState.getValue(BlockDrawers.FACING);
+        alignRendering(poseStack, side);
+        poseStack.translate(moveX / 16, 1 - moveY / 16, 1 - moveZ);
+        poseStack.mulPose((new Matrix4f()).scale(scaleX, scaleY, 0.001f));
+        poseStack.last().trustedNormals = true;
 
         try {
-            context.getItemModelResolver().updateForTopItem(
-                this.itemRenderState, itemStack, ItemDisplayContext.GUI, context.getBlockEntityRenderDispatcher().level, null, 0
-            );
 
-            matrix.last().normal().rotateYXZ(-getRotationYForSide2D(side), 0, 0).mul(ITEM_LIGHT_ROTATION_3D);
-            this.itemRenderState.render(matrix, buffer, combinedLight, combinedOverlay);
+            //context.itemModelResolver().updateForTopItem(
+            //    this.itemRenderState, itemStack, ItemDisplayContext.GUI, context.blockEntityRenderDispatcher(), null, 0
+            //);
+
+            poseStack.last().normal().rotateYXZ(-getRotationYForSide2D(side), 0, 0).mul(ITEM_LIGHT_ROTATION_3D);
+            itemState.submit(poseStack, submitNodeCollector, renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+
+            //this.itemRenderState.render(matrix, buffer, combinedLight, combinedOverlay);
         } catch (Exception e) {
             // Shrug
         }
 
-        matrix.popPose();
+        poseStack.popPose();
     }
 
-    private void alignRendering (PoseStack matrix, Direction side) {
+    private void alignRendering (PoseStack poseStack, Direction side) {
         // Rotate to face the correct direction for the drawer's orientation.
 
-        matrix.translate(.5f, 0, .5f);
-        matrix.mulPose((new Matrix4f()).rotateYXZ(getRotationYForSide2D(side), 0, 0));
-        matrix.translate(-.5f, 0, -.5f);
+        poseStack.translate(.5f, 0, .5f);
+        poseStack.mulPose((new Matrix4f()).rotateYXZ(getRotationYForSide2D(side), 0, 0));
+        poseStack.translate(-.5f, 0, -.5f);
     }
 
     private static final float[] sideRotationY2D = { 0, 0, 2, 0, 3, 1 };
@@ -233,6 +257,7 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
     public static final ResourceLocation TEXTURE_IND_COMP_3 = ModConstants.loc("block/indicator/indicator_comp_on");
     public static final ResourceLocation TEXTURE_IND_COMP_2 = ModConstants.loc("block/indicator/indicator_comp2_on");
 
+    /*
     private void renderIndicator (BlockDrawers block, BlockEntityDrawers blockEntityDrawers, PoseStack matrixStack, MultiBufferSource buffer, Direction side, int combinedLight, int combinedOverlay) {
         int count = (blockEntityDrawers instanceof BlockEntityDrawersComp) ? 1 : block.getDrawerCount();
 
@@ -327,4 +352,5 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
 
         return x + (w * fillAmt);
     }
+    */
 }

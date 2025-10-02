@@ -95,7 +95,7 @@ public abstract class ContainerDrawers extends AbstractContainerMenu
         for (int i = 0; i < 9; i++)
             hotbarSlots.add(addSlot(new Slot(playerInventory, i, InventoryX + i * 18, HotbarY)));
 
-        isRemote = playerInventory.player.level().isClientSide;
+        isRemote = playerInventory.player.level().isClientSide();
     }
 
     public void setLastAccessedItem (ItemStack stack) {

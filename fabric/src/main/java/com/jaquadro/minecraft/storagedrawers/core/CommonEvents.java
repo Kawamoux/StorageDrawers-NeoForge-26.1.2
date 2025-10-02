@@ -23,7 +23,7 @@ public class CommonEvents
             Block block = state.getBlock();
             if (block instanceof BlockDrawers blockDrawers) {
                 if (player.isCreative()) {
-                    if (level.isClientSide)
+                    if (level.isClientSide())
                         return InteractionResult.CONSUME;
 
                     BlockHitResult hit = WorldUtils.rayTraceEyes(level, player, pos);

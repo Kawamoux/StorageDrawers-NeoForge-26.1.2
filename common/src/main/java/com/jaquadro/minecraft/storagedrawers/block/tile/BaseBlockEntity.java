@@ -64,7 +64,7 @@ public class BaseBlockEntity extends BlockEntity
         //    trapLoadFailure(t, tag);
         //}
 
-        if (level != null && level.isClientSide && dataPacketRequiresRenderUpdate())
+        if (level != null && level.isClientSide() && dataPacketRequiresRenderUpdate())
             markBlockForRenderUpdate();
     }
 
@@ -164,7 +164,7 @@ public class BaseBlockEntity extends BlockEntity
         if (pkt != null)
             read(TagValueInput.create(ProblemReporter.DISCARDING, lookupProvider, pkt.getTag()));
 
-        if (getLevel() != null && getLevel().isClientSide && dataPacketRequiresRenderUpdate()) {
+        if (getLevel() != null && getLevel().isClientSide() && dataPacketRequiresRenderUpdate()) {
             BlockState state = getLevel().getBlockState(getBlockPos());
             getLevel().sendBlockUpdated(getBlockPos(), state, state, Block.UPDATE_ALL);
         }
@@ -174,14 +174,14 @@ public class BaseBlockEntity extends BlockEntity
      * Calls server to sync data with client, update neighbors, and cause a delayed render update.
      */
     public void markBlockForUpdate () {
-        if (getLevel() != null && !getLevel().isClientSide) {
+        if (getLevel() != null && !getLevel().isClientSide()) {
             BlockState state = getLevel().getBlockState(worldPosition);
             getLevel().sendBlockUpdated(worldPosition, state, state, Block.UPDATE_ALL);
         }
     }
 
     public void markBlockForUpdateClient () {
-        if (getLevel() != null && getLevel().isClientSide) {
+        if (getLevel() != null && getLevel().isClientSide()) {
             BlockState state = getLevel().getBlockState(worldPosition);
             getLevel().sendBlockUpdated(worldPosition, state, state, Block.UPDATE_ALL);
         }

@@ -1,2 +1,1 @@
-- Added dropMode and dropStackLimit config entries
-- FORGE: Let capability checks fall back to parent
+- Updated to 1.21.9

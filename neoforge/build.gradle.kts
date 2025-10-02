@@ -5,7 +5,7 @@ import net.darkhax.curseforgegradle.TaskPublishCurseForge
 
 plugins {
     id("modloader-conv")
-    id("net.neoforged.moddev") version ("2.0.103")
+    id("net.neoforged.moddev") version ("2.0.107")
     id("com.modrinth.minotaur")
 }
 
@@ -33,7 +33,7 @@ dependencies {
     // JEI
     //runtimeOnly("mezz.jei:jei-1.21.1-neoforge:19.8.5.118")
     // JADE
-    compileOnly("curse.maven:jade-324717:5835088")
+    //compileOnly("curse.maven:jade-324717:5835088")
 }
 
 tasks.create<TaskPublishCurseForge>("publishCurseForge") {

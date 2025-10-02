@@ -11,11 +11,13 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import org.jetbrains.annotations.NotNull;
@@ -46,10 +48,10 @@ public class AddUpgradeRecipe extends CustomRecipe
         var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, registries);
         ctx.data.write(output);
 
-        CustomData blockData = ret.get(DataComponents.BLOCK_ENTITY_DATA);
+        TypedEntityData<BlockEntityType<?>> blockData = ret.get(DataComponents.BLOCK_ENTITY_DATA);
         if (blockData != null) {
-            CustomData data = CustomData.of(blockData.copyTag().merge(output.buildResult()));
-            ret.set(DataComponents.BLOCK_ENTITY_DATA, data);
+            CompoundTag data = blockData.copyTagWithoutId().merge(output.buildResult());
+            ret.set(DataComponents.BLOCK_ENTITY_DATA, TypedEntityData.of(blockData.type(), data));
 
             return ret;
         }
@@ -100,9 +102,9 @@ public class AddUpgradeRecipe extends CustomRecipe
             }
         };
 
-        CustomData blocKEntityData = ret.drawer.get(DataComponents.BLOCK_ENTITY_DATA);
+        TypedEntityData<BlockEntityType<?>> blocKEntityData = ret.drawer.get(DataComponents.BLOCK_ENTITY_DATA);
         if (blocKEntityData != null)
-            ret.data.read(TagValueInput.create(ProblemReporter.DISCARDING, registries, blocKEntityData.copyTag()));
+            ret.data.read(TagValueInput.create(ProblemReporter.DISCARDING, registries, blocKEntityData.copyTagWithoutId()));
         else {
             CustomData customData = ret.drawer.get(DataComponents.CUSTOM_DATA);
             if (customData != null)

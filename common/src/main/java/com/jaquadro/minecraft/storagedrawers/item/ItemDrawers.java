@@ -17,8 +17,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.component.TypedEntityData;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.ValueInput;
@@ -44,7 +46,7 @@ public class ItemDrawers extends BlockItem implements IPortable
         Component textCapacity = Component.translatable("tooltip.storagedrawers.drawers.capacity", getCapacityForBlock(stack));
         tooltip.accept(Component.literal("").append(textCapacity).withStyle(ChatFormatting.GRAY));
 
-        CustomData blockData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        TypedEntityData<BlockEntityType<?>> blockData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
         CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
         if (blockData != null || customData != null) {
             Component textSealed = Component.translatable("tooltip.storagedrawers.drawers.sealed");
@@ -85,13 +87,13 @@ public class ItemDrawers extends BlockItem implements IPortable
         if (stack.getItem() != this)
             return false;
 
-        CustomData data = stack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA, CustomData.EMPTY);
-        if (data.isEmpty())
+        TypedEntityData<BlockEntityType<?>> data = stack.get(DataComponents.BLOCK_ENTITY_DATA);
+        if (data == null)
             return false;
 
         var x = new UpgradeData(7);
         try {
-            x.read(TagValueInput.create(ProblemReporter.DISCARDING, provider, data.copyTag()));
+            x.read(TagValueInput.create(ProblemReporter.DISCARDING, provider, data.copyTagWithoutId()));
         } catch (ClassCastException e) {
             return false;
         }

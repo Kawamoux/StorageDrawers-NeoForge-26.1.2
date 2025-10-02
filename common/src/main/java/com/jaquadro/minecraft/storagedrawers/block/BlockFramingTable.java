@@ -83,7 +83,7 @@ public class BlockFramingTable extends HorizontalDirectionalBlock implements Ent
 
     @Override
     public BlockState playerWillDestroy (Level level, BlockPos pos, BlockState state, Player player) {
-        if (!level.isClientSide ) {
+        if (!level.isClientSide() ) {
             preventCreativeDropFromLeft(level, pos, state, player);
             if (!player.isCreative() && state.getValue(PART) != EnumFramingTablePart.RIGHT)
                 dropResources(state.setValue(PART, EnumFramingTablePart.RIGHT), level, pos, null, player, player.getMainHandItem());
@@ -148,7 +148,7 @@ public class BlockFramingTable extends HorizontalDirectionalBlock implements Ent
     @Override
     public void setPlacedBy (Level level, BlockPos pos, BlockState state, @Nullable LivingEntity entity, ItemStack stack) {
         super.setPlacedBy(level, pos, state, entity, stack);
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             Direction dirLeft = state.getValue(FACING).getCounterClockWise();
             BlockPos pos2 = pos.relative(dirLeft);
             level.setBlock(pos2, state.setValue(PART, EnumFramingTablePart.LEFT), 3);
@@ -159,7 +159,7 @@ public class BlockFramingTable extends HorizontalDirectionalBlock implements Ent
 
     @Override
     public InteractionResult useWithoutItem (@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull BlockHitResult hit) {
-        if (level.isClientSide)
+        if (level.isClientSide())
             return InteractionResult.SUCCESS;
 
         if (state.getValue(PART) != EnumFramingTablePart.RIGHT)

@@ -265,7 +265,7 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
             ModServices.log.info("controller [{}] setRemoved", worldPosition);
 
         super.setRemoved();
-        if (getLevel() == null || getLevel().isClientSide)
+        if (getLevel() == null || getLevel().isClientSide())
             return;
 
         for (var node : getBoundRemoteNodes()) {
@@ -302,7 +302,7 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
         if (ModCommonConfig.INSTANCE.GENERAL.debugTrace.get())
             ModServices.log.info("controller [{}] onEntityLoad", worldPosition);
 
-        if (getLevel() == null || getLevel().isClientSide)
+        if (getLevel() == null || getLevel().isClientSide())
             return;
 
         BlockPos pos = getBlockPos();
@@ -451,7 +451,7 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
                     template = protectable;
 
                     if (template.getOwner() == null)
-                        state = profile.getId();
+                        state = profile.id();
                     else {
                         provider = null;
                     }
@@ -602,7 +602,7 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
         rebuildPrimaryLookup(drawerPrimaryLookup, drawerSlotList);
 
         if (preCount != drawerSlots.length && (preCount == 0 || drawerSlots.length == 0)) {
-            if (!getLevel().isClientSide)
+            if (!getLevel().isClientSide())
                 setChanged();
         }
     }
@@ -756,7 +756,7 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
         searchQueue.clear();
         searchDiscovered.clear();
 
-        if (!getLevel().isClientSide)
+        if (!getLevel().isClientSide())
             controllerHostData.validateRemoteNodes(this, level);
 
         int globalRange = ModCommonConfig.INSTANCE.CONTROLLER.controllerRange.get();
@@ -870,7 +870,7 @@ public class BlockEntityController extends BaseBlockEntity implements IDrawerGro
     public void readFixed (ValueInput input) {
         super.readFixed(input);
 
-        if (getLevel() != null && !getLevel().isClientSide)
+        if (getLevel() != null && !getLevel().isClientSide())
             updateCache();
     }
 

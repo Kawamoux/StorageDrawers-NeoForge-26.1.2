@@ -4,6 +4,7 @@ import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawers;
 import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.ContainerUser;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
@@ -98,10 +99,10 @@ public class InventoryUpgrade implements Container
     }
 
     @Override
-    public void startOpen (@NotNull Player player) { }
+    public void startOpen (@NotNull ContainerUser player) { }
 
     @Override
-    public void stopOpen (@NotNull Player player) { }
+    public void stopOpen (@NotNull ContainerUser player) { }
 
     @Override
     public boolean canPlaceItem (int slot, @NotNull ItemStack item) {

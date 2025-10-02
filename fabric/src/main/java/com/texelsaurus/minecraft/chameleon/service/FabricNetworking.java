@@ -23,7 +23,7 @@ public class FabricNetworking implements ChameleonNetworking
         } else {
             PayloadTypeRegistry.playC2S().register(payloadType, (StreamCodec<FriendlyByteBuf, P>)codec);
             ServerPlayNetworking.registerGlobalReceiver(payloadType, (packet, context) ->
-                packet.handleMessage(context.player(), context.player().getServer()::execute));
+                packet.handleMessage(context.player(), context.player().level().getServer()::execute));
         }
     }
 

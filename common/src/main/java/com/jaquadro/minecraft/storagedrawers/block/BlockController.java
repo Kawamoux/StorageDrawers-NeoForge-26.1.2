@@ -89,7 +89,7 @@ public class BlockController extends HorizontalDirectionalBlock implements INetw
         if (blockDir != hit.getDirection())
             return InteractionResult.CONSUME;
 
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             if (ModCommonConfig.INSTANCE.GENERAL.debugTrace.get() && item.isEmpty())
                 blockEntity.printDebugInfo();
 
@@ -107,7 +107,7 @@ public class BlockController extends HorizontalDirectionalBlock implements INetw
     }
 
     public boolean toggle (Level world, BlockPos pos, Player player, ItemStack itemStack) {
-        if (world.isClientSide || itemStack.isEmpty())
+        if (world.isClientSide() || itemStack.isEmpty())
             return false;
 
         Item item = itemStack.getItem();
@@ -137,7 +137,7 @@ public class BlockController extends HorizontalDirectionalBlock implements INetw
     }
 
     public void toggle (@NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull KeyType keyType) {
-        if (level.isClientSide)
+        if (level.isClientSide())
             return;
 
         if (!keyType.isEnabled())
@@ -161,7 +161,7 @@ public class BlockController extends HorizontalDirectionalBlock implements INetw
     }
 
     public void togglePersonal (@NotNull Level level, @NotNull BlockPos pos, @NotNull Player player, String providerKey) {
-        if (level.isClientSide)
+        if (level.isClientSide())
             return;
 
         if (!ModCommonConfig.INSTANCE.TOOLS.personalKey.enable.get())
@@ -182,7 +182,7 @@ public class BlockController extends HorizontalDirectionalBlock implements INetw
 
     @Override
     public void tick (@NotNull BlockState state, @NotNull ServerLevel world, @NotNull BlockPos pos, @NotNull RandomSource rand) {
-        if (world.isClientSide)
+        if (world.isClientSide())
             return;
 
         BlockEntityController blockEntity = WorldUtils.getBlockEntity(world, pos, BlockEntityController.class);

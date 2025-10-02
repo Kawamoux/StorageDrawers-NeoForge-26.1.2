@@ -21,7 +21,7 @@ public record PositionContent(BlockPos pos) implements ContainerContent<Position
     }
 
     public <T extends BlockEntity> T getBlockEntity(Level level, Class<T> type) {
-        if (!level.isClientSide)
+        if (!level.isClientSide())
             return null;
 
         return WorldUtils.getBlockEntity(level, pos, type);

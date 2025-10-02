@@ -57,12 +57,12 @@ public class CompactingHelper
     @NotNull
     public Result findHigherTier (@NotNull ItemStack stack) {
         boolean debugTrace = ModCommonConfig.INSTANCE.GENERAL.debugTrace.get();
-        if (!world.isClientSide && debugTrace)
+        if (!world.isClientSide() && debugTrace)
             ModServices.log.info("Finding ascending candidates for " + stack.toString());
 
         CompTierRegistry.Record record = CompTierRegistry.INSTANCE.findHigherTier(stack);
         if (record != null) {
-            if (!world.isClientSide && debugTrace)
+            if (!world.isClientSide() && debugTrace)
                 ModServices.log.info("Found " + record.upper.toString() + " in registry with conv=" + record.convRate);
 
             return new Result(record.upper, record.convRate);
@@ -92,7 +92,7 @@ public class CompactingHelper
                         continue;
 
                     candidates.add(match);
-                    if (!world.isClientSide && debugTrace)
+                    if (!world.isClientSide() && debugTrace)
                         ModServices.log.info("Found ascending candidate for " + stack.toString() + ": " + match.toString() + " size=" + lookupSize + ", inverse=" + comp.toString());
 
                     break;
@@ -108,7 +108,7 @@ public class CompactingHelper
         if (candidates.size() > 0)
             return new Result(candidates.get(0), lookupSize);
 
-        if (!world.isClientSide && debugTrace)
+        if (!world.isClientSide() && debugTrace)
             ModServices.log.info("No candidates found");
 
         return new Result(ItemStack.EMPTY, 0);
@@ -117,12 +117,12 @@ public class CompactingHelper
     @NotNull
     public Result findLowerTier (@NotNull ItemStack stack) {
         boolean debugTrace = ModCommonConfig.INSTANCE.GENERAL.debugTrace.get();
-        if (!world.isClientSide && debugTrace)
+        if (!world.isClientSide() && debugTrace)
             ModServices.log.info("Finding descending candidates for " + stack.toString());
 
         CompTierRegistry.Record record = CompTierRegistry.INSTANCE.findLowerTier(stack);
         if (record != null) {
-            if (!world.isClientSide && debugTrace)
+            if (!world.isClientSide() && debugTrace)
                 ModServices.log.info("Found " + record.lower.toString() + " in registry with conv=" + record.convRate);
 
             return new Result(record.lower, record.convRate);
@@ -156,9 +156,9 @@ public class CompactingHelper
                             candidates.add(match);
                             candidatesRate.put(match, recipeSize);
 
-                            if (!world.isClientSide && debugTrace)
+                            if (!world.isClientSide() && debugTrace)
                                 ModServices.log.info("Found descending candidate for " + stack.toString() + ": " + match.toString() + " size=" + recipeSize + ", inverse=" + comp.toString());
-                        } else if (!world.isClientSide && debugTrace)
+                        } else if (!world.isClientSide() && debugTrace)
                             ModServices.log.info("Back-check failed for " + match.toString() + " size=" + lookupSize + ", inverse=" + comp.toString());
                     }
                 }
@@ -175,7 +175,7 @@ public class CompactingHelper
             return new Result(match, candidatesRate.get(match));
         }
 
-        if (!world.isClientSide && debugTrace)
+        if (!world.isClientSide() && debugTrace)
             ModServices.log.info("No candidates found");
 
         return new Result(ItemStack.EMPTY, 0);

@@ -106,7 +106,7 @@ public abstract class BlockEntityDrawersComp extends BlockEntityDrawers
 
         @Override
         protected void log (String message) {
-            if (!getWorld().isClientSide && ModCommonConfig.INSTANCE.GENERAL.debugTrace.get())
+            if (!getWorld().isClientSide() && ModCommonConfig.INSTANCE.GENERAL.debugTrace.get())
                 ModServices.log.info(message);
         }
 
@@ -117,7 +117,7 @@ public abstract class BlockEntityDrawersComp extends BlockEntityDrawers
 
         @Override
         protected void onItemChanged () {
-            if (getWorld() != null && !getWorld().isClientSide) {
+            if (getWorld() != null && !getWorld().isClientSide()) {
                 int usedSlots = 0;
                 for (int slot : getAccessibleDrawerSlots()) {
                     IDrawer drawer = getDrawer(slot);
@@ -138,7 +138,7 @@ public abstract class BlockEntityDrawersComp extends BlockEntityDrawers
 
         @Override
         protected void onAmountChanged () {
-            if (getWorld() != null && !getWorld().isClientSide) {
+            if (getWorld() != null && !getWorld().isClientSide()) {
                 ChameleonServices.NETWORK.sendToPlayersNear(new CountUpdateMessage(getBlockPos(), 0, getPooledCount()),
                     (ServerLevel) getLevel(), getBlockPos().getX(), getBlockPos().getY(), getBlockPos().getZ(), 500);
 
@@ -215,7 +215,7 @@ public abstract class BlockEntityDrawersComp extends BlockEntityDrawers
 
     @Override
     public void clientUpdateCount (final int slot, final int count) {
-        if (getLevel() == null || !getLevel().isClientSide)
+        if (getLevel() == null || !getLevel().isClientSide())
             return;
 
         Minecraft.getInstance().schedule(() -> BlockEntityDrawersComp.this.clientUpdateCountAsync(count));

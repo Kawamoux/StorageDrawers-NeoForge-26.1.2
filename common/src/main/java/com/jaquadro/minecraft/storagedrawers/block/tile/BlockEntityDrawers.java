@@ -113,7 +113,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
             }
 
             BlockEntityDrawers.this.onAttributeChanged();
-            if (getLevel() != null && !getLevel().isClientSide) {
+            if (getLevel() != null && !getLevel().isClientSide()) {
                 setChanged();
                 markBlockForUpdate();
             }
@@ -189,7 +189,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
 
         @Override
         protected void onUpgradeChanged (ItemStack oldUpgrade, ItemStack newUpgrade) {
-            if (getLevel() != null && !getLevel().isClientSide) {
+            if (getLevel() != null && !getLevel().isClientSide()) {
                 checkBoundController();
                 if (getBoundControlGroup() != null)
                     getBoundControlGroup().addRemoteNode(BlockEntityDrawers.this);
@@ -267,7 +267,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
 
     public void onEntityLoad () {
         try {
-            if (getLevel() == null || getLevel().isClientSide)
+            if (getLevel() == null || getLevel().isClientSide())
                 return;
 
             BlockPos pos = getBlockPos();
@@ -420,7 +420,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
         if ((this.owner != null && !this.owner.equals(owner)) || (owner != null && !owner.equals(this.owner))) {
             this.owner = owner;
 
-            if (level != null && !level.isClientSide) {
+            if (level != null && !level.isClientSide()) {
                 markBlockForUpdate();
             }
         }
@@ -442,7 +442,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
         if ((newKey != null && !newKey.equals(securityKey)) || (securityKey != null && !securityKey.equals(newKey))) {
             securityKey = newKey;
 
-            if (level != null && !level.isClientSide) {
+            if (level != null && !level.isClientSide()) {
                 markBlockForUpdate();
             }
         }
@@ -802,7 +802,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
     }
 
     protected void syncClientCount (int slot, int count) {
-        if (getLevel() != null && getLevel().isClientSide)
+        if (getLevel() != null && getLevel().isClientSide())
             return;
 
         ChameleonServices.NETWORK.sendToPlayersNear(new CountUpdateMessage(getBlockPos(), slot, count),
@@ -810,7 +810,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
     }
 
     public void clientUpdateCount (final int slot, final int count) {
-        if (getLevel() == null || !getLevel().isClientSide)
+        if (getLevel() == null || !getLevel().isClientSide())
             return;
 
         Minecraft.getInstance().schedule(() -> BlockEntityDrawers.this.clientUpdateCountAsync(slot, count));
@@ -925,7 +925,7 @@ public abstract class BlockEntityDrawers extends BaseBlockEntity implements IDra
     }
 
     public void entityInside(Level level, BlockPos pos, BlockState state, Entity entity) {
-        if (level.isClientSide)
+        if (level.isClientSide())
             return;
 
         if (!(entity instanceof ItemEntity itementity))

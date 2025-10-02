@@ -6,6 +6,8 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.TypedEntityData;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import org.jetbrains.annotations.NotNull;
 
 public class StorageBlacklist extends ConfigItemList
@@ -25,7 +27,7 @@ public class StorageBlacklist extends ConfigItemList
             canStore = ModCommonConfig.INSTANCE.DRAWERS.filled.canStoreInDrawers.get();
 
         if (!canStore) {
-            CustomData blockData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
+            TypedEntityData<BlockEntityType<?>> blockData = stack.get(DataComponents.BLOCK_ENTITY_DATA);
             CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
             if (blockData != null || customData != null)
                 return true;

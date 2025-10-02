@@ -5,7 +5,7 @@ import net.darkhax.curseforgegradle.Constants as CFG_Constants
 
 plugins {
     id("modloader-conv")
-    id("fabric-loom") version "1.10.1"
+    id("fabric-loom") version "1.11.7"
     id("com.modrinth.minotaur")
 }
 
@@ -15,7 +15,7 @@ dependencies {
     modImplementation("net.fabricmc:fabric-loader:${Versions.fabricLoader}")
     modImplementation("net.fabricmc.fabric-api:fabric-api:${Versions.fabric}")
 
-    modImplementation("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:21.8.0")
+    modImplementation("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:21.9.6")
 
     //modCompileOnlyApi("mezz.jei:jei-${Versions.minecraft}-fabric-api:19.8.2.99")
     //modRuntimeOnly("mezz.jei:jei-${Versions.minecraft}-fabric:19.8.2.99")
