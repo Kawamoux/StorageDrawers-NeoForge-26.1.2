@@ -31,9 +31,9 @@ neoForge {
 
 dependencies {
     // JEI
-    //runtimeOnly("mezz.jei:jei-1.21.1-neoforge:19.8.5.118")
+    //runtimeOnly("mezz.jei:jei-1.21.9-neoforge:25.0.0.2")
     // JADE
-    //compileOnly("curse.maven:jade-324717:5835088")
+    compileOnly("curse.maven:jade-324717:7056468")
 }
 
 tasks.create<TaskPublishCurseForge>("publishCurseForge") {

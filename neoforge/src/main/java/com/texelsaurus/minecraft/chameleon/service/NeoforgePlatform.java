@@ -6,6 +6,6 @@ public class NeoforgePlatform implements ChameleonPlatform
 {
     @Override
     public boolean isPhysicalClient () {
-        return FMLEnvironment.dist.isClient();
+        return FMLEnvironment.getDist().isClient();
     }
 }

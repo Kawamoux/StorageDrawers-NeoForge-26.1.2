@@ -8,9 +8,10 @@ import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import snownee.jade.api.*;
 import snownee.jade.api.config.IPluginConfig;
-import snownee.jade.api.ui.IElement;
+import snownee.jade.api.ui.Element;
 import snownee.jade.impl.ui.ItemStackElement;
 
 @WailaPlugin(StorageDrawers.MOD_ID)
@@ -33,8 +34,7 @@ public class Waila implements IWailaPlugin
     public static class WailaDrawer implements IBlockComponentProvider
     {
         @Override
-        @NotNull
-        public IElement getIcon (BlockAccessor accessor, IPluginConfig config, IElement currentIcon) {
+        public @Nullable Element getIcon (BlockAccessor accessor, IPluginConfig config, Element currentIcon) {
             return ItemStackElement.of(new ItemStack(accessor.getBlock()));
         }
 
