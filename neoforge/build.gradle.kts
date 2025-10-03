@@ -31,7 +31,7 @@ neoForge {
 
 dependencies {
     // JEI
-    //runtimeOnly("mezz.jei:jei-1.21.9-neoforge:25.0.0.2")
+    runtimeOnly("mezz.jei:jei-1.21.9-neoforge:25.0.0.2")
     // JADE
     compileOnly("curse.maven:jade-324717:7056468")
 }
