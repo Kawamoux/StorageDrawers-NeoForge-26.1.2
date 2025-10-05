@@ -1,3 +1,6 @@
+[19.0.1]
+- FORGE: Fix compatibility with Forge 59.0.2+
+
 [19.0.0]
 - Updated to 1.21.9
 

@@ -1,1 +1,1 @@
-- Updated to 1.21.9
+- FORGE: Fix compatibility with Forge 59.0.2+
