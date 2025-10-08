@@ -707,7 +707,7 @@ public abstract class BlockDrawers extends FaceSlotBlock implements INetworked, 
     }
 
     @Override
-    protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier) {
+    protected void entityInside(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean flag) {
         BlockEntityDrawers blockEntity = WorldUtils.getBlockEntity(level, pos, BlockEntityDrawers.class);
         if (blockEntity != null) {
             IDrawerAttributes attr = blockEntity.getDrawerAttributes();

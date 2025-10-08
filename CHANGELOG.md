@@ -1,3 +1,6 @@
+[19.1.0]
+- Update to Minecraft 1.21.10
+
 [19.0.1]
 - FORGE: Fix compatibility with Forge 59.0.2+
 

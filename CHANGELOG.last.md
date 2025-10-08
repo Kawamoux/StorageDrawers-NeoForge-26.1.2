@@ -1,1 +1,1 @@
-- FORGE: Fix compatibility with Forge 59.0.2+
+- Update to Minecraft 1.21.10
