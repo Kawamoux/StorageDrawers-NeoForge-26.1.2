@@ -5,6 +5,7 @@ import com.jaquadro.minecraft.storagedrawers.api.storage.Drawers;
 import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawer;
 import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerAttributes;
 import com.jaquadro.minecraft.storagedrawers.api.storage.IDrawerGroup;
+import com.jaquadro.minecraft.storagedrawers.block.BlockCompDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.tile.BlockEntityDrawersComp;
@@ -34,6 +35,8 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.SpriteContents;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.AtlasManager;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Style;
@@ -55,6 +58,7 @@ import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEntityDrawers, DrawersRenderState>
 {
@@ -116,8 +120,8 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         if (!renderState.isConcealed)
             renderFastItemSet(renderState, poseStack, submitNodeCollector, cameraRenderState, distance);
 
-        //if (renderState.showFill)
-        //    renderIndicator(renderState, poseStack, submitNodeCollector, cameraRenderState, distance);
+        if (renderState.showFill)
+            renderIndicator(renderState, poseStack, submitNodeCollector, cameraRenderState);
     }
 
     private boolean playerBehindBlock(BlockPos blockPos, Direction facing) {
@@ -251,106 +255,123 @@ public class BlockEntityDrawersRenderer implements BlockEntityRenderer<BlockEnti
         return sideRotationY2D[side.ordinal()] * 90 * (float)Math.PI / 180f;
     }
 
-    public static final ResourceLocation TEXTURE_IND_1 = ModConstants.loc("block/indicator/indicator_1_on");
-    public static final ResourceLocation TEXTURE_IND_2 = ModConstants.loc("block/indicator/indicator_2_on");
-    public static final ResourceLocation TEXTURE_IND_4 = ModConstants.loc("block/indicator/indicator_4_on");
-    public static final ResourceLocation TEXTURE_IND_COMP_3 = ModConstants.loc("block/indicator/indicator_comp_on");
-    public static final ResourceLocation TEXTURE_IND_COMP_2 = ModConstants.loc("block/indicator/indicator_comp2_on");
+    private void renderIndicator (DrawersRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector, CameraRenderState cameraRenderState) {
+        poseStack.pushPose();
 
-    /*
-    private void renderIndicator (BlockDrawers block, BlockEntityDrawers blockEntityDrawers, PoseStack matrixStack, MultiBufferSource buffer, Direction side, int combinedLight, int combinedOverlay) {
-        int count = (blockEntityDrawers instanceof BlockEntityDrawersComp) ? 1 : block.getDrawerCount();
+        Direction side = renderState.blockState.getValue(BlockDrawers.FACING);
+        alignRendering(poseStack, side);
 
-        ResourceLocation resource = TEXTURE_IND_1;
-        if (blockEntityDrawers instanceof BlockEntityDrawersComp)
-            resource = block.getDrawerCount() == 2 ? TEXTURE_IND_COMP_2 : TEXTURE_IND_COMP_3;
-        else if (count == 2)
-            resource = TEXTURE_IND_2;
-        else if (count == 4)
-            resource = TEXTURE_IND_4;
+        QuadBuilder quadBuilder = new QuadBuilder(renderState);
+        submitNodeCollector.submitCustomGeometry(poseStack, RenderType.solid(), quadBuilder);
 
-        TextureAtlasSprite sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(resource);
-        SpriteContents contents = sprite.contents();
-        float u1 = sprite.getU0();
-        float u2 = sprite.getU1();
-        float v1 = sprite.getV0();
-        float v2 = sprite.getV1();
-        float pxW = contents.width();
-        float pxH = contents.height();
+        poseStack.popPose();
+    }
 
-        float unit = 0.0625f;
-        float divU = unit * (u2 - u1);
-        float divV = unit * (v2 - v1);
+    static class QuadBuilder implements SubmitNodeCollector.CustomGeometryRenderer
+    {
+        public static final ResourceLocation TEXTURE_IND_1 = ModConstants.loc("block/indicator/indicator_1_on");
+        public static final ResourceLocation TEXTURE_IND_2 = ModConstants.loc("block/indicator/indicator_2_on");
+        public static final ResourceLocation TEXTURE_IND_4 = ModConstants.loc("block/indicator/indicator_4_on");
+        public static final ResourceLocation TEXTURE_IND_COMP_3 = ModConstants.loc("block/indicator/indicator_comp_on");
+        public static final ResourceLocation TEXTURE_IND_COMP_2 = ModConstants.loc("block/indicator/indicator_comp2_on");
 
-        matrixStack.pushPose();
+        public static final Material MAT_IND_1 = new Material(TextureAtlas.LOCATION_BLOCKS, TEXTURE_IND_1);
+        public static final Material MAT_IND_2 = new Material(TextureAtlas.LOCATION_BLOCKS, TEXTURE_IND_2);
+        public static final Material MAT_IND_4 = new Material(TextureAtlas.LOCATION_BLOCKS, TEXTURE_IND_4);
+        public static final Material MAT_IND_COMP_3 = new Material(TextureAtlas.LOCATION_BLOCKS, TEXTURE_IND_COMP_3);
+        public static final Material MAT_IND_COMP_2 = new Material(TextureAtlas.LOCATION_BLOCKS, TEXTURE_IND_COMP_2);
 
-        alignRendering(matrixStack, side);
+        DrawersRenderState renderState;
 
-        for (int i = 0; i < count; i++) {
-            IDrawer drawer = blockEntityDrawers.getGroup().getDrawer(i);
-            if (drawer == Drawers.DISABLED || blockEntityDrawers.getDrawerAttributes().isConcealed())
-                continue;
+        public QuadBuilder (DrawersRenderState renderState) {
+            this.renderState = renderState;
+        }
 
-            AABB bb = block.indGeometry[i];
-            AABB bbbase = block.indBaseGeometry[i];
-            float x1 = unit * (float)bb.minX;
-            float x2 = unit * (float)bb.maxX;
-            float xb2 = unit * (float)bbbase.maxX;
-            float y1 = unit * (float)bb.minY;
-            float y2 = unit * (float)bb.maxY;
-            float yb2 = unit * (float)bbbase.maxY;
-            float z = 1 - (unit * (float)bb.minZ);
+        @Override
+        public void render (PoseStack.Pose pose, VertexConsumer vertexConsumer) {
+            if (renderState.isConcealed)
+                return;
 
-            float su1 = u1 + (float)bb.minX * divU;
-            float su2 = u1 + (float)bb.maxX * divU;
-            float sv1 = v2 - (float)bb.minY * divV;
-            float sv2 = v2 - (float)bb.maxY * divV;
+            int count = renderState.items.size();
+            if (renderState.blockState.getBlock() instanceof BlockCompDrawers)
+                count = 1;
 
-            int stepX = (int)((x2 - xb2) * pxW);
-            int stepY = (int)((y2 - yb2) * pxH);
+            Material mat = MAT_IND_1;
+            if (renderState.blockState.getBlock() instanceof BlockCompDrawers)
+                mat = renderState.items.size() == 2 ? MAT_IND_COMP_2 : MAT_IND_COMP_3;
+            else if (count == 2)
+                mat = MAT_IND_2;
+            else if (count == 4)
+                mat = MAT_IND_4;
 
-            float xCur = (stepX == 0) ? x2 : getIndEnd(blockEntityDrawers, i, x1, x2 - xb2, stepX);
-            float xFrac = (x2 == xb2) ? 1 : (xCur - x1) / (x2 - xb2);
-            float uCur = su1 + xFrac * (su2 - su1);
+            TextureAtlasSprite sprite = Minecraft.getInstance().getAtlasManager().get(mat);
+            SpriteContents contents = sprite.contents();
+            float u1 = sprite.getU0();
+            float u2 = sprite.getU1();
+            float v1 = sprite.getV0();
+            float v2 = sprite.getV1();
+            float pxW = contents.width();
+            float pxH = contents.height();
 
-            float yCur = (stepY == 0) ? y2 : getIndEnd(blockEntityDrawers, i, y1, y2 - yb2, stepY);
-            float yFrac = (y2 == yb2) ? 1 : (yCur - y1) / (y2 - yb2);
-            float vCur = sv1 + yFrac * (sv2 - sv1);
+            float unit = 0.0625f;
+            float divU = unit * (u2 - u1);
+            float divV = unit * (v2 - v1);
 
-            if (xCur > x1 && yCur > y1) {
-                Matrix4f matrix = matrixStack.last().pose();
-                VertexConsumer builder = buffer.getBuffer(RenderType.solid());
-                addQuad(matrix, matrixStack.last(), builder, combinedLight, combinedOverlay, x1, xCur, y1, yCur, z, uCur, su1, sv1, vCur);
+            BlockDrawers block = (BlockDrawers)renderState.blockState.getBlock();
+            for (int i = 0; i < renderState.items.size(); i++) {
+                DrawersRenderState.SlotState slot = renderState.items.get(i);
+
+                AABB bb = block.indGeometry[i];
+                AABB bbbase = block.indBaseGeometry[i];
+                float x1 = unit * (float)bb.minX;
+                float x2 = unit * (float)bb.maxX;
+                float xb2 = unit * (float)bbbase.maxX;
+                float y1 = unit * (float)bb.minY;
+                float y2 = unit * (float)bb.maxY;
+                float yb2 = unit * (float)bbbase.maxY;
+                float z = 1 - (unit * (float)bb.minZ);
+
+                float su1 = u1 + (float)bb.minX * divU;
+                float su2 = u1 + (float)bb.maxX * divU;
+                float sv1 = v2 - (float)bb.minY * divV;
+                float sv2 = v2 - (float)bb.maxY * divV;
+
+                int stepX = (int)((x2 - xb2) * pxW);
+                int stepY = (int)((y2 - yb2) * pxH);
+
+                float xCur = (stepX == 0) ? x2 : getIndEnd(slot.count(), slot.limit(), i, x1, x2 - xb2, stepX);
+                float xFrac = (x2 == xb2) ? 1 : (xCur - x1) / (x2 - xb2);
+                float uCur = su1 + xFrac * (su2 - su1);
+
+                float yCur = (stepY == 0) ? y2 : getIndEnd(slot.count(), slot.limit(), i, y1, y2 - yb2, stepY);
+                float yFrac = (y2 == yb2) ? 1 : (yCur - y1) / (y2 - yb2);
+                float vCur = sv1 + yFrac * (sv2 - sv1);
+
+                if (xCur > x1 && yCur > y1) {
+                    Matrix4f matrix = pose.pose();
+                    addQuad(matrix, pose, vertexConsumer, renderState.lightCoords, x1, xCur, y1, yCur, z, uCur, su1, sv1, vCur);
+                }
             }
         }
 
-        matrixStack.popPose();
+        private static float getIndEnd (int storedCount, int maxCapacity, int slot, float x, float w, int step) {
+            if (maxCapacity == 0 || storedCount == 0)
+                return x;
+
+            float fillAmt = (float)(step * storedCount / maxCapacity) / step;
+
+            return x + (w * fillAmt);
+        }
+
+        public static void addQuad(Matrix4f matrix, PoseStack.Pose normal, VertexConsumer buffer, int combinedLight, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {
+            addVertex(matrix, normal, buffer, combinedLight, x2, y1, z, u1, v1);
+            addVertex(matrix, normal, buffer, combinedLight, x2, y2, z, u1, v2);
+            addVertex(matrix, normal, buffer, combinedLight, x1, y2, z, u2, v2);
+            addVertex(matrix, normal, buffer, combinedLight, x1, y1, z, u2, v1);
+        }
+
+        private static void addVertex(Matrix4f matrix, PoseStack.Pose normal, VertexConsumer buffer, int combinedLight, float x, float y, float z, float u, float v) {
+            buffer.addVertex(matrix, x, y, z).setColor(1f, 1f, 1f, 1f).setUv(u, v).setLight(combinedLight).setNormal(normal, 0, 1, 0);
+        }
     }
-
-    public static void addQuad(Matrix4f matrix, PoseStack.Pose normal, VertexConsumer buffer, int combinedLight, int combinedOverlay, float x1, float x2, float y1, float y2, float z, float u1, float u2, float v1, float v2) {
-        addVertex(matrix, normal, buffer, combinedLight, combinedOverlay, x2, y1, z, u1, v1);
-        addVertex(matrix, normal, buffer, combinedLight, combinedOverlay, x2, y2, z, u1, v2);
-        addVertex(matrix, normal, buffer, combinedLight, combinedOverlay, x1, y2, z, u2, v2);
-        addVertex(matrix, normal, buffer, combinedLight, combinedOverlay, x1, y1, z, u2, v1);
-    }
-
-    private static void addVertex(Matrix4f matrix, PoseStack.Pose normal, VertexConsumer buffer, int combinedLight, int combinedOverlay, float x, float y, float z, float u, float v) {
-        buffer.addVertex(matrix, x, y, z).setColor(1f, 1f, 1f, 1f).setUv(u, v).setOverlay(combinedOverlay).setLight(combinedLight).setNormal(normal, 0, 1, 0);
-    }
-
-    private float getIndEnd (BlockEntityDrawers blockEntityDrawers, int slot, float x, float w, int step) {
-        IDrawer drawer = blockEntityDrawers.getGroup().getDrawer(slot);
-        if (drawer == Drawers.DISABLED)
-            return x;
-
-        int cap = drawer.getMaxCapacity();
-        int count = drawer.getStoredItemCount();
-        if (cap == 0 || count == 0)
-            return x;
-
-        float fillAmt = (float)(step * count / cap) / step;
-
-        return x + (w * fillAmt);
-    }
-    */
 }
