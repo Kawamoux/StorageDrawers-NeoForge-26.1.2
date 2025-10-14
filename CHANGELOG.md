@@ -1,3 +1,6 @@
+[19.1.1]
+- Restored rendering of fill indicators
+
 [19.1.0]
 - Update to Minecraft 1.21.10
 

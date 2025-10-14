@@ -1,1 +1,1 @@
-- Update to Minecraft 1.21.10
+- Restored rendering of fill indicators
