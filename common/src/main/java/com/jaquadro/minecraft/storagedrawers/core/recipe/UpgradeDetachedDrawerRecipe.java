@@ -8,12 +8,11 @@ import com.jaquadro.minecraft.storagedrawers.core.ModItems;
 import com.jaquadro.minecraft.storagedrawers.core.ModRecipes;
 import com.jaquadro.minecraft.storagedrawers.item.ItemDetachedDrawer;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgradeStorage;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -28,8 +27,7 @@ import java.util.List;
 
 public class UpgradeDetachedDrawerRecipe extends CustomRecipe
 {
-    public UpgradeDetachedDrawerRecipe (CraftingBookCategory cat) {
-        super(cat);
+    public UpgradeDetachedDrawerRecipe () {
     }
 
     @Override
@@ -39,7 +37,8 @@ public class UpgradeDetachedDrawerRecipe extends CustomRecipe
 
     @Override
     @NotNull
-    public ItemStack assemble(@NotNull CraftingInput inv, HolderLookup.Provider access) {
+    public ItemStack assemble(@NotNull CraftingInput inv) {
+        var access = RegistryAccess.EMPTY;
         Context ctx = findContext(inv);
         if (ctx == null)
             return ItemStack.EMPTY;
@@ -110,7 +109,7 @@ public class UpgradeDetachedDrawerRecipe extends CustomRecipe
 
     @Override
     @NotNull
-    public RecipeSerializer<? extends CustomRecipe> getSerializer() {
+    public RecipeSerializer<UpgradeDetachedDrawerRecipe> getSerializer() {
         return ModRecipes.DETACHED_UPGRADE_RECIPE_SERIALIZER.get();
     }
 }

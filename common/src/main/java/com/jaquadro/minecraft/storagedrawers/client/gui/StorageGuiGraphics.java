@@ -3,8 +3,8 @@ package com.jaquadro.minecraft.storagedrawers.client.gui;
 import com.jaquadro.minecraft.storagedrawers.inventory.ItemStackHelper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.ARGB;
@@ -13,36 +13,42 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class StorageGuiGraphics extends GuiGraphics
+public class StorageGuiGraphics extends GuiGraphicsExtractor
 {
     private final Minecraft minecraft;
-    private GuiGraphics baseGraphics;
+    private GuiGraphicsExtractor baseGraphics;
 
     @NotNull
     public ItemStack overrideStack;
 
     public StorageGuiGraphics (Minecraft minecraft, GuiRenderState renderState) {
-        super(minecraft, renderState);
+        super(minecraft, renderState, 0, 0);
 
         this.minecraft = minecraft;
         overrideStack = ItemStack.EMPTY;
     }
 
-    public StorageGuiGraphics (Minecraft minecraft, GuiGraphics graphics) {
-        super(minecraft, graphics.pose(), minecraft.gameRenderer.guiRenderState);
+    public StorageGuiGraphics (Minecraft minecraft, GuiGraphicsExtractor graphics) {
+        super(minecraft, extractRenderState(graphics), 0, 0);
 
         this.baseGraphics = graphics;
         this.minecraft = minecraft;
         this.overrideStack = ItemStack.EMPTY;
     }
 
-    public GuiGraphics baseGraphics () {
+    public GuiGraphicsExtractor baseGraphics () {
         return baseGraphics;
     }
 
-    public void renderItemDecorations(Font font, ItemStack item, int x, int y, @Nullable String text) {
+    @Override
+    public void itemDecorations(Font font, ItemStack item, int x, int y) {
+        itemDecorations(font, item, x, y, null);
+    }
+
+    @Override
+    public void itemDecorations(Font font, ItemStack item, int x, int y, @Nullable String text) {
         if (item != overrideStack) {
-            super.renderItemDecorations(font, item, x, y, text);
+            super.itemDecorations(font, item, x, y, text);
             return;
         }
 
@@ -102,9 +108,23 @@ public class StorageGuiGraphics extends GuiGraphics
             pose().pushMatrix();
             pose().scale(scale, scale);
 
-            this.drawString(font, text, textX, textY, color, true);
+            this.text(font, text, textX, textY, color, true);
             pose().popMatrix();
         }
 
+    }
+
+    private static GuiRenderState extractRenderState(GuiGraphicsExtractor graphics) {
+        try {
+            var field = GuiGraphicsExtractor.class.getDeclaredField("guiRenderState");
+            field.setAccessible(true);
+            return (GuiRenderState)field.get(graphics);
+        } catch (ReflectiveOperationException e) {
+            return new GuiRenderState();
+        }
+    }
+
+    public void renderItemDecorations(Font font, ItemStack item, int x, int y, @Nullable String text) {
+        itemDecorations(font, item, x, y, text);
     }
 }

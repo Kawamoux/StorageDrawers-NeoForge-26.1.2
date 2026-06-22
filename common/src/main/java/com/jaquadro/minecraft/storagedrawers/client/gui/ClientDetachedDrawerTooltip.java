@@ -5,11 +5,10 @@ import com.jaquadro.minecraft.storagedrawers.components.item.DetachedDrawerConte
 import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import com.jaquadro.minecraft.storagedrawers.util.CountFormatter;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 
 public class ClientDetachedDrawerTooltip implements ClientTooltipComponent
@@ -43,24 +42,24 @@ public class ClientDetachedDrawerTooltip implements ClientTooltipComponent
     }
 
     @Override
-    public void renderImage(Font font, int pX, int pY, int pW, int pH, GuiGraphics graphics) {
+    public void extractImage(Font font, int pX, int pY, int pW, int pH, GuiGraphicsExtractor graphics) {
         boolean forceCapCheck = ModCommonConfig.INSTANCE.DRAWERS.detached.forceMaxCapacityCheck.get();
         int bgY = forceCapCheck ? 0 : 24;
 
-        graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_SPRITE,
+        graphics.blit(RenderPipelines.GUI_TEXTURED, BACKGROUND_SPRITE.asIdentifier(),
             pX, pY, 0, bgY, this.backgroundWidth(), this.backgroundHeight(), 128, 64);
 
         renderSlot(pX + 3, pY + 3, graphics, font);
 
         String count = CountFormatter.formatApprox(font, item.getCount());
-        graphics.drawString(font, count, pX + 22, pY + 8, 0xFF808080, false);
+        graphics.text(font, count, pX + 22, pY + 8, 0xFF808080, false);
 
         if (forceCapCheck)
-            graphics.drawString(font, Integer.toString(stackLimit), pX + 83, pY + 8, 0xFF808080, false);
+            graphics.text(font, Integer.toString(stackLimit), pX + 83, pY + 8, 0xFF808080, false);
     }
 
-    private void renderSlot(int pX, int pY, GuiGraphics graphics, Font font) {
+    private void renderSlot(int pX, int pY, GuiGraphicsExtractor graphics, Font font) {
         ItemStack itemstack = this.item;
-        graphics.renderItem(itemstack, pX + 1, pY + 1, 0);
+        graphics.item(itemstack, pX + 1, pY + 1, 0);
     }
 }

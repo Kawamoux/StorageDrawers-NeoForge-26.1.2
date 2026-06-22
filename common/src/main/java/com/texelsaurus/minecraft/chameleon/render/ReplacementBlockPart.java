@@ -1,13 +1,10 @@
 package com.texelsaurus.minecraft.chameleon.render;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.VertexFormatElement;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.BlockModelPart;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.resources.model.geometry.BakedQuad;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.Direction;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -15,11 +12,11 @@ import java.util.List;
 
 public abstract class ReplacementBlockPart implements ChameleonBlockModelPart
 {
-    protected BlockModelPart parent;
+    protected BlockStateModelPart parent;
     private TextureAtlasSprite sprite;
     private List<BakedQuad> quads = new ArrayList<>();
 
-    public ReplacementBlockPart(BlockModelPart part, TextureAtlasSprite sprite) {
+    public ReplacementBlockPart(BlockStateModelPart part, TextureAtlasSprite sprite) {
         parent = part;
         this.sprite = sprite;
 
@@ -29,8 +26,8 @@ public abstract class ReplacementBlockPart implements ChameleonBlockModelPart
         }
     }
 
-    public ReplacementBlockPart (BlockModelPart parent, BlockModelPart replacement) {
-        this(parent, replacement.particleIcon());
+    public ReplacementBlockPart (BlockStateModelPart parent, BlockStateModelPart replacement) {
+        this(parent, replacement.particleMaterial().sprite());
     }
 
     @Override
@@ -43,34 +40,48 @@ public abstract class ReplacementBlockPart implements ChameleonBlockModelPart
         return parent.useAmbientOcclusion();
     }
 
-    @Override
     public TextureAtlasSprite particleIcon () {
         if (sprite == null)
-            return parent.particleIcon();
+            return parent.particleMaterial().sprite();
 
         return sprite;
     }
 
+    @Override
+    public Material.Baked particleMaterial () {
+        return parent.particleMaterial();
+    }
+
+    @Override
+    public int materialFlags () {
+        return parent.materialFlags();
+    }
+
     BakedQuad remapQuad (BakedQuad quad, TextureAtlasSprite sprite) {
-        int[] vertices = quad.vertices().clone();
+        BakedQuad.MaterialInfo source = quad.materialInfo();
+        BakedQuad.MaterialInfo materialInfo = new BakedQuad.MaterialInfo(
+            sprite,
+            source.layer(),
+            source.itemRenderType(),
+            source.tintIndex(),
+            source.shade(),
+            source.lightEmission(),
+            source.ambientOcclusion()
+        );
 
-        for(int i = 0; i < 4; ++i) {
-            int blk = DefaultVertexFormat.BLOCK.getVertexSize() / 4 * i;
-            int offset = DefaultVertexFormat.BLOCK.getOffset(VertexFormatElement.UV) / 4;
-            vertices[blk + offset] = Float.floatToRawIntBits(sprite.getU(getUnInterpolatedU(quad.sprite(), Float.intBitsToFloat(vertices[blk + offset]))));
-            vertices[blk + offset + 1] = Float.floatToRawIntBits(sprite.getV(getUnInterpolatedV(quad.sprite(), Float.intBitsToFloat(vertices[blk + offset + 1]))));
-        }
-
-        return new BakedQuad(vertices, quad.tintIndex(), quad.direction(), sprite, quad.shade(), quad.lightEmission());
-    }
-
-    private float getUnInterpolatedU(TextureAtlasSprite sprite, float u) {
-        float diff = sprite.getU1() - sprite.getU0();
-        return (u - sprite.getU0()) / diff;
-    }
-
-    private float getUnInterpolatedV(TextureAtlasSprite sprite, float v) {
-        float diff = sprite.getV1() - sprite.getV0();
-        return (v - sprite.getV0()) / diff;
+        return new BakedQuad(
+            quad.position0(),
+            quad.position1(),
+            quad.position2(),
+            quad.position3(),
+            quad.packedUV0(),
+            quad.packedUV1(),
+            quad.packedUV2(),
+            quad.packedUV3(),
+            quad.direction(),
+            materialInfo,
+            quad.bakedNormals(),
+            quad.bakedColors()
+        );
     }
 }

@@ -4,6 +4,7 @@ import com.jaquadro.minecraft.storagedrawers.client.NeoForgeClient;
 import com.texelsaurus.minecraft.chameleon.api.ChameleonInit;
 import com.texelsaurus.minecraft.chameleon.network.ChameleonPacket;
 import com.texelsaurus.minecraft.chameleon.registry.NeoforgeRegistryContext;
+import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
@@ -14,6 +15,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadHandler;
+import net.neoforged.neoforge.network.registration.NetworkRegistry;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
 import java.util.function.Consumer;
@@ -44,12 +46,32 @@ public class NeoforgeNetworking implements ChameleonNetworking
 
     @Override
     public void sendToPlayer (ChameleonPacket packet, ServerPlayer player) {
+        if (!canSendToPlayer(packet, player))
+            return;
+
         PacketDistributor.sendToPlayer(player, packet);
     }
 
     @Override
     public void sendToPlayersNear(ChameleonPacket packet, ServerLevel level, double x, double y, double z, double radius) {
-        PacketDistributor.sendToPlayersNear(level, null, x, y, z, radius, packet);
+        double radiusSq = radius * radius;
+
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
+            if (player.level() != level)
+                continue;
+
+            double dx = x - player.getX();
+            double dy = y - player.getY();
+            double dz = z - player.getZ();
+            if (dx * dx + dy * dy + dz * dz > radiusSq)
+                continue;
+
+            sendToPlayer(packet, player);
+        }
+    }
+
+    private boolean canSendToPlayer(ChameleonPacket packet, ServerPlayer player) {
+        return NetworkRegistry.hasChannel(player.connection.getConnection(), ConnectionProtocol.PLAY, packet.type().id());
     }
 
     @Override

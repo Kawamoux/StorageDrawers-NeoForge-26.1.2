@@ -2,6 +2,7 @@ package com.jaquadro.minecraft.storagedrawers.client.renderer.state;
 
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.client.renderer.item.ItemStackRenderState;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Collections;
@@ -15,6 +16,7 @@ public class DrawersRenderState extends BlockEntityRenderState
     public boolean isConcealed;
     public boolean showFill;
     public boolean showCount;
+    public BlockState blockState;
 
     public DrawersRenderState() { }
 

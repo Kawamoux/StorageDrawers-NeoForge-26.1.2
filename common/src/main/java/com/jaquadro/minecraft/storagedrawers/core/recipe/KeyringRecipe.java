@@ -6,18 +6,17 @@ import com.jaquadro.minecraft.storagedrawers.core.ModItems;
 import com.jaquadro.minecraft.storagedrawers.core.ModRecipes;
 import com.jaquadro.minecraft.storagedrawers.item.ItemKey;
 import com.jaquadro.minecraft.storagedrawers.item.ItemKeyring;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.Map;
 
-public class KeyringRecipe extends ShapedRecipe
+public class KeyringRecipe extends CustomRecipe
 {
-    public KeyringRecipe (CraftingBookCategory cat) {
-        super("", cat, pattern(), new ItemStack(ModItems.KEYRING.get()));
+    public KeyringRecipe () {
     }
 
     private static ShapedRecipePattern pattern () {
@@ -28,7 +27,12 @@ public class KeyringRecipe extends ShapedRecipe
     }
 
     @Override
-    public ItemStack assemble (CraftingInput inv, HolderLookup.Provider registries) {
+    public boolean matches(CraftingInput inv, Level level) {
+        return pattern().matches(inv);
+    }
+
+    @Override
+    public ItemStack assemble (CraftingInput inv) {
         ItemStack center = inv.getItem(4);
         if (center.isEmpty() || !(center.getItem() instanceof ItemKey))
             return ItemStack.EMPTY;
@@ -49,7 +53,7 @@ public class KeyringRecipe extends ShapedRecipe
     }
 
     @Override
-    public RecipeSerializer<? extends ShapedRecipe> getSerializer () {
+    public RecipeSerializer<KeyringRecipe> getSerializer () {
         return ModRecipes.KEYRING_RECIPE_SERIALIZER.get();
     }
 }

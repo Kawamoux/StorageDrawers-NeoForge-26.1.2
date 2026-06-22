@@ -1,6 +1,6 @@
 package com.texelsaurus.minecraft.chameleon.registry;
 
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
 public class NeoforgeRegistryEntry<R, T extends R> implements RegistryEntry<T>
@@ -13,7 +13,7 @@ public class NeoforgeRegistryEntry<R, T extends R> implements RegistryEntry<T>
 
     @Override
     public ResourceLocation getId () {
-        return holder.getId();
+        return ResourceLocation.fromIdentifier(holder.getId());
     }
 
     @Override

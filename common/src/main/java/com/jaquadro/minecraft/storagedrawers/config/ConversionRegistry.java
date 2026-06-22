@@ -3,7 +3,7 @@ package com.jaquadro.minecraft.storagedrawers.config;
 import com.jaquadro.minecraft.storagedrawers.ModServices;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -21,10 +21,16 @@ public class ConversionRegistry
     private Set<TagKey<Item>> tagWhitelist = new HashSet<>();
     private Set<TagKey<Item>> tagBlacklist = new HashSet<>();
     private List<Set<ResourceLocation>> equivGroups = new ArrayList<>();
+    private boolean initialized;
 
     public ConversionRegistry () { }
 
     public void initialize () {
+        if (initialized)
+            return;
+
+        initialized = true;
+
         ModCommonConfig.INSTANCE.onLoad(() -> {
             ModCommonConfig.INSTANCE.UPGRADES.conversionUpgrade.tagWhitelist.get().forEach(this::addWhitelist);
             ModCommonConfig.INSTANCE.UPGRADES.conversionUpgrade.tagBlacklist.get().forEach(this::addBlacklist);
@@ -47,7 +53,14 @@ public class ConversionRegistry
         });
     }
 
+    private void ensureInitialized () {
+        if (!initialized)
+            initialize();
+    }
+
     public boolean addBlacklist (String entry) {
+        ensureInitialized();
+
         String[] parts = entry.split(":");
         if (parts.length != 2)
             return false;
@@ -56,14 +69,18 @@ public class ConversionRegistry
     }
 
     public boolean addBlacklist (String namespace, String path) {
+        ensureInitialized();
+
         return addBlacklist(ResourceLocation.fromNamespaceAndPath(namespace, path));
     }
 
     public boolean addBlacklist (ResourceLocation entry) {
+        ensureInitialized();
+
         if (entry == null)
             return false;
 
-        tagBlacklist.add(TagKey.create(Registries.ITEM, entry));
+        tagBlacklist.add(TagKey.create(Registries.ITEM, entry.asIdentifier()));
 
         if (ModCommonConfig.INSTANCE.GENERAL.logStartupActivity.get())
             ModServices.log.info("New conversion denied tag " + entry);
@@ -72,10 +89,14 @@ public class ConversionRegistry
     }
 
     public boolean addWhitelist (String entry) {
+        ensureInitialized();
+
         return addWhitelist(entry, true);
     }
 
     public boolean addWhitelist (String entry, boolean log) {
+        ensureInitialized();
+
         String[] parts = entry.split(":");
         if (parts.length != 2)
             return false;
@@ -84,14 +105,18 @@ public class ConversionRegistry
     }
 
     public boolean addWhitelist (String namespace, String path, boolean log) {
+        ensureInitialized();
+
         return addWhitelist(ResourceLocation.fromNamespaceAndPath(namespace, path), log);
     }
 
     public boolean addWhitelist (ResourceLocation entry, boolean log) {
+        ensureInitialized();
+
         if (entry == null)
             return false;
 
-        tagWhitelist.add(TagKey.create(Registries.ITEM, entry));
+        tagWhitelist.add(TagKey.create(Registries.ITEM, entry.asIdentifier()));
 
         if (log && ModCommonConfig.INSTANCE.GENERAL.logStartupActivity.get())
             ModServices.log.info("New conversion allowed tag " + entry);
@@ -100,6 +125,8 @@ public class ConversionRegistry
     }
 
     public void addEquivGroup (String entry) {
+        ensureInitialized();
+
         String[] items = entry.split(";\\s*");
         Set<ResourceLocation> group = new HashSet<>();
 
@@ -121,8 +148,10 @@ public class ConversionRegistry
     }
 
     public boolean itemsShareEquivGroup (Item item1, Item item2) {
-        ResourceLocation key1 = BuiltInRegistries.ITEM.getKey(item1);
-        ResourceLocation key2 = BuiltInRegistries.ITEM.getKey(item2);
+        ensureInitialized();
+
+        ResourceLocation key1 = ResourceLocation.fromIdentifier(BuiltInRegistries.ITEM.getKey(item1));
+        ResourceLocation key2 = ResourceLocation.fromIdentifier(BuiltInRegistries.ITEM.getKey(item2));
 
         for (Set<ResourceLocation> group : equivGroups) {
             if (!group.contains(key1))
@@ -136,7 +165,9 @@ public class ConversionRegistry
     }
 
     public List<ItemStack> getEquivItems (Item item) {
-        ResourceLocation key = BuiltInRegistries.ITEM.getKey(item);
+        ensureInitialized();
+
+        ResourceLocation key = ResourceLocation.fromIdentifier(BuiltInRegistries.ITEM.getKey(item));
         List<ItemStack> items = new ArrayList<>();
 
         for (Set<ResourceLocation> group : equivGroups) {
@@ -144,7 +175,7 @@ public class ConversionRegistry
                 continue;
 
             for (ResourceLocation entry : group) {
-                Item other = BuiltInRegistries.ITEM.getValue(entry);
+                Item other = BuiltInRegistries.ITEM.getValue(entry.asIdentifier());
                 items.add(new ItemStack(other));
             }
         }
@@ -153,6 +184,8 @@ public class ConversionRegistry
     }
 
     public boolean isEntryValid (TagKey<Item> entry) {
+        ensureInitialized();
+
         // Formerly utilized "graylist", which contained items not on the whitelist
         // but also not on the blacklist and not failing the valid equiv check
         if (tagBlacklist.contains(entry))

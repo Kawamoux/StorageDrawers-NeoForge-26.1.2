@@ -5,10 +5,8 @@ import com.jaquadro.minecraft.storagedrawers.core.ModItems;
 import com.jaquadro.minecraft.storagedrawers.core.ModRecipes;
 import com.jaquadro.minecraft.storagedrawers.core.ModSecurity;
 import com.jaquadro.minecraft.storagedrawers.item.ItemPersonalKey;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -19,8 +17,7 @@ import java.util.List;
 
 public class PersonalKeyRecipe extends CustomRecipe
 {
-    public PersonalKeyRecipe (CraftingBookCategory cat) {
-        super(cat);
+    public PersonalKeyRecipe () {
     }
 
     @Override
@@ -70,7 +67,7 @@ public class PersonalKeyRecipe extends CustomRecipe
     }
 
     @Override
-    public ItemStack assemble (CraftingInput inv, HolderLookup.Provider registries) {
+    public ItemStack assemble (CraftingInput inv) {
         ItemStack pkey = findPersonalKey(inv);
 
         List<Item> cycle = new ArrayList<>();
@@ -90,7 +87,7 @@ public class PersonalKeyRecipe extends CustomRecipe
     }
 
     @Override
-    public RecipeSerializer<? extends CustomRecipe> getSerializer () {
+    public RecipeSerializer<PersonalKeyRecipe> getSerializer () {
         return ModRecipes.PERSONAL_KEY_RECIPE_SERIALIZER.get();
     }
 }

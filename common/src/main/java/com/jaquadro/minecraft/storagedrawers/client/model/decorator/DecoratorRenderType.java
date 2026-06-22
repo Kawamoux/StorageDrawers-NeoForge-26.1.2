@@ -1,7 +1,6 @@
 package com.jaquadro.minecraft.storagedrawers.client.model.decorator;
 
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
+import com.texelsaurus.minecraft.chameleon.render.RenderType;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 
 public enum DecoratorRenderType
@@ -16,18 +15,18 @@ public enum DecoratorRenderType
 
         return switch (renderType) {
             case SOLID -> DecoratorRenderType.SOLID;
-            case CUTOUT, CUTOUT_MIPPED -> DecoratorRenderType.CUTOUT;
+            case CUTOUT -> DecoratorRenderType.CUTOUT;
             case TRANSLUCENT -> DecoratorRenderType.TRANSLUCENT;
             default -> null;
         };
     }
 
     public static DecoratorRenderType fromItemType (RenderType renderType) {
-        if (renderType == Sheets.solidBlockSheet())
+        if (renderType == RenderType.solid())
             return DecoratorRenderType.SOLID;
-        if (renderType == Sheets.cutoutBlockSheet())
+        if (renderType == RenderType.cutout())
             return DecoratorRenderType.CUTOUT;
-        if (renderType == Sheets.translucentItemSheet())
+        if (renderType == RenderType.translucent())
             return DecoratorRenderType.TRANSLUCENT;
         return null;
     }
@@ -38,7 +37,7 @@ public enum DecoratorRenderType
 
         return switch (renderType) {
             case SOLID -> ChunkSectionLayer.SOLID;
-            case CUTOUT -> ChunkSectionLayer.CUTOUT_MIPPED;
+            case CUTOUT -> ChunkSectionLayer.CUTOUT;
             case TRANSLUCENT -> ChunkSectionLayer.TRANSLUCENT;
         };
     }
@@ -48,9 +47,9 @@ public enum DecoratorRenderType
             return null;
 
         return switch (renderType) {
-            case SOLID -> Sheets.solidBlockSheet();
-            case CUTOUT -> Sheets.cutoutBlockSheet();
-            case TRANSLUCENT -> Sheets.translucentItemSheet();
+            case SOLID -> RenderType.solid();
+            case CUTOUT -> RenderType.cutout();
+            case TRANSLUCENT -> RenderType.translucent();
         };
     }
 }

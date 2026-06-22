@@ -14,7 +14,7 @@ import com.texelsaurus.minecraft.chameleon.registry.RegistryEntry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
@@ -139,11 +139,11 @@ public final class ModItems
     }
 
     static ResourceKey<Item> modKey (String name) {
-        return ResourceKey.create(Registries.ITEM, modLoc(name));
+        return ResourceKey.create(Registries.ITEM, modLoc(name).asIdentifier());
     }
 
     static ResourceKey<Item> modKey (ResourceLocation name) {
-        return ResourceKey.create(Registries.ITEM, name);
+        return ResourceKey.create(Registries.ITEM, name.asIdentifier());
     }
 
     static void registerBlock (ChameleonRegistry<Item> register, RegistryEntry<? extends Block> blockHolder) {

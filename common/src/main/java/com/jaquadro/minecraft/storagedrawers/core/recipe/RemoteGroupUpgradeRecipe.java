@@ -3,19 +3,16 @@ package com.jaquadro.minecraft.storagedrawers.core.recipe;
 import com.jaquadro.minecraft.storagedrawers.core.ModDataComponents;
 import com.jaquadro.minecraft.storagedrawers.core.ModItems;
 import com.jaquadro.minecraft.storagedrawers.core.ModRecipes;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
+import net.minecraft.world.level.Level;
 
 import java.util.Map;
-import java.util.Optional;
 
-public class RemoteGroupUpgradeRecipe extends ShapedRecipe
+public class RemoteGroupUpgradeRecipe extends CustomRecipe
 {
-    public RemoteGroupUpgradeRecipe (CraftingBookCategory cat) {
-        super("", cat, pattern(), new ItemStack(ModItems.REMOTE_GROUP_UPGRADE_BOUND.get()));
+    public RemoteGroupUpgradeRecipe () {
     }
 
     private static ShapedRecipePattern pattern () {
@@ -26,7 +23,12 @@ public class RemoteGroupUpgradeRecipe extends ShapedRecipe
     }
 
     @Override
-    public ItemStack assemble (CraftingInput inv, HolderLookup.Provider registries) {
+    public boolean matches(CraftingInput inv, Level level) {
+        return pattern().matches(inv);
+    }
+
+    @Override
+    public ItemStack assemble (CraftingInput inv) {
         ItemStack center = inv.getItem(1);
         if (center == ItemStack.EMPTY)
             center = inv.getItem(4);
@@ -43,7 +45,7 @@ public class RemoteGroupUpgradeRecipe extends ShapedRecipe
     }
 
     @Override
-    public RecipeSerializer<? extends ShapedRecipe>  getSerializer () {
+    public RecipeSerializer<RemoteGroupUpgradeRecipe>  getSerializer () {
         return ModRecipes.REMOTE_GROUP_UPGRADE_SERIALIZER.get();
     }
 }

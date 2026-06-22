@@ -7,7 +7,7 @@ plugins {
 }
 
 minecraft {
-    version(Versions.minecraft)
+    version(Versions.minecraftVanilla)
     accessWideners(file("src/main/resources/${Properties.modid}.accesswidener"))
 }
 

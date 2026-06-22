@@ -8,39 +8,40 @@ import com.jaquadro.minecraft.storagedrawers.block.tile.modelprops.RenderDataPro
 import com.jaquadro.minecraft.storagedrawers.block.tile.tiledata.MaterialData;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.ModelContext;
 import com.jaquadro.minecraft.storagedrawers.client.model.decorator.ModelDecorator;
+import com.texelsaurus.minecraft.chameleon.render.ChameleonBlockModelPart;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.block.model.BlockModelPart;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
-import net.minecraft.client.renderer.block.model.TextureSlots;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
+import net.minecraft.client.resources.model.sprite.TextureSlots;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.item.*;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelBaker;
 import net.minecraft.client.resources.model.ResolvedModel;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.ItemOwner;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockAndTintGetter;
+import net.minecraft.client.renderer.block.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.neoforge.client.model.DynamicBlockStateModel;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4fc;
 import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -58,7 +59,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
     }
 
     @Override
-    public void collectParts (BlockAndTintGetter level, BlockPos blockPos, BlockState state, RandomSource randomSource, List<BlockModelPart> list) {
+    public void collectParts (BlockAndTintGetter level, BlockPos blockPos, BlockState state, RandomSource randomSource, List<BlockStateModelPart> list) {
         BlockEntity entity = level.getBlockEntity(blockPos);
         if (entity instanceof RenderDataProvider renderProvider) {
             Object renderData = renderProvider.getRenderData();
@@ -82,7 +83,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
     }
 
     @Override
-    public TextureAtlasSprite particleIcon (BlockAndTintGetter level, BlockPos pos, BlockState state) {
+    public Material.Baked particleMaterial (BlockAndTintGetter level, BlockPos pos, BlockState state) {
         BlockEntity entity = level.getBlockEntity(pos);
         if (entity instanceof RenderDataProvider renderProvider) {
             Object renderData = renderProvider.getRenderData();
@@ -96,14 +97,14 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
                 ItemStack side = matData.getEffectiveSide();
                 if (side != ItemStack.EMPTY) {
                     if (side.getItem() instanceof BlockItem blockItem) {
-                        BlockStateModel model = Minecraft.getInstance().getBlockRenderer().getBlockModel(blockItem.getBlock().defaultBlockState());
-                        return model.particleIcon();
+                        BlockStateModel model = Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(blockItem.getBlock().defaultBlockState());
+                        return model.particleMaterial();
                     }
                 }
             }
         }
 
-        return super.particleIcon(level, pos, state);
+        return super.particleMaterial(level, pos, state);
     }
 
     public static class PlatformDecoratedItemModel implements ItemModel
@@ -111,7 +112,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         private final ResourceLocation location;
         private final String variant;
         private final ModelRenderProperties properties;
-        private final Supplier<Vector3f[]> extents;
+        private final Supplier<Vector3fc[]> extents;
         private final Map<MaterialData, BlockStateModel> modelCache = new HashMap<>();
 
         PlatformDecoratedModel<?> parent;
@@ -125,7 +126,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             this.properties = properties;
 
             this.extents = Suppliers.memoize(() -> {
-                Vector3f[] ext = new Vector3f[2];
+                Vector3fc[] ext = new Vector3fc[2];
                 ext[0] = new Vector3f(0.0f, 0.0f, 0.0f);
                 ext[1] = new Vector3f(1.0f, 1.0f, 1.0f);
                 return ext;
@@ -138,7 +139,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             itemStackRenderState.appendModelIdentityElement(itemStack);
 
             if (state == null) {
-                var blockOption = BuiltInRegistries.BLOCK.get(location);
+                var blockOption = BuiltInRegistries.BLOCK.get(location.asIdentifier());
                 if (blockOption.isEmpty())
                     return;
 
@@ -171,24 +172,15 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             }
 
             if (model != null) {
-                List<BlockModelPart> parts = new ArrayList<>();
+                List<BlockStateModelPart> parts = new ArrayList<>();
                 model.collectParts(null, parts);
                 Map<ChunkSectionLayer, ItemStackRenderState.LayerRenderState> layers = new HashMap<>();
-                for (BlockModelPart part : parts) {
-                    ChunkSectionLayer partType = part.getRenderType(state);
+                for (BlockStateModelPart part : parts) {
+                    ChunkSectionLayer partType = getRenderType(part, state);
                     if (!layers.containsKey(partType)) {
                         ItemStackRenderState.LayerRenderState renderState = itemStackRenderState.newLayer();
                         layers.put(partType, renderState);
 
-                        RenderType itemRenderType = null;
-                        if (partType == ChunkSectionLayer.SOLID)
-                            itemRenderType = Sheets.solidBlockSheet();
-                        if (partType == ChunkSectionLayer.CUTOUT_MIPPED || partType == ChunkSectionLayer.CUTOUT)
-                            itemRenderType = Sheets.cutoutBlockSheet();
-                        else if (partType == ChunkSectionLayer.TRANSLUCENT)
-                            itemRenderType = Sheets.translucentItemSheet();
-
-                        renderState.setRenderType(itemRenderType);
                         renderState.setExtents(extents);
                     }
 
@@ -200,6 +192,16 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
                         layer.prepareQuadList().addAll(part.getQuads(direction));
                 }
             }
+        }
+
+        private static ChunkSectionLayer getRenderType (BlockStateModelPart part, BlockState state) {
+            if (part instanceof ChameleonBlockModelPart chameleonPart) {
+                ChunkSectionLayer layer = chameleonPart.getRenderType(state);
+                if (layer != null)
+                    return layer;
+            }
+
+            return ChunkSectionLayer.SOLID;
         }
 
         private static <T extends Comparable<T>> BlockState setProperty(BlockState state, Property<T> property, String valueName) {
@@ -221,9 +223,9 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
             }
 
             @Override
-            public ItemModel bake (BakingContext bakingContext) {
+            public ItemModel bake (BakingContext bakingContext, Matrix4fc matrix) {
                 ModelBaker modelbaker = bakingContext.blockModelBaker();
-                ResolvedModel resolvedmodel = modelbaker.getModel(ResourceLocation.fromNamespaceAndPath(StorageDrawers.MOD_ID, "block/oak_full_drawers_2"));
+                ResolvedModel resolvedmodel = modelbaker.getModel(ResourceLocation.fromNamespaceAndPath(StorageDrawers.MOD_ID, "block/oak_full_drawers_2").asIdentifier());
                 TextureSlots textureslots = resolvedmodel.getTopTextureSlots();
 
                 ModelRenderProperties modelrenderproperties = ModelRenderProperties.fromResolvedModel(modelbaker, resolvedmodel, textureslots);
@@ -249,7 +251,7 @@ public class PlatformDecoratedModel<C extends ModelContext> extends ParentModel 
         }
 
         @Override
-        public void collectParts (RandomSource randomSource, List<BlockModelPart> list) {
+        public void collectParts (RandomSource randomSource, List<BlockStateModelPart> list) {
             Supplier<C> supplier = () -> parent.contextSupplier.makeContext(stack);
             ModelDecorator<C> decorator = parent.decorator;
             if (decorator.shouldRenderBase(supplier, stack))

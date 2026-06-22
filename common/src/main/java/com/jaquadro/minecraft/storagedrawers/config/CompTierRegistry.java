@@ -2,7 +2,7 @@ package com.jaquadro.minecraft.storagedrawers.config;
 
 import com.jaquadro.minecraft.storagedrawers.ModServices;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -37,6 +37,9 @@ public class CompTierRegistry
     public CompTierRegistry () { }
 
     public void initialize () {
+        if (initialized)
+            return;
+
         initialized = true;
 
         if (ModCommonConfig.INSTANCE.DRAWERS.compacting.enableExtraCompactingRules.get()) {
@@ -65,7 +68,14 @@ public class CompTierRegistry
         pendingRules = null;
     }
 
+    private void ensureInitialized () {
+        if (!initialized)
+            initialize();
+    }
+
     public boolean register (@NotNull ItemStack upper, @NotNull ItemStack lower, int convRate) {
+        ensureInitialized();
+
         if (upper.isEmpty() || lower.isEmpty())
             return false;
 
@@ -118,10 +128,10 @@ public class CompTierRegistry
             return false;
 
         ResourceLocation upperResource = ResourceLocation.parse(parts[0]);
-        Item upperItem = BuiltInRegistries.ITEM.getValue(upperResource);
+        Item upperItem = BuiltInRegistries.ITEM.getValue(upperResource.asIdentifier());
 
         ResourceLocation lowerResource = ResourceLocation.parse(parts[1]);
-        Item lowerItem = BuiltInRegistries.ITEM.getValue(lowerResource);
+        Item lowerItem = BuiltInRegistries.ITEM.getValue(lowerResource.asIdentifier());
 
         try {
             int conv = Integer.parseInt(parts[2]);
@@ -133,6 +143,8 @@ public class CompTierRegistry
     }
 
     public boolean unregisterUpperTarget (@NotNull ItemStack stack) {
+        ensureInitialized();
+
         for (Record r : records) {
             if (ItemStack.matches(stack, r.upper)) {
                 records.remove(r);
@@ -144,6 +156,8 @@ public class CompTierRegistry
     }
 
     public boolean unregisterLowerTarget (@NotNull ItemStack stack) {
+        ensureInitialized();
+
         for (Record r : records) {
             if (ItemStack.matches(stack, r.lower)) {
                 records.remove(r);
@@ -158,6 +172,8 @@ public class CompTierRegistry
         if (stack.isEmpty())
             return null;
 
+        ensureInitialized();
+
         for (Record r : records) {
             if (ItemStack.isSameItemSameComponents(stack, r.lower))
                 return r;
@@ -169,6 +185,8 @@ public class CompTierRegistry
     public Record findLowerTier (@NotNull ItemStack stack) {
         if (stack.isEmpty())
             return null;
+
+        ensureInitialized();
 
         for (Record r : records) {
             if (ItemStack.isSameItemSameComponents(stack, r.upper))

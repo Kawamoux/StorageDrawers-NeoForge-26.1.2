@@ -1,7 +1,7 @@
 package com.texelsaurus.minecraft.chameleon.capabilities;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -17,7 +17,7 @@ public class NeoforgeCapability<T, C> implements ChameleonCapability<T>
 
     public NeoforgeCapability(ResourceLocation location, Class<T> clazz, Class<C> context) {
         id = location;
-        nativeCapability = BlockCapability.create(location, clazz, context);
+        nativeCapability = BlockCapability.create(location.asIdentifier(), clazz, context);
     }
 
     public NeoforgeCapability(BlockCapability<T, C> nativeCapability) {

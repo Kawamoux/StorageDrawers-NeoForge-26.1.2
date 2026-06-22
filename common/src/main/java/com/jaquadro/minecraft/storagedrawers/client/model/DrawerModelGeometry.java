@@ -4,11 +4,12 @@ import com.jaquadro.minecraft.storagedrawers.ModConstants;
 import com.jaquadro.minecraft.storagedrawers.block.BlockCompDrawers;
 import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlocks;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.BlockElement;
-import net.minecraft.client.renderer.block.model.BlockModel;
-import net.minecraft.client.renderer.block.model.SimpleUnbakedGeometry;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.phys.AABB;
 import org.apache.commons.io.IOUtils;
@@ -90,10 +91,10 @@ public class DrawerModelGeometry
                                              ResourceLocation locationInd,
                                              ResourceLocation locationIndBase,
                                              BlockDrawers... blocks) {
-        List<BlockElement> slotGeo = getElements(getBlockModel(locationIcon));
-        List<BlockElement> countGeo = getElements(getBlockModel(locationCount));
-        List<BlockElement> indicatorGeo = getElements(getBlockModel(locationInd));
-        List<BlockElement> indicatorBaseGeo = getElements(getBlockModel(locationIndBase));
+        List<GeometryElement> slotGeo = getElements(locationIcon);
+        List<GeometryElement> countGeo = getElements(locationCount);
+        List<GeometryElement> indicatorGeo = getElements(locationInd);
+        List<GeometryElement> indicatorBaseGeo = getElements(locationIndBase);
 
         for (BlockDrawers block : blocks) {
             if (block == null)
@@ -106,7 +107,7 @@ public class DrawerModelGeometry
         }
     }
 
-    private static void populateGeometryData (BlockDrawers block, List<BlockElement> info, BlockDrawers.GeometryType type) {
+    private static void populateGeometryData (BlockDrawers block, List<GeometryElement> info, BlockDrawers.GeometryType type) {
         if (block == null || info == null)
             return;
 
@@ -129,27 +130,33 @@ public class DrawerModelGeometry
         }
     }
 
-    private static BlockModel getBlockModel (ResourceLocation location) {
-        Resource iresource = null;
+    private static List<GeometryElement> getElements (ResourceLocation location) {
         Reader reader = null;
         try {
-            iresource = Minecraft.getInstance().getResourceManager().getResourceOrThrow(location);
+            Resource iresource = Minecraft.getInstance().getResourceManager().getResourceOrThrow(location.asIdentifier());
             reader = new InputStreamReader(iresource.open(), StandardCharsets.UTF_8);
-            return BlockModel.fromStream(reader);
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonArray elements = root.getAsJsonArray("elements");
+            List<GeometryElement> result = new ArrayList<>();
+            if (elements == null)
+                return result;
+
+            for (JsonElement element : elements) {
+                JsonObject object = element.getAsJsonObject();
+                result.add(new GeometryElement(readVector(object.getAsJsonArray("from")), readVector(object.getAsJsonArray("to"))));
+            }
+
+            return result;
         } catch (IOException e) {
-            return null;
+            return new ArrayList<>();
         } finally {
             IOUtils.closeQuietly(reader);
         }
     }
 
-    private static List<BlockElement> getElements (BlockModel model) {
-        if (model == null)
-            return new ArrayList<>();
-
-        if (model.geometry() instanceof SimpleUnbakedGeometry geo)
-            return geo.elements();
-        else
-            return new ArrayList<>();
+    private static Vector3f readVector (JsonArray array) {
+        return new Vector3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
     }
+
+    private record GeometryElement(Vector3fc from, Vector3fc to) { }
 }

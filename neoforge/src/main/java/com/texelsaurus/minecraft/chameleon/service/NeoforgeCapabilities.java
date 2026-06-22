@@ -2,7 +2,7 @@ package com.texelsaurus.minecraft.chameleon.service;
 
 import com.texelsaurus.minecraft.chameleon.capabilities.ChameleonCapability;
 import com.texelsaurus.minecraft.chameleon.capabilities.NeoforgeCapability;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 
 public class NeoforgeCapabilities implements ChameleonCapabilities
 {

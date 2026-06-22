@@ -6,12 +6,11 @@ import com.jaquadro.minecraft.storagedrawers.block.EnumCompDrawer;
 import com.jaquadro.minecraft.storagedrawers.block.meta.*;
 import com.jaquadro.minecraft.storagedrawers.core.ModBlocks;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -368,7 +367,7 @@ public class DrawerModelStore
 
         BlockStateModel storedModel = modelStore.getOrDefault(state, null);
         if (storedModel == null) {
-            return Minecraft.getInstance().getModelManager().getBlockModelShaper().getBlockModel(state);
+            return Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state);
         } else {
             return storedModel;
         }
@@ -419,7 +418,7 @@ public class DrawerModelStore
         if (replacementModel == null)
             return model;
 
-        BlockStateModel merged = new SpriteReplacementModel(model, replacementModel, ChunkSectionLayer.CUTOUT_MIPPED);
+        BlockStateModel merged = new SpriteReplacementModel(model, replacementModel, ChunkSectionLayer.CUTOUT);
         store.put(replaceLoc, merged);
         return merged;
     }

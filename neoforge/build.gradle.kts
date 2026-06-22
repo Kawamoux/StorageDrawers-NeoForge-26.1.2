@@ -5,7 +5,7 @@ import net.darkhax.curseforgegradle.TaskPublishCurseForge
 
 plugins {
     id("modloader-conv")
-    id("net.neoforged.moddev") version ("2.0.107")
+    id("net.neoforged.moddev") version ("2.0.141")
     id("com.modrinth.minotaur")
 }
 
@@ -27,6 +27,15 @@ neoForge {
             sourceSet(sourceSets.main.get())
         }
     }
+}
+
+sourceSets.main {
+    java.exclude("net/minecraft/**")
+    java.exclude("com/jaquadro/minecraft/storagedrawers/integration/Waila.java")
+}
+
+tasks.jar {
+    exclude("net/minecraft/**")
 }
 
 dependencies {

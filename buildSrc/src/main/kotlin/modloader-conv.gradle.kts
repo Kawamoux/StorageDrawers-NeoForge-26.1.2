@@ -18,11 +18,6 @@ configurations {
 }
 
 dependencies {
-    compileOnly(project(":common")) {
-        capabilities {
-            requireCapability("$group:${Properties.modid}")
-        }
-    }
     "commonJava"(project(path = ":common", configuration = "commonJava"))
     "commonResources"(project(path = ":common", configuration = "commonResources"))
 }

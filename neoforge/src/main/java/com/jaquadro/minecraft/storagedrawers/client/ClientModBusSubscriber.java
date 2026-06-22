@@ -14,9 +14,7 @@ import com.jaquadro.minecraft.storagedrawers.inventory.DrawerScreen;
 import com.jaquadro.minecraft.storagedrawers.inventory.FramingTableScreen;
 import com.jaquadro.minecraft.storagedrawers.inventory.tooltip.DetachedDrawerTooltip;
 import com.jaquadro.minecraft.storagedrawers.inventory.tooltip.KeyringTooltip;
-import net.minecraft.client.renderer.block.BlockModelShaper;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
-import net.minecraft.client.resources.model.MissingBlockModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.api.distmarker.Dist;
@@ -74,7 +72,7 @@ public class ClientModBusSubscriber
 
     @SubscribeEvent
     static void registerItemModels(RegisterItemModelsEvent event) {
-        event.register(ModConstants.loc("framed_block"), PlatformDecoratedModel.PlatformDecoratedItemModel.Unbaked.MAP_CODEC);
+        event.register(ModConstants.loc("framed_block").asIdentifier(), PlatformDecoratedModel.PlatformDecoratedItemModel.Unbaked.MAP_CODEC);
     }
 
     @SubscribeEvent

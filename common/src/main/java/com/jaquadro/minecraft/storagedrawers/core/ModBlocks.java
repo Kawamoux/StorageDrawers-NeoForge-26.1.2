@@ -15,7 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -215,7 +215,7 @@ public final class ModBlocks
     }
 
     static ResourceKey<Block> modKey (String name) {
-        return ResourceKey.create(Registries.BLOCK, modLoc(name));
+        return ResourceKey.create(Registries.BLOCK, modLoc(name).asIdentifier());
     }
 
     static IDrawerConfig getStandardConfig (int drawerCount, boolean halfDepth) {

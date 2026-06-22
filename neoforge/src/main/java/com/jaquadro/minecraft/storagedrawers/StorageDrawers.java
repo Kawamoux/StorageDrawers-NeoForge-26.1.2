@@ -11,7 +11,7 @@ import com.texelsaurus.minecraft.chameleon.service.ChameleonConfig;
 import com.texelsaurus.minecraft.chameleon.service.NeoforgeConfig;
 import com.texelsaurus.minecraft.chameleon.service.NeoforgeNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -74,12 +74,6 @@ public class StorageDrawers
     }
 
     private void setup (final FMLCommonSetupEvent event) {
-        //compRegistry = new CompTierRegistry();
-        CompTierRegistry.INSTANCE.initialize();
-        StorageBlacklist.INSTANCE.initialize();
-        MaterialBlacklist.INSTANCE.initialize();
-        ConversionRegistry.INSTANCE.initialize();
-
         LocalIntegrationRegistry.initialize();
         LocalIntegrationRegistry.instance().init();
         LocalIntegrationRegistry.instance().postInit();

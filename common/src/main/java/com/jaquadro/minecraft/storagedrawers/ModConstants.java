@@ -1,6 +1,6 @@
 package com.jaquadro.minecraft.storagedrawers;
 
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 
 public final class ModConstants
 {

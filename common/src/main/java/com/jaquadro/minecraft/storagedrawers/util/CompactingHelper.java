@@ -6,7 +6,7 @@ import com.jaquadro.minecraft.storagedrawers.config.ModCommonConfig;
 import net.minecraft.core.Holder;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.inventory.CraftingContainer;
 import net.minecraft.world.inventory.TransientCraftingContainer;
@@ -136,7 +136,7 @@ public class CompactingHelper
                 ItemStack output;
                 List<Optional<Ingredient>> ingredients;
                 if (recipe.value() instanceof ShapedRecipe shaped) {
-                    output = shaped.result;
+                    output = shaped.result.create();
                     ingredients = shaped.pattern.ingredients();
                 } else
                     continue;
@@ -188,7 +188,7 @@ public class CompactingHelper
         if (world instanceof ServerLevel serverWorld) {
             for (RecipeHolder<CraftingRecipe> recipe : serverWorld.recipeAccess().recipes.getRecipesFor(RecipeType.CRAFTING, input, world).toList()) {
                 if (recipe.value().matches(input, world)) {
-                    ItemStack result = recipe.value().assemble(input, world.registryAccess());
+                    ItemStack result = recipe.value().assemble(input);
                     if (!result.isEmpty())
                         candidates.add(result);
                 }
@@ -200,10 +200,10 @@ public class CompactingHelper
 
     @NotNull
     private ItemStack findMatchingModCandidate (@NotNull ItemStack reference, List<Item> candidates) {
-        ResourceLocation referenceName = BuiltInRegistries.ITEM.getKey(reference.getItem());
+        ResourceLocation referenceName = ResourceLocation.fromIdentifier(BuiltInRegistries.ITEM.getKey(reference.getItem()));
         if (referenceName != null) {
             for (Item candidate : candidates) {
-                ResourceLocation matchName = BuiltInRegistries.ITEM.getKey(candidate);
+                ResourceLocation matchName = ResourceLocation.fromIdentifier(BuiltInRegistries.ITEM.getKey(candidate));
                 if (matchName != null) {
                     if (referenceName.getNamespace().equals(matchName.getPath()))
                         return new ItemStack(candidate);

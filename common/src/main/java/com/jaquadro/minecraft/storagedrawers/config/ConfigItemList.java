@@ -2,7 +2,7 @@ package com.jaquadro.minecraft.storagedrawers.config;
 
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +20,9 @@ public class ConfigItemList
     public ConfigItemList () { }
 
     public void initialize () {
+        if (initialized)
+            return;
+
         initialized = true;
 
         innerInitialize();
@@ -31,9 +34,16 @@ public class ConfigItemList
         pendingRules = null;
     }
 
+    protected void ensureInitialized () {
+        if (!initialized)
+            initialize();
+    }
+
     protected void innerInitialize () { }
 
     public boolean isListed (ItemStack stack) {
+        ensureInitialized();
+
         Item item = stack.getItem();
 
         if (listedItems.contains(item))
@@ -42,7 +52,7 @@ public class ConfigItemList
         if(!listedNamespaces.isEmpty()) {
             ResourceKey<Item> resourceKey = BuiltInRegistries.ITEM.getResourceKey(item).orElse(null);
             if (resourceKey != null) {
-                String namespace = resourceKey.location().getNamespace();
+                String namespace = resourceKey.identifier().getNamespace();
                 if (listedNamespaces.contains(namespace))
                     return true;
             }
@@ -52,6 +62,8 @@ public class ConfigItemList
     }
 
     public boolean registerNamespace (@NotNull String namespace) {
+        ensureInitialized();
+
         if (namespace.isEmpty())
             return false;
 
@@ -66,6 +78,8 @@ public class ConfigItemList
     protected void logRegisterNamespace (@NotNull String namespace) { }
 
     public boolean registerItem (@NotNull ItemStack item) {
+        ensureInitialized();
+
         if (item.isEmpty())
             return false;
 
@@ -94,12 +108,14 @@ public class ConfigItemList
             return registerNamespace(parts[0]);
 
         ResourceLocation resource = ResourceLocation.parse(entry);
-        Item item = BuiltInRegistries.ITEM.getValue(resource);
+        Item item = BuiltInRegistries.ITEM.getValue(resource.asIdentifier());
 
         return registerItem(new ItemStack(item));
     }
 
     public boolean unregisterNamespace (@NotNull String namespace) {
+        ensureInitialized();
+
         if (namespace.isEmpty())
             return false;
 
@@ -107,6 +123,8 @@ public class ConfigItemList
     }
 
     public boolean unregisterItem (@NotNull ItemStack stack) {
+        ensureInitialized();
+
         if (stack.isEmpty())
             return false;
 

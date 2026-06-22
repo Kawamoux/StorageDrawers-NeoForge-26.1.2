@@ -6,13 +6,13 @@ import com.jaquadro.minecraft.storagedrawers.core.ModRecipes;
 import com.jaquadro.minecraft.storagedrawers.item.ItemDrawers;
 import com.jaquadro.minecraft.storagedrawers.item.ItemUpgrade;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.TypedEntityData;
-import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -28,8 +28,7 @@ import java.util.List;
 
 public class AddUpgradeRecipe extends CustomRecipe
 {
-    public AddUpgradeRecipe (CraftingBookCategory cat) {
-        super(cat);
+    public AddUpgradeRecipe () {
     }
 
     @Override
@@ -39,7 +38,8 @@ public class AddUpgradeRecipe extends CustomRecipe
 
     @Override
     @NotNull
-    public ItemStack assemble(@NotNull CraftingInput inv, HolderLookup.Provider registries) {
+    public ItemStack assemble(@NotNull CraftingInput inv) {
+        HolderLookup.Provider registries = RegistryAccess.EMPTY;
         Context ctx = findContext(inv, registries);
         if (ctx == null)
             return ItemStack.EMPTY;
@@ -124,7 +124,7 @@ public class AddUpgradeRecipe extends CustomRecipe
 
     @Override
     @NotNull
-    public RecipeSerializer<? extends CustomRecipe> getSerializer() {
+    public RecipeSerializer<AddUpgradeRecipe> getSerializer() {
         return ModRecipes.UPGRADE_RECIPE_SERIALIZER.get();
     }
 }

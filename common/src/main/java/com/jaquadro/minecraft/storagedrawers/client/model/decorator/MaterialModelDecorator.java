@@ -10,13 +10,13 @@ import com.jaquadro.minecraft.storagedrawers.client.model.DrawerModelStore;
 import com.jaquadro.minecraft.storagedrawers.client.model.SpriteReplacementModel;
 import com.jaquadro.minecraft.storagedrawers.client.model.context.FramedModelContext;
 import com.jaquadro.minecraft.storagedrawers.config.ModClientConfig;
-import net.minecraft.client.renderer.RenderType;
+import com.texelsaurus.minecraft.chameleon.render.RenderType;
 import net.minecraft.client.renderer.Sheets;
-import net.minecraft.client.renderer.block.model.BlockStateModel;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -120,7 +120,7 @@ public abstract class MaterialModelDecorator<C extends FramedModelContext> exten
             replacementCache.put(baseModel, matCache);
         }
 
-        ResourceLocation matName = BuiltInRegistries.ITEM.getKey(material.getItem());
+        ResourceLocation matName = ResourceLocation.fromIdentifier(BuiltInRegistries.ITEM.getKey(material.getItem()));
         BlockStateModel replacedModel = null;
         if (matCache.containsKey(matName))
             replacedModel = matCache.get(matName);

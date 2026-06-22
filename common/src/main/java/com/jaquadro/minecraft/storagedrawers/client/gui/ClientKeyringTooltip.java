@@ -2,15 +2,14 @@ package com.jaquadro.minecraft.storagedrawers.client.gui;
 
 import com.jaquadro.minecraft.storagedrawers.components.item.KeyringContents;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import com.texelsaurus.minecraft.chameleon.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 
@@ -66,7 +65,7 @@ public class ClientKeyringTooltip implements ClientTooltipComponent
     }
 
     @Override
-    public void renderImage(Font font, int pX, int pY, int pW, int pH, GuiGraphics graphics) {
+    public void extractImage(Font font, int pX, int pY, int pW, int pH, GuiGraphicsExtractor graphics) {
         if (this.contents.isEmpty()) {
             this.renderEmptyBundleTooltip(font, pX, pY, pW, pH, graphics);
         } else {
@@ -74,12 +73,12 @@ public class ClientKeyringTooltip implements ClientTooltipComponent
         }
     }
 
-    private void renderEmptyBundleTooltip(Font font, int pX, int pY, int pW, int pH, GuiGraphics graphics) {
+    private void renderEmptyBundleTooltip(Font font, int pX, int pY, int pW, int pH, GuiGraphicsExtractor graphics) {
         //drawEmptyBundleDescriptionText($$1 + this.getContentXOffset($$3), $$2, $$0, $$5);
         //this.drawProgressbar($$1 + this.getContentXOffset($$3), $$2 + getEmptyBundleDescriptionTextHeight($$0) + 4, $$0, $$5);
     }
 
-    private void renderBundleWithItemsTooltip(Font font, int pX, int pY, int pW, int pH, GuiGraphics graphics) {
+    private void renderBundleWithItemsTooltip(Font font, int pX, int pY, int pW, int pH, GuiGraphicsExtractor graphics) {
         boolean overflow = this.contents.size() > 16;
         List<ItemStack> items = this.getShownItems(this.contents.getNumberOfItemsToShow());
         int x = pX + this.getContentXOffset(pW) + GRID_WIDTH;
@@ -120,33 +119,33 @@ public class ClientKeyringTooltip implements ClientTooltipComponent
         return items.size() >= index;
     }
 
-    private static void renderCount(int x, int y, int hiddenCount, Font font, GuiGraphics graphics) {
-        graphics.drawCenteredString(font, "+" + hiddenCount, x + 12, y + 10, -1);
+    private static void renderCount(int x, int y, int hiddenCount, Font font, GuiGraphicsExtractor graphics) {
+        graphics.centeredText(font, "+" + hiddenCount, x + 12, y + 10, -1);
     }
 
-    private void renderSlot(int index, int pX, int pY, List<ItemStack> items, int renderIndex, Font font, GuiGraphics graphics) {
+    private void renderSlot(int index, int pX, int pY, List<ItemStack> items, int renderIndex, Font font, GuiGraphicsExtractor graphics) {
         int itemIndex = items.size() - index;
         boolean selected = itemIndex == this.contents.getSelectedItem();
         ItemStack item = items.get(itemIndex);
         if (selected)
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_BACK_SPRITE, pX, pY, SLOT_SIZE, SLOT_SIZE);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_BACK_SPRITE.asIdentifier(), pX, pY, SLOT_SIZE, SLOT_SIZE);
         else
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_BACKGROUND_SPRITE, pX, pY, SLOT_SIZE, SLOT_SIZE);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_BACKGROUND_SPRITE.asIdentifier(), pX, pY, SLOT_SIZE, SLOT_SIZE);
 
-        graphics.renderItem(item, pX + SLOT_MARGIN, pY + SLOT_MARGIN, renderIndex);
-        graphics.renderItemDecorations(font, item, pX + SLOT_MARGIN, pY + SLOT_MARGIN);
+        graphics.item(item, pX + SLOT_MARGIN, pY + SLOT_MARGIN, renderIndex);
+        graphics.itemDecorations(font, item, pX + SLOT_MARGIN, pY + SLOT_MARGIN);
         if (selected)
-            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_FRONT_SPRITE, pX, pY, 24, 24);
+            graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_HIGHLIGHT_FRONT_SPRITE.asIdentifier(), pX, pY, 24, 24);
     }
 
-    private void drawSelectedItemTooltip(Font font, GuiGraphics graphics, int pX, int pY, int pW) {
+    private void drawSelectedItemTooltip(Font font, GuiGraphicsExtractor graphics, int pX, int pY, int pW) {
         if (this.contents.hasSelectedItem()) {
             ItemStack item = this.contents.getItemUnsafe(this.contents.getSelectedItem());
             Component hoverComponent = item.getStyledHoverName();
             int textWidth = font.width(hoverComponent.getVisualOrderText());
             int textOffset = pX + pW / 2 - 12;
             ClientTooltipComponent tooltip = ClientTooltipComponent.create(hoverComponent.getVisualOrderText());
-            graphics.renderTooltip(font, List.of(tooltip), textOffset - textWidth / 2, pY - 15, DefaultTooltipPositioner.INSTANCE, item.get(DataComponents.TOOLTIP_STYLE));
+            graphics.tooltip(font, List.of(tooltip), textOffset - textWidth / 2, pY - 15, DefaultTooltipPositioner.INSTANCE, item.get(DataComponents.TOOLTIP_STYLE));
         }
 
     }
