@@ -1,16 +1,19 @@
-StorageDrawers
-==============
+# Storage Drawers NeoForge 26.1.2
 
-A mod adding compartmental storage for Minecraft Forge.
+Unofficial Storage Drawers conversion for Minecraft NeoForge 26.1.2.
+
+[Download Storage Drawers NeoForge 26.1.2](https://github.com/Kawamoux/StorageDrawers-NeoForge-26.1.2/releases/download/neoforge-26.1.2/StorageDrawers-neoforge-26.1.2-19.1.1%2B26.1.2.jar)
 
 Unofficial NeoForge 26.1.2 Conversion
 -------------------------------------
 
-This repository is an unofficial conversion of Storage Drawers for Minecraft/NeoForge 26.1.2.
+This repository provides an unofficial NeoForge 26.1.2 port of Storage Drawers, a Minecraft mod that adds compartmental storage blocks.
 
-- [Download the NeoForge 26.1.2 jar](https://github.com/Kawamoux/StorageDrawers-NeoForge-26.1.2/releases/download/neoforge-26.1.2/StorageDrawers-neoforge-26.1.2-19.1.1%2B26.1.2.jar)
+- [Download the Storage Drawers NeoForge 26.1.2 jar](https://github.com/Kawamoux/StorageDrawers-NeoForge-26.1.2/releases/download/neoforge-26.1.2/StorageDrawers-neoforge-26.1.2-19.1.1%2B26.1.2.jar)
+- [View the NeoForge 26.1.2 release](https://github.com/Kawamoux/StorageDrawers-NeoForge-26.1.2/releases/tag/neoforge-26.1.2)
 - Target loader: NeoForge 26.1.2
 - Original project: [jaquadro/StorageDrawers](https://github.com/jaquadro/StorageDrawers)
+- Status: unofficial community conversion, not an official upstream release
 
 For Players
 -----------
